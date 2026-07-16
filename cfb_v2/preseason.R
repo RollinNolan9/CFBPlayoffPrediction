@@ -134,10 +134,20 @@ build_preseason_team_priors <- function(returning, talent, polls, membership,
   }
 
   returning <- normalize_returning_production(returning, season)
+  prior <- prior_strength[as.integer(prior_strength$season) == season - 1L, , drop = FALSE]
+  prior_teams <- canonical_team(prior$team)
+
+  # A team absent from returning production is only legitimate when it has no
+  # prior-season on-field history to return (2020 COVID opt-outs, new FBS members).
   missing <- setdiff(fbs_teams, returning$team)
-  if (length(missing)) {
+  unexplained <- missing[missing %in% prior_teams]
+  if (length(unexplained)) {
     stop("Returning production for ", season, " is missing FBS teams: ",
-         paste(missing, collapse = ", "), call. = FALSE)
+         paste(unexplained, collapse = ", "), call. = FALSE)
+  }
+  if (length(missing)) {
+    message("Returning production for ", season, " leaves teams without a prior ",
+            "season unknown: ", paste(missing, collapse = ", "))
   }
   index <- match(fbs_teams, returning$team)
 
@@ -147,8 +157,7 @@ build_preseason_team_priors <- function(returning, talent, polls, membership,
   polls <- normalize_preseason_polls(polls, config)
   vote_share <- poll_vote_share(polls, fbs_teams)
 
-  prior <- prior_strength[as.integer(prior_strength$season) == season - 1L, , drop = FALSE]
-  prior_value <- as.numeric(prior$strength[match(fbs_teams, canonical_team(prior$team))])
+  prior_value <- as.numeric(prior$strength[match(fbs_teams, prior_teams)])
   prior_percentile <- percentile_rank(prior_value)
 
   returning_ppa <- returning$returning_ppa_pct[index]

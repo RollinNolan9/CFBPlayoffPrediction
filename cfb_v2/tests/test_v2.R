@@ -194,6 +194,39 @@ test_that("preseason priors are one normalized row per FBS team-season", {
   )
 })
 
+test_that("returning production may only be missing without a prior season", {
+  membership <- data.frame(team = c("Alpha", "Beta"), season = 2021,
+                           classification = "fbs", stringsAsFactors = FALSE)
+  returning <- data.frame(season = 2021, team = "Alpha", percent_ppa = 60,
+                          percent_passing_ppa = 50, usage = 55,
+                          stringsAsFactors = FALSE)
+  talent <- data.frame(year = 2021, school = c("Alpha", "Beta"),
+                       talent = c(900, 700), stringsAsFactors = FALSE)
+  polls <- data.frame(poll = c("AP Top 25", "Coaches Poll"), school = "Alpha",
+                      points = c(1500, 1400), stringsAsFactors = FALSE)
+  opt_out_prior <- data.frame(team = "Alpha", season = 2020, strength = 0.2,
+                              stringsAsFactors = FALSE)
+
+  expect_message(
+    priors <- build_preseason_team_priors(returning, talent, polls, membership,
+                                          opt_out_prior, 2021, config),
+    "without a prior season"
+  )
+  beta <- priors[priors$team == "Beta", ]
+  expect_true(is.na(beta$returning_ppa_pct))
+  expect_true(is.na(beta$retained_quality))
+  expect_true(is.na(beta$replacement_capacity))
+
+  played_prior <- rbind(opt_out_prior,
+                        data.frame(team = "Beta", season = 2020, strength = 0,
+                                   stringsAsFactors = FALSE))
+  expect_error(
+    build_preseason_team_priors(returning, talent, polls, membership,
+                                played_prior, 2021, config),
+    "missing FBS teams"
+  )
+})
+
 test_that("preseason challenger features fade and stay out of production", {
   priors <- data.frame(
     team = c("Alpha", "Beta"), season = 2024,
