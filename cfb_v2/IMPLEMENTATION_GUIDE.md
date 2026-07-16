@@ -331,7 +331,9 @@ items are:
    special-teams possession changes) instead of havoc allowed, and persists the
    raw `turnover_lost_rate` numerator. The stored foundation, backtest, and
    August 29 dry run still need to be regenerated locally.
-2. Backfill and rolling-test 2021-2025 preseason challengers.
+2. Backfill and rolling-test 2021-2025 preseason challengers — the freeze command
+   (`--mode=build-preseason`) and the three rolling challengers are implemented;
+   the 2021-2025 pull and the real backtest review still need to run locally.
 3. Build an FCS-to-FBS bridge and transition-specific uncertainty.
 4. Complete prior history for the three unmapped 2026 head coaches.
 5. Automate the final 2026 preseason data refresh.

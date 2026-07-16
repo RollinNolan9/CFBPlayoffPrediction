@@ -34,6 +34,20 @@ backtest plus August 29 dry run are regenerated.
 
 ### Backfill Preseason Challengers
 
+**Status:** Code and tests landed. `cfb_v2/preseason.R` freezes one timestamped row
+per FBS team-season (`--mode=build-preseason`), and the backtest evaluates the core
+against returning-production, +talent, and +poll-hype challengers whose
+`challenger_ps_*` features fade with the standard preseason weights. Week 0/1
+diagnostics write to `cfb_v2/output/backtest/preseason_challenger_report.md`,
+including learned per-feature effects. Poll features are diagnostic only — they
+measure how much preseason sentiment misleads (the Clemson/LSU pattern) and are
+not promotion candidates; only the returning-production and talent variants can
+be promoted.
+
+**Remaining:** Run `--mode=build-preseason --seasons=2021:2025 --overwrite=true` with
+the CFBD key, rerun `--mode=backtest`, and review the Week 0/1 report before any
+challenger is promoted.
+
 **What:** Pull and freeze 2021-2025 CFBD returning production, Week 1 AP/Coaches poll
 points, and 247 team-talent composites. Build four rolling challengers: core,
 returning production, returning production plus talent, and returning production plus

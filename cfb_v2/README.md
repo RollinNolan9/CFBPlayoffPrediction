@@ -100,6 +100,37 @@ The command compares the ridge core with team-home-field and residual-forest
 challengers, then writes the report, fold predictions, summary metrics, and selected
 coach split beneath `cfb_v2/output/backtest`.
 
+## Preseason challenger command
+
+Freeze the 2021-2025 preseason sources (CFBD returning production, 247 team talent,
+Week 1 AP/Coaches poll points) into one timestamped row per team-season:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v2.R `
+  --mode=build-preseason --seasons=2021:2025 --overwrite=true
+```
+
+Raw pulls are cached beneath `cfb_v2/cache/preseason`; add `--refresh-preseason=true`
+to re-download. The frozen output is `cfb_v2/data/preseason_team_priors.csv` with
+season-normalized values only (percentiles and vote shares, never raw ranks) and no
+team or conference identity predictors. Any FBS team missing from returning
+production stops the build.
+
+When the priors file has rows, `--mode=backtest` additionally evaluates three
+preseason challengers (returning production; plus talent; plus poll hype gap) whose
+`challenger_ps_*` matchup features fade with the standard Week 0-4 preseason
+weights and are excluded from the production model by the `challenger_` prefix. The
+Week 0/1 diagnostics land in `cfb_v2/output/backtest/preseason_challenger_report.md`
+covering margin MAE, straight-up accuracy, ATS accuracy, uncertainty coverage,
+conference slices, and the learned points-per-standard-deviation effect of each
+preseason feature.
+
+The returning-production and talent variants are the only promotion candidates.
+The poll hype variant is diagnostic by design: the production contract excludes
+polls, so `preseason_poll_vote_share` and `hype_gap` exist to quantify how far
+preseason AP/Coaches sentiment misleads relative to prior on-field results (the
+2025 Clemson/LSU pattern), not to rate teams.
+
 ## Weekly command
 
 ```powershell

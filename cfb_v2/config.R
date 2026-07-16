@@ -38,6 +38,10 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
       lower_level_strength = c(fbs = 1.00, fcs = 0.72, d2 = 0.48, d3 = 0.35,
                                naia = 0.35, nfl = 0.90, unknown = 0.50)
     ),
+    preseason = list(
+      polls = c("AP Top 25", "Coaches Poll"),
+      prior_seasons = 2021:2025
+    ),
     ats = list(
       threshold_grid = data.frame(
         min_edge = c(2, 3, 4),

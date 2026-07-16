@@ -6,7 +6,8 @@ project_dir <- if (file.exists(file.path(getwd(), "cfb_v2", "config.R"))) {
   normalizePath(file.path(getwd(), "..", ".."), winslash = "/", mustWork = TRUE)
 }
 for (file in c("config.R", "store.R", "features.R", "coaches.R", "adapters.R",
-               "models.R", "coach_migration.R", "historical_data.R", "workflow.R")) {
+               "models.R", "coach_migration.R", "historical_data.R", "preseason.R",
+               "workflow.R")) {
   source(file.path(project_dir, "cfb_v2", file))
 }
 config <- cfb_v2_config(project_dir, 2026)
@@ -140,6 +141,157 @@ test_that("turnover rate counts only giveaways, not havoc or downs", {
     mean(efficiencies$havoc_allowed), prior_opportunities = 80
   )
   expect_false(any(efficiencies$turnover_rate_regressed == havoc_copy))
+})
+
+test_that("preseason priors are one normalized row per FBS team-season", {
+  membership <- data.frame(
+    team = c("Alpha", "Beta", "Gamma", "Delta"), season = 2024,
+    classification = c("fbs", "fbs", "fbs", "fcs"), stringsAsFactors = FALSE
+  )
+  returning <- data.frame(
+    season = 2024, team = c("Alpha", "Beta", "Gamma"),
+    percent_ppa = c(80, 50, 20), percent_passing_ppa = c(90, 40, 10),
+    usage = c(70, 55, 30), stringsAsFactors = FALSE
+  )
+  talent <- data.frame(year = 2024, school = c("Alpha", "Beta"),
+                       talent = c(900, 700), stringsAsFactors = FALSE)
+  polls <- data.frame(
+    poll = c("AP Top 25", "AP Top 25", "Coaches Poll", "Coaches Poll"),
+    school = c("Alpha", "Gamma", "Alpha", "Gamma"),
+    points = c(1500, 900, 1400, 850), stringsAsFactors = FALSE
+  )
+  prior_strength <- data.frame(
+    team = c("Alpha", "Beta", "Gamma"), season = 2023,
+    strength = c(0.30, 0.00, -0.20), stringsAsFactors = FALSE
+  )
+  priors <- build_preseason_team_priors(returning, talent, polls, membership,
+                                        prior_strength, 2024, config)
+  expect_equal(nrow(priors), 3)
+  expect_equal(anyDuplicated(priors[c("team", "season")]), 0L)
+  expect_false(any(c("conference", "rank") %in% names(priors)))
+  expect_true(all(nzchar(priors$captured_at)))
+
+  alpha <- priors[priors$team == "Alpha", ]
+  beta <- priors[priors$team == "Beta", ]
+  gamma <- priors[priors$team == "Gamma", ]
+  expect_equal(alpha$returning_ppa_pct, 0.8)
+  expect_equal(alpha$talent_percentile, 1)
+  expect_equal(beta$talent_percentile, 0.5)
+  expect_true(is.na(gamma$talent_percentile))
+  expect_equal(alpha$preseason_poll_vote_share, 1)
+  expect_equal(beta$preseason_poll_vote_share, 0)
+  expect_equal(gamma$preseason_poll_vote_share, mean(c(900 / 1500, 850 / 1400)))
+  expect_equal(alpha$retained_quality, 0.8 * 1)
+  expect_equal(alpha$replacement_capacity, 1 * (1 - 0.8))
+  expect_equal(alpha$hype_gap, 0)
+  expect_equal(beta$hype_gap, 1 / 3 - 2 / 3)
+  expect_equal(gamma$hype_gap, 2 / 3 - 1 / 3)
+
+  expect_error(
+    build_preseason_team_priors(returning[returning$team != "Gamma", ], talent,
+                                polls, membership, prior_strength, 2024, config),
+    "missing FBS teams"
+  )
+})
+
+test_that("preseason challenger features fade and stay out of production", {
+  priors <- data.frame(
+    team = c("Alpha", "Beta"), season = 2024,
+    returning_ppa_pct = c(0.8, 0.4), returning_passing_ppa_pct = c(0.9, 0.2),
+    returning_usage_pct = c(0.7, 0.5), talent_percentile = c(1, 0.5),
+    preseason_poll_vote_share = c(1, 0), retained_quality = c(0.8, 0.2),
+    replacement_capacity = c(0.2, 0.3), hype_gap = c(0.1, -0.1),
+    stringsAsFactors = FALSE
+  )
+  training <- data.frame(
+    game_id = c("a", "b", "c"), season = c(2024, 2024, 2023), week = c(1, 5, 1),
+    home = "Alpha", away = "Beta", home_level = "fbs", away_level = "fbs",
+    postseason_type = "regular", margin = c(7, 3, 10), stringsAsFactors = FALSE
+  )
+  attached <- attach_preseason_challenger_features(training, priors, config)
+  expect_equal(attached$challenger_ps_returning_ppa_pct_diff,
+               c(0.8 - 0.4, 0, 0))
+  expect_equal(attached$challenger_ps_preseason_poll_vote_share_diff,
+               c(1, 0, 0))
+  expect_false(any(grepl("^challenger_ps_", football_feature_names(attached))))
+
+  missing <- training
+  missing$away <- "Gamma"
+  expect_error(attach_preseason_challenger_features(missing, priors, config),
+               "Missing preseason priors")
+})
+
+test_that("preseason challengers recover a planted week-one signal", {
+  set.seed(20260716)
+  seasons <- 2021:2025
+  teams <- paste0("T", sprintf("%02d", 1:20))
+  strength <- lapply(seasons, function(s) {
+    setNames(stats::rnorm(length(teams), 0, 8), teams)
+  })
+  names(strength) <- seasons
+  priors <- do.call(rbind, lapply(seasons, function(s) {
+    data.frame(
+      team = teams, season = s,
+      returning_ppa_pct = 0.5 + strength[[as.character(s)]] / 40,
+      returning_passing_ppa_pct = 0.5, returning_usage_pct = 0.5,
+      talent_percentile = 0.5, preseason_poll_vote_share = 0,
+      retained_quality = 0.25, replacement_capacity = 0.25, hype_gap = 0,
+      stringsAsFactors = FALSE
+    )
+  }))
+  make_games <- function(season, week, count) {
+    pick <- replicate(count, sample(teams, 2))
+    home <- pick[1, ]
+    away <- pick[2, ]
+    diff <- strength[[as.character(season)]][home] -
+      strength[[as.character(season)]][away]
+    data.frame(
+      game_id = paste(season, week, seq_len(count), sep = "_"),
+      season = season, week = week, model_week = week,
+      game_phase = game_phase(week), postseason_type = "regular",
+      home = home, away = away, home_level = "fbs", away_level = "fbs",
+      home_coach_id = "h", away_coach_id = "a", neutral_site = FALSE,
+      form_diff = if (week <= 1) 0 else diff + stats::rnorm(count, 0, 1),
+      margin = diff + stats::rnorm(count, 0, 3),
+      stringsAsFactors = FALSE
+    )
+  }
+  training <- do.call(rbind, lapply(seasons, function(season) {
+    rbind(make_games(season, 1, 10),
+          make_games(season, 6, 10), make_games(season, 9, 10))
+  }))
+  training <- attach_preseason_challenger_features(training, priors, config)
+  weights <- rep(1, nrow(training))
+
+  core <- rolling_validate_ensemble(training, features = "form_diff",
+                                    weights = weights, config = config,
+                                    fit_nonlinear = FALSE)
+  challenger <- rolling_validate_ensemble(
+    training, features = c("form_diff", "challenger_ps_returning_ppa_pct_diff"),
+    weights = weights, config = config, fit_nonlinear = FALSE
+  )
+  predictions <- rbind(
+    build_v2_backtest_predictions(training, core, "ridge_core"),
+    build_v2_backtest_predictions(training, challenger, "preseason_returning_challenger")
+  )
+  week_one_mae <- function(model) {
+    keep <- predictions$model == model & predictions$game_phase == "preseason"
+    mean(predictions$absolute_error[keep])
+  }
+  expect_lt(week_one_mae("preseason_returning_challenger"),
+            week_one_mae("ridge_core"))
+
+  output_dir <- file.path(tempfile("preseason_report_"))
+  dir.create(output_dir, recursive = TRUE)
+  written <- write_preseason_challenger_report(predictions, output_dir, TRUE)
+  expect_true(file.exists(written$report))
+  summary <- utils::read.csv(written$summary)
+  expect_true(all(c("ridge_core", "preseason_returning_challenger") %in%
+                    summary$model))
+  expect_true("all_week_0_1" %in% summary$slice)
+  expect_true(all(is.finite(
+    summary$uncertainty_coverage[summary$slice == "all_week_0_1"]
+  )))
 })
 
 test_that("coach intervals are week-aware and reject overlap", {

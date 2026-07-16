@@ -320,11 +320,47 @@ build_v2_backtest_predictions <- function(data, rolling, model_name) {
   )
 }
 
-summarize_v2_backtest <- function(predictions) {
+p4_or_independent_sides <- function(predictions) {
   p4 <- c("ACC", "Big 12", "Big Ten", "SEC", "Pac-12")
   independent <- c("Notre Dame", "Connecticut", "UConn")
-  home_p4 <- predictions$home_conference %in% p4 | predictions$home %in% independent
-  away_p4 <- predictions$away_conference %in% p4 | predictions$away %in% independent
+  list(
+    home = predictions$home_conference %in% p4 | predictions$home %in% independent,
+    away = predictions$away_conference %in% p4 | predictions$away %in% independent
+  )
+}
+
+backtest_slice_metrics <- function(predictions, slices) {
+  metric <- function(model, slice, keep) {
+    keep[is.na(keep)] <- FALSE
+    eligible <- keep & predictions$model == model & is.finite(predictions$actual_margin) &
+      is.finite(predictions$expected_margin)
+    ats <- eligible & !is.na(predictions$ats_correct)
+    market <- eligible & is.finite(predictions$market_absolute_error)
+    data.frame(
+      model = model, slice = slice, games = sum(eligible),
+      margin_mae = if (any(eligible)) mean(predictions$absolute_error[eligible]) else NA,
+      winner_accuracy = if (any(eligible)) mean(predictions$winner_correct[eligible]) else NA,
+      ats_graded = sum(ats),
+      ats_accuracy = if (any(ats)) mean(predictions$ats_correct[ats]) else NA,
+      market_margin_mae = if (any(market))
+        mean(predictions$market_absolute_error[market]) else NA,
+      uncertainty_coverage = if (any(eligible)) mean(
+        predictions$absolute_error[eligible] <= predictions$margin_sd[eligible], na.rm = TRUE
+      ) else NA,
+      stringsAsFactors = FALSE
+    )
+  }
+  do.call(rbind, lapply(unique(predictions$model), function(model) {
+    do.call(rbind, lapply(names(slices), function(slice) {
+      metric(model, slice, slices[[slice]])
+    }))
+  }))
+}
+
+summarize_v2_backtest <- function(predictions) {
+  sides <- p4_or_independent_sides(predictions)
+  home_p4 <- sides$home
+  away_p4 <- sides$away
   teams <- paste(predictions$home, predictions$away)
   slices <- list(
     all_weighted_games = rep(TRUE, nrow(predictions)),
@@ -362,31 +398,7 @@ summarize_v2_backtest <- function(predictions) {
     slices[[paste0("model_bin_", label)]] <- model_bin == bin
   }
 
-  metric <- function(model, slice, keep) {
-    keep[is.na(keep)] <- FALSE
-    eligible <- keep & predictions$model == model & is.finite(predictions$actual_margin) &
-      is.finite(predictions$expected_margin)
-    ats <- eligible & !is.na(predictions$ats_correct)
-    market <- eligible & is.finite(predictions$market_absolute_error)
-    data.frame(
-      model = model, slice = slice, games = sum(eligible),
-      margin_mae = if (any(eligible)) mean(predictions$absolute_error[eligible]) else NA,
-      winner_accuracy = if (any(eligible)) mean(predictions$winner_correct[eligible]) else NA,
-      ats_graded = sum(ats),
-      ats_accuracy = if (any(ats)) mean(predictions$ats_correct[ats]) else NA,
-      market_margin_mae = if (any(market))
-        mean(predictions$market_absolute_error[market]) else NA,
-      uncertainty_coverage = if (any(eligible)) mean(
-        predictions$absolute_error[eligible] <= predictions$margin_sd[eligible], na.rm = TRUE
-      ) else NA,
-      stringsAsFactors = FALSE
-    )
-  }
-  do.call(rbind, lapply(unique(predictions$model), function(model) {
-    do.call(rbind, lapply(names(slices), function(slice) {
-      metric(model, slice, slices[[slice]])
-    }))
-  }))
+  backtest_slice_metrics(predictions, slices)
 }
 
 markdown_table <- function(data) {
@@ -480,6 +492,84 @@ write_v2_backtest_report <- function(summary, predictions, coach_comparison, pat
   path
 }
 
+write_preseason_challenger_report <- function(predictions, output_dir,
+                                              challengers_available,
+                                              coefficients = NULL) {
+  report_path <- file.path(output_dir, "preseason_challenger_report.md")
+  summary_path <- file.path(output_dir, "preseason_challenger_summary.csv")
+  header <- c(
+    "# CFB v2 Preseason Challenger Report (Weeks 0-1)",
+    "",
+    paste0("Generated: ", format(Sys.time(), tz = "UTC", usetz = TRUE)),
+    "",
+    paste0("The ridge core is the production baseline. Preseason challengers add ",
+           "frozen returning-production, 247 talent, and Week 1 poll features that ",
+           "fade to zero from Week 5. ATS accuracy forces a side from the model edge. ",
+           "`uncertainty_coverage` is the share of games landing inside one modeled ",
+           "standard deviation."),
+    "",
+    paste0("The returning-production and talent variants are promotion candidates. ",
+           "The hype variant is diagnostic only: the production design contract ",
+           "excludes polls, so its job is to measure how much trust preseason ",
+           "AP/Coaches sentiment deserves beyond the objective inputs. A negative ",
+           "`hype_gap` coefficient means the model learns to fade poll hype relative ",
+           "to prior on-field results; a coefficient near zero means polls add ",
+           "nothing the objective inputs did not already carry."),
+    ""
+  )
+  if (!challengers_available) {
+    writeLines(c(
+      header,
+      "Preseason challengers were skipped: `cfb_v2/data/preseason_team_priors.csv`",
+      "is empty or missing. Run `--mode=build-preseason --seasons=2021:2025",
+      "--overwrite=true` first."
+    ), report_path)
+    return(list(report = report_path, summary = NULL))
+  }
+  pre <- predictions[predictions$game_phase == "preseason", , drop = FALSE]
+  if (!nrow(pre)) {
+    writeLines(c(header, "No Week 0/1 games were present in the rolling folds."),
+               report_path)
+    return(list(report = report_path, summary = NULL))
+  }
+  sides <- p4_or_independent_sides(pre)
+  fbs_pair <- pre$home_level == "fbs" & pre$away_level == "fbs"
+  slices <- list(
+    all_week_0_1 = rep(TRUE, nrow(pre)),
+    week_0 = pre$week == 0,
+    week_1 = pre$week == 1,
+    p4_vs_p4 = sides$home & sides$away & fbs_pair,
+    p4_vs_g5 = xor(sides$home, sides$away) & fbs_pair,
+    g5_vs_g5 = !sides$home & !sides$away & fbs_pair,
+    fbs_vs_fcs = xor(pre$home_level == "fbs", pre$away_level == "fbs")
+  )
+  for (season in sort(unique(pre$season))) {
+    slices[[paste0("season_", season)]] <- pre$season == season
+  }
+  summary <- backtest_slice_metrics(pre, slices)
+  utils::write.csv(summary, summary_path, row.names = FALSE, na = "")
+  display <- summary
+  display$winner_accuracy <- 100 * display$winner_accuracy
+  display$ats_accuracy <- 100 * display$ats_accuracy
+  names(display)[names(display) == "winner_accuracy"] <- "winner_pct"
+  names(display)[names(display) == "ats_accuracy"] <- "ats_pct"
+  report <- c(header, "## Week 0/1 Diagnostics", "", markdown_table(display))
+  if (!is.null(coefficients) && nrow(coefficients)) {
+    report <- c(
+      report, "",
+      "## Learned Preseason Effects (points per standard deviation)",
+      "",
+      paste0("Descriptive full-sample ridge coefficients at each variant's selected ",
+             "lambda. Direction and size only; the out-of-sample verdict is the ",
+             "table above."),
+      "",
+      markdown_table(coefficients)
+    )
+  }
+  writeLines(report, report_path)
+  list(report = report_path, summary = summary_path)
+}
+
 run_v2_backtest <- function(config) {
   training_path <- file.path(config$inbox_dir, "training_games.csv")
   if (!file.exists(training_path)) stop("Missing cached training_games.csv.", call. = FALSE)
@@ -511,6 +601,37 @@ run_v2_backtest <- function(config) {
       after = 1L
     )
   }
+  priors <- read_csv_if_present(
+    file.path(config$data_dir, "preseason_team_priors.csv"), required = FALSE
+  )
+  challengers_available <- !is.null(priors) && nrow(priors) > 0
+  preseason_coefficients <- NULL
+  if (challengers_available) {
+    preseason_data <- attach_preseason_challenger_features(coach$data, priors, config)
+    variants <- preseason_challenger_variants()
+    coefficient_rows <- list()
+    for (variant in names(variants)) {
+      extra <- paste0("challenger_ps_", variants[[variant]], "_diff")
+      fit <- rolling_validate_ensemble(
+        preseason_data, features = c(coach$features, extra),
+        weights = validation$weights, config = config, fit_nonlinear = FALSE
+      )
+      prediction_sets <- append(
+        prediction_sets,
+        list(build_v2_backtest_predictions(preseason_data, fit, variant))
+      )
+      full_ridge <- fit_weighted_ridge(
+        preseason_data, "margin", c(coach$features, extra),
+        weights = validation$weights, lambda = fit$best_lambda
+      )
+      coefficient_rows[[variant]] <- data.frame(
+        model = variant, feature = extra,
+        points_per_sd = as.numeric(full_ridge$coefficients[extra]),
+        stringsAsFactors = FALSE
+      )
+    }
+    preseason_coefficients <- do.call(rbind, coefficient_rows)
+  }
   predictions <- do.call(rbind, prediction_sets)
   summary <- summarize_v2_backtest(predictions)
   coach_comparison <- coach$comparison
@@ -527,8 +648,12 @@ run_v2_backtest <- function(config) {
   utils::write.csv(coach_comparison, coach_path, row.names = FALSE, na = "")
   write_v2_backtest_report(summary, predictions, coach_comparison, report_path,
                            training_path)
+  preseason <- write_preseason_challenger_report(predictions, output_dir,
+                                                 challengers_available,
+                                                 preseason_coefficients)
   list(report = report_path, predictions = predictions_path, summary = summary_path,
-       coach_comparison = coach_path)
+       coach_comparison = coach_path, preseason_report = preseason$report,
+       preseason_summary = preseason$summary)
 }
 
 validate_article_as_of <- function(as_of, config) {

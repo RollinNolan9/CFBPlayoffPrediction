@@ -65,6 +65,13 @@ full backtest plus the August 29 dry run are regenerated.
 
 ## Phase 2 — Backfill Preseason Challengers (P0, after Phase 1)
 
+**Status: code and tests landed.** `cfb_v2/preseason.R` provides the cached CFBD
+pulls, the frozen one-row-per-team-season priors builder
+(`--mode=build-preseason`), and the faded `challenger_ps_*` matchup features; the
+backtest now evaluates the three preseason challengers and writes
+`preseason_challenger_report.md`. Remaining local steps: freeze 2021-2025 with the
+CFBD key, rerun `--mode=backtest`, review the Week 0/1 report.
+
 **Problem.** Week 0/1 has no current-season evidence, and historical misses (2025
 Clemson, LSU) currently rely on hand-set adjustments instead of learned trust in
 preseason information.
