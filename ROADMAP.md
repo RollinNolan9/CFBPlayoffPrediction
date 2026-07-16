@@ -95,6 +95,13 @@ preseason information.
 
 ## Phase 3 — Parallel P1 items (after Phase 1; 3b can start any time)
 
+**Status: both items landed.** `cfb_v2/bridge.R` calibrates the transition prior and
+uncertainty from the six historical movers plus crossover games, flags transition
+games end to end, and guards confidence when bridge variance dominates.
+`coach_history_manual.csv` carries Polasek's sourced 2024 FCS title season and
+documented-neutral rows for Pritchard and Carter. Local: rerun `--mode=backtest`
+for the transition slice; append Polasek's verified 2025 season.
+
 ### 3a. FCS-to-FBS Bridge
 
 Conservative prior plus added uncertainty for first-year FBS teams (North Dakota

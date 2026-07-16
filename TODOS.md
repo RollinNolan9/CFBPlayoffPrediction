@@ -71,6 +71,18 @@ accuracy, ATS accuracy, calibration, and conference diagnostic slices.
 
 ### Build FCS-to-FBS Bridge
 
+**Status:** Code and tests landed. `cfb_v2/bridge.R` detects first-year FBS teams from
+membership, calibrates a conservative prior and margin uncertainty against the six
+historical movers (James Madison 2022 through Delaware/Missouri State 2025) plus the
+FCS sides of crossover games, fills only the missing history fields, inflates
+`margin_sd`, writes a visible `fbs_transition` flag into predictions and the DuckDB
+snapshot, forces low confidence and `transition_review` status when bridge variance
+dominates, and adds an `fbs_transition` slice to both backtest reports.
+
+**Remaining:** Rerun `--mode=backtest` locally to review the transition slice, and
+keep 2026 membership rows for North Dakota State and Sacramento State in
+`membership.csv` so the Week 1 run flags them.
+
 **What:** Create a conservative prior and added uncertainty for first-year FBS teams,
 starting with North Dakota State and Sacramento State in 2026.
 
@@ -86,6 +98,17 @@ uncertainty dominates, and backtest promoted teams separately.
 **Depends on:** Correct Turnover Rate
 
 ### Complete New-Coach Coverage
+
+**Status:** Code and data landed. `cfb_v2/inbox/coach_history_manual.csv` is a new
+sourced contract merged into the coach ledger at read time; manual rows may only add
+seasons the public ledger lacks (collisions stop the run) and every row requires an
+explicit source. Tim Polasek carries his documented 2024 NDSU FCS title season
+(14-2, level-adjusted and portability-capped); Tavita Pritchard and Alonzo Carter
+carry documented-neutral zero-game rows so their identities resolve without invented
+value.
+
+**Remaining:** Verify and append Polasek's 2025 NDSU season as a second row, and
+replace Carter's neutral row if sourced junior-college records are worth modeling.
 
 **What:** Add prior head-coaching history for Tim Polasek, Alonzo Carter, and Tavita
 Pritchard where supported, using the existing lower-level portability adjustment and

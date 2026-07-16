@@ -188,6 +188,21 @@ alter the article card.
   experience. Both 65/35 and 70/30 recent/history ratings are persisted; 65/35 is the
   initial production setting until rolling validation chooses otherwise.
 
+`coach_history_manual.csv`
+: Sourced supplement for seasons the public FBS ledger cannot see (FCS or other
+  lower-level head-coaching stints, documented-neutral rows for genuinely first-time
+  head coaches). Every row requires an explicit source; rows that collide with a
+  public coach-season stop the run instead of replacing it. Lower-level value flows
+  through the standard level multipliers and the portability cap.
+
+First-year FBS teams are handled by the FCS-to-FBS bridge: membership history
+identifies transitions, a conservative prior calibrated on the historical movers
+and FBS/FCS crossover games fills only their missing history fields, `margin_sd`
+is inflated by the calibrated transition spread, predictions carry a visible
+`fbs_transition` flag, and picks fall to low confidence and `transition_review`
+status whenever bridge variance dominates the projection. The backtest reports a
+dedicated `fbs_transition` slice.
+
 `team_week_features.csv`
 : Pregame team rows only. Current-season fields must contain games completed before
   kickoff. Week 0/1 rows use prior and preseason columns because current-season fields

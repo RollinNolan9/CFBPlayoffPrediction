@@ -51,6 +51,30 @@ map_coaches_as_of <- function(games, assignments) {
   games
 }
 
+merge_manual_coach_history <- function(history, manual) {
+  required <- c("coach_id", "season", "week", "games", "wins", "level",
+                "context_strength", "target_context_strength",
+                "playoff_appearances", "titles", "source")
+  assert_columns(manual, required, "coach_history_manual")
+  if (!"above_expectation" %in% names(manual)) manual$above_expectation <- NA_real_
+  if (any(is.na(manual$source) | !nzchar(manual$source))) {
+    stop("Every manual coach history row needs an explicit source.", call. = FALSE)
+  }
+  key <- function(x) paste(x$coach_id, as.integer(x$season), as.integer(x$week),
+                           sep = "\r")
+  collision <- key(manual) %in% key(history)
+  if (any(collision)) {
+    stop("Manual coach history would replace public rows for: ",
+         paste(unique(manual$coach_id[collision]), collapse = ", "),
+         ". Manual rows may only add seasons the public ledger lacks.",
+         call. = FALSE)
+  }
+  columns <- union(names(history), names(manual))
+  for (column in setdiff(columns, names(history))) history[[column]] <- NA
+  for (column in setdiff(columns, names(manual))) manual[[column]] <- NA
+  rbind(history[columns], manual[columns])
+}
+
 weighted_mean_safe <- function(x, w) {
   keep <- is.finite(x) & is.finite(w) & w > 0
   if (!any(keep)) return(NA_real_)

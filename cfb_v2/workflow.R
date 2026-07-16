@@ -33,6 +33,14 @@ v2_input_templates <- function() {
       source_name = character(), canonical_name = character(),
       coach_id = character(), notes = character()
     ),
+    coach_history_manual = data.frame(
+      coach_id = character(), season = integer(), week = integer(),
+      games = integer(), wins = numeric(), above_expectation = numeric(),
+      level = character(), context_strength = numeric(),
+      target_context_strength = numeric(), playoff_appearances = integer(),
+      titles = integer(), source = character(), source_url = character(),
+      notes = character()
+    ),
     coach_assignment_overrides = data.frame(
       team = character(), season = integer(), start_week = integer(),
       end_week = integer(), coach_id = character(), coach_name = character(),
@@ -106,6 +114,11 @@ read_v2_inputs <- function(config, strict = TRUE) {
   if (strict && length(empty)) {
     stop("Production run cannot continue. Populate these v2 inbox files: ",
          paste(paste0(empty, ".csv"), collapse = ", "), call. = FALSE)
+  }
+  manual <- inputs$coach_history_manual
+  if (!is.null(manual) && nrow(manual) && !is.null(inputs$coach_history) &&
+      nrow(inputs$coach_history)) {
+    inputs$coach_history <- merge_manual_coach_history(inputs$coach_history, manual)
   }
   inputs
 }
@@ -373,6 +386,9 @@ summarize_v2_backtest <- function(predictions) {
     fbs_vs_fcs = xor(predictions$home_level == "fbs", predictions$away_level == "fbs"),
     g5_vs_p4 = xor(home_p4, away_p4) & predictions$home_level == "fbs" &
       predictions$away_level == "fbs",
+    fbs_transition = if ("fbs_transition_game" %in% names(predictions)) {
+      as.logical(predictions$fbs_transition_game)
+    } else rep(FALSE, nrow(predictions)),
     preseason = predictions$game_phase == "preseason",
     early_season = predictions$game_phase == "early_season",
     in_season = predictions$game_phase == "in_season",
@@ -428,7 +444,7 @@ write_v2_backtest_report <- function(summary, predictions, coach_comparison, pat
   metric_columns <- c("model", "slice", "games", "margin_mae", "winner_accuracy",
                       "ats_graded", "ats_accuracy", "market_margin_mae")
   focus <- c("all_weighted_games", "fbs_vs_fbs", "p4_or_independent", "p4_vs_fbs",
-             "fbs_vs_fcs", "preseason",
+             "fbs_vs_fcs", "fbs_transition", "preseason",
              "postseason", "cfp", "new_coach", "alabama_clemson", "indiana_smu",
              "market_spread_21_plus", "ats_edge_3_plus")
   display <- format_metrics(summary[summary$slice %in% focus, metric_columns])
@@ -546,7 +562,10 @@ write_preseason_challenger_report <- function(predictions, output_dir,
     p4_vs_p4 = sides$home & sides$away & fbs_pair,
     p4_vs_g5 = xor(sides$home, sides$away) & fbs_pair,
     g5_vs_g5 = !sides$home & !sides$away & fbs_pair,
-    fbs_vs_fcs = xor(pre$home_level == "fbs", pre$away_level == "fbs")
+    fbs_vs_fcs = xor(pre$home_level == "fbs", pre$away_level == "fbs"),
+    fbs_transition = if ("fbs_transition_game" %in% names(pre)) {
+      as.logical(pre$fbs_transition_game)
+    } else rep(FALSE, nrow(pre))
   )
   for (season in sort(unique(pre$season))) {
     slices[[paste0("season_", season)]] <- pre$season == season
@@ -669,6 +688,13 @@ run_v2_backtest <- function(config) {
     )
   }
   predictions <- do.call(rbind, prediction_sets)
+  transitions <- fbs_transition_teams(combine_membership(read_csv_if_present(
+    file.path(config$data_dir, "historical_fbs_membership.csv")
+  )))
+  transition_key <- paste(transitions$team, transitions$season)
+  predictions$fbs_transition_game <-
+    paste(predictions$home, predictions$season) %in% transition_key |
+    paste(predictions$away, predictions$season) %in% transition_key
   summary <- summarize_v2_backtest(predictions)
   coach_comparison <- coach$comparison
   coach_comparison$selected <- abs(coach_comparison$recent_share - coach$recent_share) <
@@ -795,8 +821,23 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
       ats_threshold <- select_ats_threshold(threshold_validation[finite, ], config)
     }
   }
+  membership_flags <- combine_membership(
+    inputs$membership,
+    read_csv_if_present(file.path(config$data_dir, "historical_fbs_membership.csv"))
+  )
+  transitions <- fbs_transition_teams(membership_flags)
+  bridge <- NULL
+  team_week_features <- inputs$team_week_features
+  if (nrow(transitions)) {
+    historical_team_games <- read_csv_if_present(
+      file.path(config$data_dir, "historical_team_games.csv"), required = TRUE
+    )
+    bridge <- calibrate_fbs_bridge(historical_team_games, membership_flags, config)
+    team_week_features <- apply_fbs_bridge_features(team_week_features, transitions,
+                                                    bridge)
+  }
   matchup <- prepare_matchup_features(
-    schedule, inputs$team_week_features, inputs$coach_assignments,
+    schedule, team_week_features, inputs$coach_assignments,
     inputs$coach_history, coach_selection$recent_share, config
   )
   matchup <- attach_preseason_features(
@@ -815,6 +856,14 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     force_game_ids = force_game_ids, injuries = injuries,
     ats_threshold = ats_threshold, ats_model = ats_model, config = config
   )
+  if (!is.null(bridge)) {
+    predictions <- apply_fbs_bridge_predictions(
+      predictions, schedule, transitions, bridge, config,
+      ats_threshold = ats_threshold, ats_model = ats_model
+    )
+  } else {
+    predictions$fbs_transition <- ""
+  }
   predictions$expected_total <- NA_real_
   predictions$total_sd <- NA_real_
   for (column in setdiff(names(selected_lines), "game_id")) {

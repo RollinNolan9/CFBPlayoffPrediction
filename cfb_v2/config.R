@@ -47,6 +47,11 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
       ),
       diagnostic_features = c("preseason_poll_vote_share", "hype_gap")
     ),
+    bridge = list(
+      minimum_movers = 2L,
+      sd_floor = 8,
+      dominance_share = 0.5
+    ),
     ats = list(
       threshold_grid = data.frame(
         min_edge = c(2, 3, 4),
