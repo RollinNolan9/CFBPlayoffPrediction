@@ -4,6 +4,18 @@
 
 ### Correct Turnover Rate
 
+**Status:** Code and tests landed. `build_team_game_efficiencies_v2` now builds the
+rate from interception and lost-fumble plays only (excluding failed fourth downs,
+defensive scores, and special-teams changes of possession that the upstream
+cfbfastR flags also count) and persists the raw `turnover_lost_rate` numerator for
+audit. The committed foundation CSVs still hold the old havoc-derived values until
+the local rebuild below is run.
+
+**Remaining:** Rebuild the historical foundation
+(`--mode=build-foundation --seasons=2020:2025 --overwrite=true`), rerun
+`--mode=backtest`, and regenerate the August 29 dry run on a machine with the CFBD
+key and PBP cache.
+
 **What:** Build `turnover_rate_regressed` from turnover-only scrimmage plays instead
 of `havoc_allowed`, then rebuild the historical foundation and rerun every rolling
 fold.
@@ -21,6 +33,19 @@ backtest plus August 29 dry run are regenerated.
 **Depends on:** Nothing
 
 ### Backfill Preseason Challengers
+
+**Status:** Complete through promotion. The 2021-2025 freeze ran, the rolling report
+showed the talent variant beating the core on Week 0/1 margin MAE in all three
+honest folds (13.01/15.28/14.08 vs 14.13/15.55/14.66), and its six objective
+features were promoted into the production model under the `ps_` prefix with the
+standard Week 0-4 fade. Poll features measured at roughly a tenth of the talent
+signal (hype_gap +0.22 pts/SD) and stay diagnostic-only. The backtest now tracks a
+`preseason_ablation_challenger` (production minus preseason features) and the poll
+`preseason_hype_challenger`.
+
+**Remaining:** Rerun `--mode=backtest` to confirm the promoted core, and freeze 2026
+priors before the Week 1 article run (production now requires prediction-season
+coverage through Week 4 — the Automate 2026 Preseason Refresh item).
 
 **What:** Pull and freeze 2021-2025 CFBD returning production, Week 1 AP/Coaches poll
 points, and 247 team-talent composites. Build four rolling challengers: core,

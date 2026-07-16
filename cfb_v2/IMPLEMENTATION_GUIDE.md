@@ -326,9 +326,16 @@ foundation. Local caches and generated output will be recreated as needed.
 The authoritative pending list is [`../TODOS.md`](../TODOS.md). The highest-priority
 items are:
 
-1. Correct `turnover_rate_regressed`, which currently shrinks havoc allowed instead of
-   a turnover-only rate.
-2. Backfill and rolling-test 2021-2025 preseason challengers.
+1. Correct `turnover_rate_regressed` — the code now shrinks a turnover-only
+   giveaway rate (interceptions and lost fumbles, excluding downs and
+   special-teams possession changes) instead of havoc allowed, and persists the
+   raw `turnover_lost_rate` numerator. The stored foundation, backtest, and
+   August 29 dry run still need to be regenerated locally.
+2. Backfill and rolling-test 2021-2025 preseason challengers — complete. The
+   talent variant won the rolling comparison and its six objective features are
+   production inputs under the `ps_` prefix; Week 1 polls stay diagnostic-only.
+   Production runs now require frozen preseason priors covering the predicted
+   season through Week 4.
 3. Build an FCS-to-FBS bridge and transition-specific uncertainty.
 4. Complete prior history for the three unmapped 2026 head coaches.
 5. Automate the final 2026 preseason data refresh.

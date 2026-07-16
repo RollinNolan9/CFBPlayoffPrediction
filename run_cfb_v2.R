@@ -6,7 +6,7 @@ parse_args <- function(args) {
                  week = NA_integer_, as_of = Sys.time(), force = character(), strict = TRUE,
                  seasons = 2020:2025, refresh_pbp = FALSE,
                  refresh_schedule = FALSE, refresh_coaches = FALSE,
-                 refresh_espn = FALSE, overwrite = FALSE)
+                 refresh_espn = FALSE, refresh_preseason = FALSE, overwrite = FALSE)
   for (arg in args) {
     pair <- strsplit(sub("^--", "", arg), "=", fixed = TRUE)[[1]]
     key <- gsub("-", "_", pair[1])
@@ -27,6 +27,7 @@ parse_args <- function(args) {
     else if (key == "refresh_schedule") parsed$refresh_schedule <- tolower(value) %in% c("true", "1", "yes")
     else if (key == "refresh_coaches") parsed$refresh_coaches <- tolower(value) %in% c("true", "1", "yes")
     else if (key == "refresh_espn") parsed$refresh_espn <- tolower(value) %in% c("true", "1", "yes")
+    else if (key == "refresh_preseason") parsed$refresh_preseason <- tolower(value) %in% c("true", "1", "yes")
     else if (key == "overwrite") parsed$overwrite <- tolower(value) %in% c("true", "1", "yes")
     else stop("Unknown argument: --", key, call. = FALSE)
   }
@@ -49,6 +50,7 @@ source(file.path(project_dir, "cfb_v2", "adapters.R"))
 source(file.path(project_dir, "cfb_v2", "models.R"))
 source(file.path(project_dir, "cfb_v2", "coach_migration.R"))
 source(file.path(project_dir, "cfb_v2", "historical_data.R"))
+source(file.path(project_dir, "cfb_v2", "preseason.R"))
 source(file.path(project_dir, "cfb_v2", "workflow.R"))
 
 options(warn = 1)
@@ -78,6 +80,14 @@ if (cli$mode == "init") {
   cat("Backtest report:", result$report, "\n")
   cat("Predictions:", result$predictions, "\n")
   cat("Summary:", result$summary, "\n")
+  cat("Preseason challenger report:", result$preseason_report, "\n")
+} else if (cli$mode == "build-preseason") {
+  result <- build_preseason_priors(
+    config, seasons = cli$seasons,
+    refresh = cli$refresh_preseason, overwrite = cli$overwrite
+  )
+  cat("Preseason priors:", result$path, "\n")
+  print(result$coverage)
 } else if (cli$mode %in% c("article", "live")) {
   if (is.na(cli$week)) stop("--week is required for article/live runs.", call. = FALSE)
   result <- run_v2_week(
@@ -91,5 +101,6 @@ if (cli$mode == "init") {
                              "straight_up_pick", "ats_pick", "pick_status",
                              "confidence_tier")])
 } else {
-  stop("--mode must be init, build-foundation, backtest, article, or live.", call. = FALSE)
+  stop("--mode must be init, build-foundation, build-preseason, backtest, article, or live.",
+       call. = FALSE)
 }
