@@ -3,6 +3,9 @@
 This is the parallel production pipeline. It does not modify or source the original
 `model_final.Rmd` or `cfb_model_rebuild.R`.
 
+See [`IMPLEMENTATION_GUIDE.md`](IMPLEMENTATION_GUIDE.md) for the chronological rebuild
+history, design decisions, verification commands, and current limitations.
+
 ## Design contract
 
 - The football model predicts score margin without team names, conference labels,
@@ -101,7 +104,7 @@ coach split beneath `cfb_v2/output/backtest`.
 
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v2.R `
-  --mode=article --season=2026 --week=1 --as-of="2026-09-04 13:00:00"
+  --mode=article --season=2026 --week=1 --as-of="2026-08-28 13:00:00"
 ```
 
 The `--as-of` value is interpreted in `America/New_York`. The output includes expected
@@ -113,7 +116,7 @@ To require a side in a game that would normally pass:
 
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v2.R `
-  --mode=article --season=2026 --week=1 --as-of="2026-09-04 13:00:00" `
+  --mode=article --season=2026 --week=1 --as-of="2026-08-28 13:00:00" `
   --force=401752001
 ```
 
