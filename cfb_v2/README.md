@@ -122,7 +122,10 @@ returning fields instead.
 When the priors file has rows, `--mode=backtest` additionally evaluates three
 preseason challengers (returning production; plus talent; plus poll hype gap) whose
 `challenger_ps_*` matchup features fade with the standard Week 0-4 preseason
-weights and are excluded from the production model by the `challenger_` prefix. The
+weights and are excluded from the production model by the `challenger_` prefix.
+A fold uses the preseason features only when at least two frozen seasons predate
+its test season; earlier folds evaluate the core feature set, because one covered
+season of faded rows cannot support the extra collinear features. The
 Week 0/1 diagnostics land in `cfb_v2/output/backtest/preseason_challenger_report.md`
 covering margin MAE, straight-up accuracy, ATS accuracy, uncertainty coverage,
 conference slices, and the learned points-per-standard-deviation effect of each

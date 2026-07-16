@@ -515,6 +515,10 @@ write_preseason_challenger_report <- function(predictions, output_dir,
            "`hype_gap` coefficient means the model learns to fade poll hype relative ",
            "to prior on-field results; a coefficient near zero means polls add ",
            "nothing the objective inputs did not already carry."),
+    "",
+    paste0("Folds with fewer than two frozen prior seasons evaluate the core ",
+           "feature set, so the earliest test season matches the ridge core by ",
+           "construction."),
     ""
   )
   if (!challengers_available) {
@@ -609,12 +613,21 @@ run_v2_backtest <- function(config) {
   if (challengers_available) {
     preseason_data <- attach_preseason_challenger_features(coach$data, priors, config)
     variants <- preseason_challenger_variants()
+    covered_seasons <- sort(unique(as.integer(priors$season)))
     coefficient_rows <- list()
     for (variant in names(variants)) {
       extra <- paste0("challenger_ps_", variants[[variant]], "_diff")
+      # A fold learns the preseason features only from covered earlier seasons;
+      # with fewer than two, the handful of faded rows cannot support the extra
+      # collinear features and the fold evaluates the core set instead.
+      gate <- function(test_season, features) {
+        if (sum(covered_seasons < test_season) >= 2L) features else
+          setdiff(features, extra)
+      }
       fit <- rolling_validate_ensemble(
         preseason_data, features = c(coach$features, extra),
-        weights = validation$weights, config = config, fit_nonlinear = FALSE
+        weights = validation$weights, config = config, fit_nonlinear = FALSE,
+        fold_features = gate
       )
       prediction_sets <- append(
         prediction_sets,

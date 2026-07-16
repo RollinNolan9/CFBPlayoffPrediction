@@ -324,6 +324,19 @@ test_that("preseason challengers recover a planted week-one signal", {
   expect_lt(week_one_mae("preseason_returning_challenger"),
             week_one_mae("ridge_core"))
 
+  gated <- rolling_validate_ensemble(
+    training, features = c("form_diff", "challenger_ps_returning_ppa_pct_diff"),
+    weights = weights, config = config, fit_nonlinear = FALSE,
+    fold_features = function(test_season, features) {
+      if (test_season <= 2023) setdiff(features, "challenger_ps_returning_ppa_pct_diff")
+      else features
+    }
+  )
+  gated_predictions <- build_v2_backtest_predictions(training, gated, "gated")
+  gated_week_one <- gated_predictions[gated_predictions$game_phase == "preseason", ]
+  expect_gt(mean(gated_week_one$absolute_error[gated_week_one$season == 2023]),
+            mean(gated_week_one$absolute_error[gated_week_one$season >= 2024]))
+
   output_dir <- file.path(tempfile("preseason_report_"))
   dir.create(output_dir, recursive = TRUE)
   written <- write_preseason_challenger_report(predictions, output_dir, TRUE)

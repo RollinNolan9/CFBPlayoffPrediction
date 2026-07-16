@@ -372,7 +372,8 @@ rolling_season_splits <- function(data, minimum_train_seasons = 2L) {
 }
 
 rolling_validate_ensemble <- function(data, target = "margin", features = NULL,
-                                      weights = NULL, config, fit_nonlinear = TRUE) {
+                                      weights = NULL, config, fit_nonlinear = TRUE,
+                                      fold_features = NULL) {
   if (is.null(features)) features <- football_feature_names(data)
   if (is.null(weights)) weights <- rep(1, nrow(data))
   splits <- rolling_season_splits(data)
@@ -381,8 +382,10 @@ rolling_validate_ensemble <- function(data, target = "margin", features = NULL,
   k <- 1L
   for (lambda in config$model$ridge_lambda_grid) {
     for (split in splits) {
+      split_features <- if (is.null(fold_features)) features else
+        fold_features(split$test_season, features)
       model <- fit_cfb_ensemble(
-        data[split$train, , drop = FALSE], target, features,
+        data[split$train, , drop = FALSE], target, split_features,
         weights[split$train], lambda, config, fit_nonlinear
       )
       prediction <- predict(model, data[split$test, , drop = FALSE])
