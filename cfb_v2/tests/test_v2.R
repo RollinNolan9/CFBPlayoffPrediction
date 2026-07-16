@@ -73,6 +73,75 @@ test_that("garbage time and clock-kill plays are removed", {
   expect_equal(filter_competitive_plays(plays)$id, c(1, 4))
 })
 
+test_that("turnover rate counts only giveaways, not havoc or downs", {
+  base_play <- function(pos_team, def_pos_team, play_type, play_text,
+                        turnover_indicator = 0, turnover = 0, sack = 0,
+                        stuffed_run = 0, rush = 0, pass = 0, epa = 0.1) {
+    data.frame(
+      game_id = "g1", season = 2024, year = 2024, week = 5,
+      pos_team = pos_team, def_pos_team = def_pos_team,
+      home = "Alpha", away = "Beta",
+      play_type = play_type, play_text = play_text,
+      EPA = epa, success = 0, rush = rush, pass = pass, sack = sack,
+      turnover_indicator = turnover_indicator, turnover = turnover,
+      stuffed_run = stuffed_run, garbage_time = FALSE, period = 1,
+      pos_team_score = 0, def_pos_team_score = 0,
+      stringsAsFactors = FALSE
+    )
+  }
+  pbp <- rbind(
+    base_play("Alpha", "Beta", "Rush", "clean run for 6 yards", rush = 1),
+    base_play("Alpha", "Beta", "Interception Return",
+              "pass intercepted by defender", pass = 1,
+              turnover_indicator = 1, turnover = 1),
+    base_play("Alpha", "Beta", "Sack", "sacked for a loss", pass = 1, sack = 1),
+    base_play("Alpha", "Beta", "Rush", "run for 1 yard on fourth down",
+              rush = 1, turnover_indicator = 1, turnover = 1),
+    base_play("Alpha", "Beta", "Fumble Recovery (Own)",
+              "fumbles, recovered by Alpha", rush = 1),
+    base_play("Beta", "Alpha", "Pass Reception", "pass complete", pass = 1),
+    base_play("Beta", "Alpha", "Rush", "run stuffed at the line",
+              rush = 1, stuffed_run = 1),
+    base_play("Beta", "Alpha", "Fumble Recovery (Opponent)",
+              "fumbles, recovered by Alpha", rush = 1,
+              turnover_indicator = 1, turnover = 1),
+    base_play("Beta", "Alpha", "Pass Incompletion", "pass incomplete", pass = 1)
+  )
+  games <- data.frame(
+    game_id = "g1", season = 2024, week = 5, model_week = 5,
+    kickoff = as.POSIXct("2024-09-28 12:00:00", tz = "UTC"),
+    home = "Alpha", away = "Beta", home_score = 24, away_score = 17,
+    neutral_site = FALSE, source_season_type = "regular",
+    postseason_type = "regular", stringsAsFactors = FALSE
+  )
+  efficiencies <- build_team_game_efficiencies_v2(pbp, games)
+  alpha <- efficiencies[efficiencies$team == "Alpha", ]
+  beta <- efficiencies[efficiencies$team == "Beta", ]
+
+  # Interception is Alpha's only giveaway: the failed fourth down flagged by
+  # turnover_indicator and the own-recovered fumble must not count.
+  expect_equal(alpha$turnover_lost_rate, 1 / 5)
+  # Beta's lost fumble is a giveaway; the stuffed run is havoc only.
+  expect_equal(beta$turnover_lost_rate, 1 / 4)
+  expect_equal(alpha$havoc_allowed, 3 / 5)
+  expect_equal(beta$havoc_allowed, 2 / 4)
+
+  league_rate <- mean(c(1 / 5, 1 / 4))
+  expect_equal(
+    alpha$turnover_rate_regressed,
+    regress_unstable_rate(1 / 5, 5, league_rate, prior_opportunities = 80)
+  )
+  expect_equal(
+    beta$turnover_rate_regressed,
+    regress_unstable_rate(1 / 4, 4, league_rate, prior_opportunities = 80)
+  )
+  havoc_copy <- regress_unstable_rate(
+    efficiencies$havoc_allowed, efficiencies$scrimmage_plays,
+    mean(efficiencies$havoc_allowed), prior_opportunities = 80
+  )
+  expect_false(any(efficiencies$turnover_rate_regressed == havoc_copy))
+})
+
 test_that("coach intervals are week-aware and reject overlap", {
   assignments <- data.frame(
     team = c("Auburn", "Auburn"), season = 2026,

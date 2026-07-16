@@ -22,7 +22,14 @@ any time. Phase 5 waits on Snapshot Ledger stability, not on the other phases.
 
 ## Phase 1 — Correct Turnover Rate (P0, blocks Phases 2 and 3a)
 
-**Problem.** `turnover_rate_regressed` is currently a shrunken copy of havoc
+**Status: code and tests landed.** The turnover-only numerator (interceptions and
+lost fumbles, excluding failed fourth downs, defensive scores, and special-teams
+possession changes) is implemented in `build_team_game_efficiencies_v2()` with a
+fixture test in `cfb_v2/tests/test_v2.R`. Steps 3-5 below (foundation rebuild,
+backtest, dry run) still need to run locally with the CFBD key and PBP cache —
+the committed foundation CSVs hold the old havoc-derived values until then.
+
+**Problem.** `turnover_rate_regressed` was a shrunken copy of havoc
 allowed, not a turnover rate. In
 `cfb_v2/historical_data.R`, `build_team_game_efficiencies_v2()` defines havoc as
 `sack | turnover | stuffed_run` (line ~719), then feeds `havoc_allowed` straight

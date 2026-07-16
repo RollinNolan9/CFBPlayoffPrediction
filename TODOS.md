@@ -4,6 +4,18 @@
 
 ### Correct Turnover Rate
 
+**Status:** Code and tests landed. `build_team_game_efficiencies_v2` now builds the
+rate from interception and lost-fumble plays only (excluding failed fourth downs,
+defensive scores, and special-teams changes of possession that the upstream
+cfbfastR flags also count) and persists the raw `turnover_lost_rate` numerator for
+audit. The committed foundation CSVs still hold the old havoc-derived values until
+the local rebuild below is run.
+
+**Remaining:** Rebuild the historical foundation
+(`--mode=build-foundation --seasons=2020:2025 --overwrite=true`), rerun
+`--mode=backtest`, and regenerate the August 29 dry run on a machine with the CFBD
+key and PBP cache.
+
 **What:** Build `turnover_rate_regressed` from turnover-only scrimmage plays instead
 of `havoc_allowed`, then rebuild the historical foundation and rerun every rolling
 fold.

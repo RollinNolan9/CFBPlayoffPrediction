@@ -717,6 +717,14 @@ build_team_game_efficiencies_v2 <- function(pbp, games) {
   turnover <- ifelse(is.finite(plays$turnover_indicator), plays$turnover_indicator,
                      ifelse(is.finite(plays$turnover), plays$turnover, 0))
   plays$havoc <- as.numeric(plays$sack == 1 | turnover == 1 | plays$stuffed_run == 1)
+  # The upstream turnover flags also count failed fourth downs, defensive scores,
+  # and special-teams changes of possession, so a giveaway additionally requires an
+  # interception or lost-fumble play type.
+  giveaway_description <- paste(plays$play_type, plays$play_text)
+  giveaway_play <- grepl("intercept", giveaway_description, ignore.case = TRUE) |
+    grepl("fumble recovery \\(opponent\\)|fumble return touchdown|sack touchdown",
+          plays$play_type, ignore.case = TRUE)
+  plays$turnover_lost <- as.numeric(turnover == 1 & giveaway_play)
   scrimmage <- plays[plays$is_scrimmage & is.finite(plays$epa) &
                        nzchar(plays$pos_team) & nzchar(plays$def_pos_team), , drop = FALSE]
   if (!nrow(scrimmage)) stop("No competitive scrimmage plays were available.", call. = FALSE)
@@ -728,6 +736,9 @@ build_team_game_efficiencies_v2 <- function(pbp, games) {
   names(success)[names(success) == "pos_team"] <- "team"
   havoc_allowed <- aggregate_mean_metric(scrimmage, group_offense, "havoc", "havoc_allowed")
   names(havoc_allowed)[names(havoc_allowed) == "pos_team"] <- "team"
+  turnovers_lost <- aggregate_mean_metric(scrimmage, group_offense, "turnover_lost",
+                                          "turnover_lost_rate")
+  names(turnovers_lost)[names(turnovers_lost) == "pos_team"] <- "team"
   pass_epa <- aggregate_mean_metric(scrimmage[scrimmage$is_pass, ], group_offense,
                                     "epa", "pass_epa")
   if (nrow(pass_epa)) names(pass_epa)[names(pass_epa) == "pos_team"] <- "team"
@@ -749,12 +760,13 @@ build_team_game_efficiencies_v2 <- function(pbp, games) {
   output <- Reduce(function(x, y) merge(x, y, by = c("game_id", "team"), all = TRUE),
                    Filter(function(x) nrow(x),
                           list(offense_epa, defense, success, pass_epa, rush_epa,
-                               havoc_allowed, havoc_generated, play_count)))
+                               havoc_allowed, havoc_generated, turnovers_lost,
+                               play_count)))
   output$defense_epa <- -output$epa_allowed
-  turnover_prior <- mean(output$havoc_allowed, na.rm = TRUE)
+  turnover_prior <- mean(output$turnover_lost_rate, na.rm = TRUE)
   if (!is.finite(turnover_prior)) turnover_prior <- 0
   output$turnover_rate_regressed <- regress_unstable_rate(
-    output$havoc_allowed, output$scrimmage_plays,
+    output$turnover_lost_rate, output$scrimmage_plays,
     turnover_prior, prior_opportunities = 80
   )
 
