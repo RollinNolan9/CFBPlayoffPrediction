@@ -251,17 +251,30 @@ test_that("preseason challenger features fade and stay out of production", {
     home = "Alpha", away = "Beta", home_level = "fbs", away_level = "fbs",
     postseason_type = "regular", margin = c(7, 3, 10), stringsAsFactors = FALSE
   )
-  attached <- attach_preseason_challenger_features(training, priors, config)
+  attached <- attach_preseason_features(training, priors, config)
   expect_equal(attached$challenger_ps_returning_ppa_pct_diff,
                c(0.8 - 0.4, 0, 0))
   expect_equal(attached$challenger_ps_preseason_poll_vote_share_diff,
                c(1, 0, 0))
   expect_false(any(grepl("^challenger_ps_", football_feature_names(attached))))
 
+  promoted <- attach_preseason_features(
+    training, priors, config,
+    features = config$preseason$production_features, prefix = "ps_"
+  )
+  expect_equal(promoted$ps_returning_ppa_pct_diff, c(0.8 - 0.4, 0, 0))
+  expect_true(all(paste0("ps_", config$preseason$production_features, "_diff") %in%
+                    football_feature_names(promoted)))
+
   missing <- training
   missing$away <- "Gamma"
-  expect_error(attach_preseason_challenger_features(missing, priors, config),
+  expect_error(attach_preseason_features(missing, priors, config),
                "Missing preseason priors")
+  expect_error(
+    attach_preseason_features(training, priors[0, ], config,
+                              require_coverage = TRUE),
+    "do not cover season"
+  )
 })
 
 test_that("preseason challengers recover a planted week-one signal", {
@@ -303,7 +316,7 @@ test_that("preseason challengers recover a planted week-one signal", {
     rbind(make_games(season, 1, 10),
           make_games(season, 6, 10), make_games(season, 9, 10))
   }))
-  training <- attach_preseason_challenger_features(training, priors, config)
+  training <- attach_preseason_features(training, priors, config)
   weights <- rep(1, nrow(training))
 
   core <- rolling_validate_ensemble(training, features = "form_diff",
@@ -842,6 +855,17 @@ test_that("one-command article workflow writes immutable CSV, Parquet, and DuckD
   training$total_points <- 52 + rnorm(n, 0, 8)
   training$closing_home_spread <- -training$margin + rnorm(n, 0, 4)
   write_input("training_games", training)
+
+  priors <- data.frame(
+    team = c("Notre Dame", "Miami"), season = 2026,
+    returning_ppa_pct = c(.7, .5), returning_passing_ppa_pct = c(.8, .4),
+    returning_usage_pct = c(.65, .55), talent_percentile = c(.9, .8),
+    preseason_poll_vote_share = c(.8, .6), retained_quality = c(.63, .4),
+    replacement_capacity = c(.27, .4), hype_gap = c(.1, -.05),
+    source = "test", captured_at = "2026-07-01 12:00:00"
+  )
+  utils::write.csv(priors, file.path(cfg$data_dir, "preseason_team_priors.csv"),
+                   row.names = FALSE, na = "")
 
   as_of <- as.POSIXct("2026-09-04 17:00:00", tz = "UTC")
   result <- run_v2_week(cfg, 2026, 1, "article", as_of, strict = TRUE)

@@ -219,13 +219,15 @@ prepare_training_data <- function(training_games, config) {
 }
 
 select_coach_split_validation <- function(data, weights, config,
-                                          fit_nonlinear = TRUE) {
+                                          fit_nonlinear = TRUE,
+                                          fold_features = NULL) {
   columns <- c(`0.65` = "coach_rating_65_35_diff",
                `0.70` = "coach_rating_70_30_diff")
   available <- columns[columns %in% names(data)]
   if (length(available) < 2L) {
     rolling <- rolling_validate_ensemble(data, config = config, weights = weights,
-                                         fit_nonlinear = fit_nonlinear)
+                                         fit_nonlinear = fit_nonlinear,
+                                         fold_features = fold_features)
     return(list(data = data, recent_share = 0.65, rolling = rolling,
                 features = football_feature_names(data),
                 comparison = data.frame(recent_share = .65,
@@ -240,7 +242,7 @@ select_coach_split_validation <- function(data, weights, config,
     features <- c(base_features, "coach_rating_diff")
     rolling <- rolling_validate_ensemble(
       variant, features = features, weights = weights, config = config,
-      fit_nonlinear = fit_nonlinear
+      fit_nonlinear = fit_nonlinear, fold_features = fold_features
     )
     list(share = as.numeric(share), data = variant, rolling = rolling,
          mae = min(rolling$scores$absolute_error))
@@ -502,23 +504,22 @@ write_preseason_challenger_report <- function(predictions, output_dir,
     "",
     paste0("Generated: ", format(Sys.time(), tz = "UTC", usetz = TRUE)),
     "",
-    paste0("The ridge core is the production baseline. Preseason challengers add ",
-           "frozen returning-production, 247 talent, and Week 1 poll features that ",
-           "fade to zero from Week 5. ATS accuracy forces a side from the model edge. ",
-           "`uncertainty_coverage` is the share of games landing inside one modeled ",
-           "standard deviation."),
+    paste0("The ridge core is the production model and includes the promoted ",
+           "preseason features (returning production, retained quality, 247 talent ",
+           "percentile, replacement capacity), which fade to zero from Week 5. ",
+           "ATS accuracy forces a side from the model edge. `uncertainty_coverage` ",
+           "is the share of games landing inside one modeled standard deviation."),
     "",
-    paste0("The returning-production and talent variants are promotion candidates. ",
-           "The hype variant is diagnostic only: the production design contract ",
-           "excludes polls, so its job is to measure how much trust preseason ",
-           "AP/Coaches sentiment deserves beyond the objective inputs. A negative ",
-           "`hype_gap` coefficient means the model learns to fade poll hype relative ",
-           "to prior on-field results; a coefficient near zero means polls add ",
-           "nothing the objective inputs did not already carry."),
+    paste0("`preseason_ablation_challenger` removes the promoted preseason features ",
+           "and shows what they keep earning. `preseason_hype_challenger` adds the ",
+           "diagnostic Week 1 poll features, which stay out of production by the ",
+           "design contract; a `hype_gap` coefficient near zero means polls add ",
+           "nothing the objective inputs did not already carry, and a negative one ",
+           "means the model would fade poll hype."),
     "",
-    paste0("Folds with fewer than two frozen prior seasons evaluate the core ",
-           "feature set, so the earliest test season matches the ridge core by ",
-           "construction."),
+    paste0("Folds with fewer than two frozen prior seasons evaluate the ",
+           "pre-promotion feature set, so the earliest test season matches the ",
+           "ablation by construction."),
     ""
   )
   if (!challengers_available) {
@@ -580,13 +581,38 @@ run_v2_backtest <- function(config) {
   training <- utils::read.csv(training_path, check.names = FALSE,
                               na.strings = c("", "NA"))
   validation <- prepare_training_data(training, config)
+  priors <- read_csv_if_present(
+    file.path(config$data_dir, "preseason_team_priors.csv"), required = FALSE
+  )
+  challengers_available <- !is.null(priors) && nrow(priors) > 0
+  production_ps <- paste0("ps_", config$preseason$production_features, "_diff")
+  poll_columns <- paste0("challenger_ps_", config$preseason$diagnostic_features,
+                         "_diff")
+  gate_for <- function(drop) NULL
+  if (challengers_available) {
+    covered_seasons <- sort(unique(as.integer(priors$season)))
+    validation$data <- attach_preseason_features(
+      validation$data, priors, config,
+      features = config$preseason$production_features, prefix = "ps_"
+    )
+    # A fold learns the preseason features only from covered earlier seasons;
+    # with fewer than two, the handful of faded rows cannot support the extra
+    # collinear features and the fold evaluates the pre-promotion set instead.
+    gate_for <- function(drop) {
+      function(test_season, features) {
+        if (sum(covered_seasons < test_season) >= 2L) features else
+          setdiff(features, drop)
+      }
+    }
+  }
   coach <- select_coach_split_validation(
-    validation$data, validation$weights, config, fit_nonlinear = FALSE
+    validation$data, validation$weights, config, fit_nonlinear = FALSE,
+    fold_features = gate_for(production_ps)
   )
   ridge <- coach$rolling
   forest <- rolling_validate_ensemble(
     coach$data, features = coach$features, weights = validation$weights,
-    config = config, fit_nonlinear = TRUE
+    config = config, fit_nonlinear = TRUE, fold_features = gate_for(production_ps)
   )
   prediction_sets <- list(
     build_v2_backtest_predictions(coach$data, ridge, "ridge_core"),
@@ -597,7 +623,7 @@ run_v2_backtest <- function(config) {
     hfa_data$home_field_points <- hfa_data$challenger_team_home_field_points
     hfa <- rolling_validate_ensemble(
       hfa_data, features = coach$features, weights = validation$weights,
-      config = config, fit_nonlinear = FALSE
+      config = config, fit_nonlinear = FALSE, fold_features = gate_for(production_ps)
     )
     prediction_sets <- append(
       prediction_sets,
@@ -605,45 +631,42 @@ run_v2_backtest <- function(config) {
       after = 1L
     )
   }
-  priors <- read_csv_if_present(
-    file.path(config$data_dir, "preseason_team_priors.csv"), required = FALSE
-  )
-  challengers_available <- !is.null(priors) && nrow(priors) > 0
   preseason_coefficients <- NULL
   if (challengers_available) {
-    preseason_data <- attach_preseason_challenger_features(coach$data, priors, config)
-    variants <- preseason_challenger_variants()
-    covered_seasons <- sort(unique(as.integer(priors$season)))
-    coefficient_rows <- list()
-    for (variant in names(variants)) {
-      extra <- paste0("challenger_ps_", variants[[variant]], "_diff")
-      # A fold learns the preseason features only from covered earlier seasons;
-      # with fewer than two, the handful of faded rows cannot support the extra
-      # collinear features and the fold evaluates the core set instead.
-      gate <- function(test_season, features) {
-        if (sum(covered_seasons < test_season) >= 2L) features else
-          setdiff(features, extra)
-      }
-      fit <- rolling_validate_ensemble(
-        preseason_data, features = c(coach$features, extra),
-        weights = validation$weights, config = config, fit_nonlinear = FALSE,
-        fold_features = gate
-      )
-      prediction_sets <- append(
-        prediction_sets,
-        list(build_v2_backtest_predictions(preseason_data, fit, variant))
-      )
-      full_ridge <- fit_weighted_ridge(
-        preseason_data, "margin", c(coach$features, extra),
-        weights = validation$weights, lambda = fit$best_lambda
-      )
-      coefficient_rows[[variant]] <- data.frame(
-        model = variant, feature = extra,
-        points_per_sd = as.numeric(full_ridge$coefficients[extra]),
-        stringsAsFactors = FALSE
-      )
-    }
-    preseason_coefficients <- do.call(rbind, coefficient_rows)
+    ablation <- rolling_validate_ensemble(
+      coach$data, features = setdiff(coach$features, production_ps),
+      weights = validation$weights, config = config, fit_nonlinear = FALSE
+    )
+    poll_data <- attach_preseason_features(
+      coach$data, priors, config,
+      features = config$preseason$diagnostic_features
+    )
+    hype <- rolling_validate_ensemble(
+      poll_data, features = c(coach$features, poll_columns),
+      weights = validation$weights, config = config, fit_nonlinear = FALSE,
+      fold_features = gate_for(c(production_ps, poll_columns))
+    )
+    prediction_sets <- append(prediction_sets, list(
+      build_v2_backtest_predictions(coach$data, ablation,
+                                    "preseason_ablation_challenger"),
+      build_v2_backtest_predictions(poll_data, hype, "preseason_hype_challenger")
+    ))
+    core_ridge <- fit_weighted_ridge(
+      coach$data, "margin", coach$features, weights = validation$weights,
+      lambda = ridge$best_lambda
+    )
+    hype_ridge <- fit_weighted_ridge(
+      poll_data, "margin", c(coach$features, poll_columns),
+      weights = validation$weights, lambda = hype$best_lambda
+    )
+    preseason_coefficients <- rbind(
+      data.frame(model = "ridge_core", feature = production_ps,
+                 points_per_sd = as.numeric(core_ridge$coefficients[production_ps]),
+                 stringsAsFactors = FALSE),
+      data.frame(model = "preseason_hype_challenger", feature = poll_columns,
+                 points_per_sd = as.numeric(hype_ridge$coefficients[poll_columns]),
+                 stringsAsFactors = FALSE)
+    )
   }
   predictions <- do.call(rbind, prediction_sets)
   summary <- summarize_v2_backtest(predictions)
@@ -712,8 +735,26 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
   if (!nrow(schedule)) stop("No games passed the weekly card eligibility rules.", call. = FALSE)
 
   validation <- prepare_training_data(inputs$training_games, config)
+  priors <- read_csv_if_present(
+    file.path(config$data_dir, "preseason_team_priors.csv"), required = TRUE
+  )
+  if (is.null(priors) || !nrow(priors)) {
+    stop("preseason_team_priors.csv has no rows. ",
+         "Run --mode=build-preseason before production runs.", call. = FALSE)
+  }
+  validation$data <- attach_preseason_features(
+    validation$data, priors, config,
+    features = config$preseason$production_features, prefix = "ps_"
+  )
+  covered_priors_seasons <- sort(unique(as.integer(priors$season)))
+  production_ps <- paste0("ps_", config$preseason$production_features, "_diff")
+  preseason_gate <- function(test_season, features) {
+    if (sum(covered_priors_seasons < test_season) >= 2L) features else
+      setdiff(features, production_ps)
+  }
   coach_selection <- select_coach_split_validation(
-    validation$data, validation$weights, config, fit_nonlinear = FALSE
+    validation$data, validation$weights, config, fit_nonlinear = FALSE,
+    fold_features = preseason_gate
   )
   validation$data <- coach_selection$data
   rolling <- coach_selection$rolling
@@ -757,6 +798,11 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
   matchup <- prepare_matchup_features(
     schedule, inputs$team_week_features, inputs$coach_assignments,
     inputs$coach_history, coach_selection$recent_share, config
+  )
+  matchup <- attach_preseason_features(
+    matchup, priors, config,
+    features = config$preseason$production_features, prefix = "ps_",
+    require_coverage = TRUE
   )
   lines <- inputs$lines
   lines$captured_at <- as.POSIXct(lines$captured_at, tz = "UTC")

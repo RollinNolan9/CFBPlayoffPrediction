@@ -65,12 +65,13 @@ full backtest plus the August 29 dry run are regenerated.
 
 ## Phase 2 — Backfill Preseason Challengers (P0, after Phase 1)
 
-**Status: code and tests landed.** `cfb_v2/preseason.R` provides the cached CFBD
-pulls, the frozen one-row-per-team-season priors builder
-(`--mode=build-preseason`), and the faded `challenger_ps_*` matchup features; the
-backtest now evaluates the three preseason challengers and writes
-`preseason_challenger_report.md`. Remaining local steps: freeze 2021-2025 with the
-CFBD key, rerun `--mode=backtest`, review the Week 0/1 report.
+**Status: complete — talent variant promoted.** The 2021-2025 freeze and rolling
+report ran; the talent variant beat the core on Week 0/1 margin MAE in every
+honest fold and its six objective features are now production inputs (`ps_`
+prefix, standard fade). Poll features measured ~a tenth of the talent signal and
+stay diagnostic-only. Production article runs now require
+`preseason_team_priors.csv` coverage of the predicted season, which Phase 4
+automates for 2026.
 
 **Problem.** Week 0/1 has no current-season evidence, and historical misses (2025
 Clemson, LSU) currently rely on hand-set adjustments instead of learned trust in

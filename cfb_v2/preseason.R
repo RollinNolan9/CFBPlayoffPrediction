@@ -224,9 +224,11 @@ build_preseason_priors <- function(config, seasons, refresh = FALSE, overwrite =
   list(path = target, priors = priors, coverage = coverage)
 }
 
-attach_preseason_challenger_features <- function(training, priors, config) {
+attach_preseason_features <- function(training, priors, config,
+                                      features = preseason_challenger_feature_names(),
+                                      prefix = "challenger_ps_",
+                                      require_coverage = FALSE) {
   assert_columns(training, c("season", "week", "home", "away"), "training games")
-  features <- preseason_challenger_feature_names()
   assert_columns(priors, c("team", "season", features), "preseason priors")
   priors$team <- canonical_team(priors$team)
   assert_unique_keys(priors, c("team", "season"), "preseason priors")
@@ -239,6 +241,15 @@ attach_preseason_challenger_features <- function(training, priors, config) {
   phase_week <- ifelse(!is.na(postseason) & postseason != "regular", 99L, week)
   weight <- preseason_feature_weight(phase_week, config)
   covered <- season %in% unique(as.integer(priors$season))
+  if (require_coverage) {
+    uncovered <- !covered & weight > 0
+    if (any(uncovered)) {
+      stop("Preseason priors do not cover season(s) ",
+           paste(unique(season[uncovered]), collapse = ", "),
+           " required for Weeks 0-4. Freeze them with --mode=build-preseason.",
+           call. = FALSE)
+    }
+  }
 
   side_level <- function(column) {
     if (column %in% names(training)) tolower(as.character(training[[column]])) else
@@ -263,19 +274,7 @@ attach_preseason_challenger_features <- function(training, priors, config) {
     difference <- as.numeric(priors[[feature]][home_index]) -
       as.numeric(priors[[feature]][away_index])
     difference[!covered] <- 0
-    training[[paste0("challenger_ps_", feature, "_diff")]] <- difference * weight
+    training[[paste0(prefix, feature, "_diff")]] <- difference * weight
   }
   training
-}
-
-preseason_challenger_variants <- function() {
-  returning <- c("returning_ppa_pct", "returning_passing_ppa_pct",
-                 "returning_usage_pct", "retained_quality")
-  talent <- c(returning, "talent_percentile", "replacement_capacity")
-  hype <- c(talent, "preseason_poll_vote_share", "hype_gap")
-  list(
-    preseason_returning_challenger = returning,
-    preseason_talent_challenger = talent,
-    preseason_hype_challenger = hype
-  )
 }

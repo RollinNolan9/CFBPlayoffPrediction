@@ -19,6 +19,11 @@ history, design decisions, verification commands, and current limitations.
   challenger only.
 - Preseason roster, quarterback, portal, and returning-production inputs are multiplied
   by `100/60/30/10/0%` in Weeks `0-1/2/3/4/5+`.
+- Frozen preseason returning-production and 247 talent features (the validated
+  talent variant) are production inputs under the `ps_` prefix and follow the same
+  fade. Week 1 AP/Coaches poll features remain diagnostic-only challengers.
+  Production runs require `cfb_v2/data/preseason_team_priors.csv`, including
+  coverage of the predicted season through Week 4.
 - Prior-season team performance is capped at 10% from Week 8 onward.
 - Coach assignments are interval records keyed by team, season, start week, and end
   week. Overlap or a missing as-of coach stops the run.
@@ -119,23 +124,25 @@ season — 2020 COVID opt-outs (Connecticut, Old Dominion in 2021) and first-yea
 FBS members (Jacksonville State, Sam Houston in 2023) pass with visibly empty
 returning fields instead.
 
-When the priors file has rows, `--mode=backtest` additionally evaluates three
-preseason challengers (returning production; plus talent; plus poll hype gap) whose
-`challenger_ps_*` matchup features fade with the standard Week 0-4 preseason
-weights and are excluded from the production model by the `challenger_` prefix.
-A fold uses the preseason features only when at least two frozen seasons predate
-its test season; earlier folds evaluate the core feature set, because one covered
-season of faded rows cannot support the extra collinear features. The
-Week 0/1 diagnostics land in `cfb_v2/output/backtest/preseason_challenger_report.md`
-covering margin MAE, straight-up accuracy, ATS accuracy, uncertainty coverage,
-conference slices, and the learned points-per-standard-deviation effect of each
-preseason feature.
+The six talent-variant features were promoted to production after beating the core
+on Week 0/1 and full-season margin MAE in every honest rolling fold. When the
+priors file has rows, `--mode=backtest` evaluates the production core (with `ps_`
+features) against a `preseason_ablation_challenger` (production without them,
+monitoring what the promotion keeps earning) and a `preseason_hype_challenger`
+(production plus the diagnostic Week 1 poll features). A fold uses preseason
+features only when at least two frozen seasons predate its test season; earlier
+folds evaluate the pre-promotion set, because one covered season of faded rows
+cannot support the extra collinear features. The Week 0/1 diagnostics land in
+`cfb_v2/output/backtest/preseason_challenger_report.md` covering margin MAE,
+straight-up accuracy, ATS accuracy, uncertainty coverage, conference slices, and
+the learned points-per-standard-deviation effect of each preseason feature.
 
-The returning-production and talent variants are the only promotion candidates.
-The poll hype variant is diagnostic by design: the production contract excludes
+The poll hype features are diagnostic by design: the production contract excludes
 polls, so `preseason_poll_vote_share` and `hype_gap` exist to quantify how far
 preseason AP/Coaches sentiment misleads relative to prior on-field results (the
-2025 Clemson/LSU pattern), not to rate teams.
+2025 Clemson/LSU pattern), not to rate teams. The 2021-2025 backfill measured
+their marginal value at roughly a tenth of the talent signal, confirming the
+exclusion.
 
 ## Weekly command
 
