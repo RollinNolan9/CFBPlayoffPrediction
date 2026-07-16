@@ -114,9 +114,10 @@ Raw pulls are cached beneath `cfb_v2/cache/preseason`; add `--refresh-preseason=
 to re-download. The frozen output is `cfb_v2/data/preseason_team_priors.csv` with
 season-normalized values only (percentiles and vote shares, never raw ranks) and no
 team or conference identity predictors. An FBS team missing from returning
-production stops the build unless it has no prior-season on-field history to
-return — 2020 COVID opt-outs (Connecticut, Old Dominion in 2021) and first-year
-FBS members pass with visibly empty returning fields instead.
+production stops the build unless it was not an FBS member with games the prior
+season — 2020 COVID opt-outs (Connecticut, Old Dominion in 2021) and first-year
+FBS members (Jacksonville State, Sam Houston in 2023) pass with visibly empty
+returning fields instead.
 
 When the priors file has rows, `--mode=backtest` additionally evaluates three
 preseason challengers (returning production; plus talent; plus poll hype gap) whose

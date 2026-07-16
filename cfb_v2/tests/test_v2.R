@@ -145,8 +145,10 @@ test_that("turnover rate counts only giveaways, not havoc or downs", {
 
 test_that("preseason priors are one normalized row per FBS team-season", {
   membership <- data.frame(
-    team = c("Alpha", "Beta", "Gamma", "Delta"), season = 2024,
-    classification = c("fbs", "fbs", "fbs", "fcs"), stringsAsFactors = FALSE
+    team = c("Alpha", "Beta", "Gamma", "Delta", "Alpha", "Beta", "Gamma"),
+    season = c(2024, 2024, 2024, 2024, 2023, 2023, 2023),
+    classification = c("fbs", "fbs", "fbs", "fcs", "fbs", "fbs", "fbs"),
+    stringsAsFactors = FALSE
   )
   returning <- data.frame(
     season = 2024, team = c("Alpha", "Beta", "Gamma"),
@@ -194,9 +196,13 @@ test_that("preseason priors are one normalized row per FBS team-season", {
   )
 })
 
-test_that("returning production may only be missing without a prior season", {
-  membership <- data.frame(team = c("Alpha", "Beta"), season = 2021,
-                           classification = "fbs", stringsAsFactors = FALSE)
+test_that("returning production may only be missing without prior FBS games", {
+  membership <- data.frame(
+    team = c("Alpha", "Beta", "Gamma", "Alpha", "Beta", "Gamma"),
+    season = c(2021, 2021, 2021, 2020, 2020, 2020),
+    classification = c("fbs", "fbs", "fbs", "fbs", "fbs", "fcs"),
+    stringsAsFactors = FALSE
+  )
   returning <- data.frame(season = 2021, team = "Alpha", percent_ppa = 60,
                           percent_passing_ppa = 50, usage = 55,
                           stringsAsFactors = FALSE)
@@ -204,26 +210,30 @@ test_that("returning production may only be missing without a prior season", {
                        talent = c(900, 700), stringsAsFactors = FALSE)
   polls <- data.frame(poll = c("AP Top 25", "Coaches Poll"), school = "Alpha",
                       points = c(1500, 1400), stringsAsFactors = FALSE)
-  opt_out_prior <- data.frame(team = "Alpha", season = 2020, strength = 0.2,
-                              stringsAsFactors = FALSE)
+  # Beta was an FBS member in 2020 with no games (opt-out); Gamma was FCS in
+  # 2020 but appears in the foundation through a crossover game.
+  prior_strength <- data.frame(team = c("Alpha", "Gamma"), season = 2020,
+                               strength = c(0.2, 0.1), stringsAsFactors = FALSE)
 
   expect_message(
     priors <- build_preseason_team_priors(returning, talent, polls, membership,
-                                          opt_out_prior, 2021, config),
-    "without a prior season"
+                                          prior_strength, 2021, config),
+    "without prior FBS participation"
   )
   beta <- priors[priors$team == "Beta", ]
+  gamma <- priors[priors$team == "Gamma", ]
   expect_true(is.na(beta$returning_ppa_pct))
   expect_true(is.na(beta$retained_quality))
   expect_true(is.na(beta$replacement_capacity))
+  expect_true(is.na(gamma$returning_ppa_pct))
 
-  played_prior <- rbind(opt_out_prior,
+  played_prior <- rbind(prior_strength,
                         data.frame(team = "Beta", season = 2020, strength = 0,
                                    stringsAsFactors = FALSE))
   expect_error(
     build_preseason_team_priors(returning, talent, polls, membership,
                                 played_prior, 2021, config),
-    "missing FBS teams"
+    "missing FBS teams: Beta"
   )
 })
 

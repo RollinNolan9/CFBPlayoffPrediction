@@ -137,17 +137,22 @@ build_preseason_team_priors <- function(returning, talent, polls, membership,
   prior <- prior_strength[as.integer(prior_strength$season) == season - 1L, , drop = FALSE]
   prior_teams <- canonical_team(prior$team)
 
-  # A team absent from returning production is only legitimate when it has no
-  # prior-season on-field history to return (2020 COVID opt-outs, new FBS members).
+  # A team absent from returning production is only legitimate when it was not
+  # an FBS member with games the season before: new FBS members appear in the
+  # foundation through FCS crossover games, and 2020 opt-outs were members with
+  # no games, so both conditions are required to call an absence an error.
   missing <- setdiff(fbs_teams, returning$team)
-  unexplained <- missing[missing %in% prior_teams]
+  prior_fbs <- membership[tolower(membership$classification) == "fbs" &
+                            as.integer(membership$season) == season - 1L, , drop = FALSE]
+  prior_fbs_teams <- unique(canonical_team(prior_fbs$team))
+  unexplained <- missing[missing %in% prior_fbs_teams & missing %in% prior_teams]
   if (length(unexplained)) {
     stop("Returning production for ", season, " is missing FBS teams: ",
          paste(unexplained, collapse = ", "), call. = FALSE)
   }
   if (length(missing)) {
-    message("Returning production for ", season, " leaves teams without a prior ",
-            "season unknown: ", paste(missing, collapse = ", "))
+    message("Returning production for ", season, " leaves teams without prior ",
+            "FBS participation unknown: ", paste(missing, collapse = ", "))
   }
   index <- match(fbs_teams, returning$team)
 
