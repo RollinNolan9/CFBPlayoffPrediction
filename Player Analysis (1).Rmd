@@ -30,7 +30,7 @@ usethis::edit_r_environ()
 ```
 
 ```{r}
-years <- c(2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024)
+years <- c(2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024,2025)
 
 # Loop over years
 for (year in years) {
@@ -47,7 +47,7 @@ for (year in years) {
 
 ```{r}
 # Define the years
-years <- c(2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024)
+years <- c(2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025)
 
 # Loop through each year to fetch and merge player usage and PPA data
 for (year in years) {
@@ -75,7 +75,7 @@ for (year in years) {
 ```
 ```{r}
 # Loop over the years from 2014 to 2024
-for (year in 2014:2024) {
+for (year in 2014:2025) {
   # Construct the name of the dataframe dynamically
   data_frame_name <- paste0(year, "_usage_ppa")
   
@@ -101,7 +101,7 @@ View(`2014_usage_ppa`)
 columns_to_keep <- c("name.x", "season.x", "position.x", "team.x", "usg_overall", "countable_plays", "avg_PPA_all")
 
 # Loop through each year and apply the filter and select columns
-for (year in 2014:2024) {
+for (year in 2014:2025) {
   # Generate the name of the data frame dynamically (e.g., "2014_usage_ppa")
   data_frame_name <- paste0(year, "_usage_ppa")
   
@@ -117,8 +117,8 @@ for (year in 2014:2024) {
 ```
 
 ```{r}
-# Loop through the years from 2014 to 2024
-for (year in 2014:2024) {
+# Loop through the years from 2014 to 202X
+for (year in 2014:2025) {
   # Construct the name of the dataframe dynamically
   data_frame_name <- paste0(year, "_filtered_usage_ppa")
   
@@ -140,8 +140,8 @@ View(`2014_filtered_usage_ppa`)
 ```
 
 ```{r}
-# Loop through the years from 2014 to 2024
-for (year in 2014:2024) {
+# Loop through the years from 2014 to 202X
+for (year in 2014:2025) {
   # Construct the name of the dataframe dynamically
   data_frame_name <- paste0(year, "_filtered_usage_ppa")
   
@@ -376,9 +376,97 @@ complete_2023 <-  `2023_top_15_usage_ppa` %>%
 complete_2024 <- `2024_top_15_usage_ppa` %>%
   mutate(usg_overall = ifelse(name.x %in% `2024_injuries`, 0, usg_overall))
 ```
+#2025 Injuries
+```{r}
+`2025_injuries` <- c(
+  "Addison Ostrenga",   # Iowa TE
+  "Andre Cojoe",        # Texas OL
+  "Blye Hill",          # Nebraska CB
+  "Cam Porter",         # Northwestern RB
+  "Chasen Johnson",     # USC CB
+  "Dantae Chin",        # Rutgers OL
+  "Gage Stenger",       # Nebraska LB
+  "Hayden Lowe",        # Miami (FL) DE
+  "Jahiem White",       # West Virginia RB
+  "Jeremiah Beaman",    # Alabama DL
+  "Kedren Young",       # Notre Dame RB
+  "Kevin Bauman",       # Notre Dame TE
+  "Quindarrius Jones",  # Florida State CB
+  "Sam Horn",            # Missouri QB 
+  "Ben Ford",
+  "Kage Casey",
+  "Dion Washington",
+  "A'Marion McCoy",
+  "Ty Benefield",
+  "Rashid Williams",
+  "Armon Parker",
+  "Russell Davis II",
+  "Taariq Al-Uqdah",
+  "Isaiah Ward",
+  "Tacario Davis",
+  "Makell Esteen",
+  "Goose Crowder",
+  "Tae Meadows",
+  "Colton Joseph",
+  "Maurki James",
+  "Botros Alisandro",
+  "Byrum Brown",
+  "Chas Nimrod",
+  "Christian Neptune",
+  "Jo Silver",
+  "Ja'Carree Kelly",
+  "Connor Witthoft",
+  "Tristian Gardner",
+  "Hayden Hagler",
+  "Ja'Quez Cross",
+  "Jabari Bush",
+  "Tyler Little",
+  "Jovantae Barnes",
+  #Alabama has a lot of maybes
+  "Jam Miller",
+  "Kevin Riley",
+  "Josh Cuevas",
+  "LT Overton",
+  "Justin Jefferson",
+  "Kelby Collins",
+  "Tony Johnson",
+  "David Blay Jr.",
+  "Le'Veon Moss",
+  "Scooby Williams",
+  "Bryce Bohanon",
+  "Gerrod Henderson",
+  "Dickson Agu",
+  "Antonio Kite",
+  "Jordan Fuller",
+  "Immanuel Bush",
+  "Jayden Limar",
+  "Makhi Hughes",
+  "Dakorien Moore",
+  "Gary Bryant Jr.",
+  "Evan Stewart",
+  "Sione Laulea",
+  "Dakoda Fields",
+  "Quentin Joyner",
+  "Skyler Gill-Howard",
+  "Maurion Horn",
+  "Lee Beebe Jr.",
+  "Omar Cooper Jr.",
+  "Stephen Daley",
+  "Kellen Wyatt",
+  "Chauncey Bowens",
+  "Bo Walker",
+  "Colbie Young",
+  "Joenel Aguero",
+  "Zion Branch",
+  "Kyron Jones"
+)
+# Apply the mutate function
+complete_2025 <- `2025_top_15_usage_ppa` %>%
+  mutate(usg_overall = ifelse(name.x %in% `2025_injuries`, 0, usg_overall))
+```
 
 ```{r}
-complete_years <- c(2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024)
+complete_years <- c(2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024,2025)
 
 for (year in complete_years) {
   data_frame_name <- paste0("complete_", year)
@@ -393,8 +481,10 @@ for (year in complete_years) {
 }
 ```
 
+
+
 ```{r}
-merge_years <- c(2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024)
+merge_years <- c(2014, 2015, 2016, 2017, 2018, 2019, 2021, 2022, 2023, 2024,2025)
 
 
 for (year in merge_years) {
@@ -436,7 +526,7 @@ for (year in merge_years) {
 ```
 
 ```{r}
-all_data <- dplyr::bind_rows(final_2014, final_2015, final_2016, final_2017, final_2018, final_2019, final_2021, final_2022, final_2023)
+all_data <- dplyr::bind_rows(final_2014, final_2015, final_2016, final_2017, final_2018, final_2019, final_2021, final_2022, final_2023, final_2024, final_2025)
 ```
 
 ```{r}
@@ -457,6 +547,6 @@ final_for_sure <- na.omit(final_product)
 ```
 
 ```{r}
-write.csv(final_for_sure, file = "final_for_sure.csv") 
+write.csv(final_for_sure, file = "final_for_sure_1.csv") 
 ```
 

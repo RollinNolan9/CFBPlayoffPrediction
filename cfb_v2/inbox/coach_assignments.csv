@@ -1,0 +1,899 @@
+"team","season","start_week","end_week","coach_id","coach_name","interim","source","assignment_confidence","source_games","schedule_games","needs_review","inference_reason","effective_date","source_url"
+"Air Force",2020,0,99,"coach_troy_calhoun","Troy Calhoun",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Akron",2020,0,99,"coach_tom_arth","Tom Arth",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Alabama",2020,0,99,"coach_nick_saban","Nick Saban",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"App State",2020,0,99,"coach_shawn_clark","Shawn Clark",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Arizona",2020,0,99,"coach_kevin_sumlin","Kevin Sumlin",FALSE,"cfbd_coaches","high",5,5,FALSE,"single_source_coach",,
+"Arizona State",2020,0,99,"coach_herm_edwards","Herm Edwards",FALSE,"cfbd_coaches","high",4,4,FALSE,"single_source_coach",,
+"Arkansas",2020,0,99,"coach_sam_pittman","Sam Pittman",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Arkansas State",2020,0,99,"coach_blake_anderson","Blake Anderson",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Army",2020,0,99,"coach_jeff_monken","Jeff Monken",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Auburn",2020,0,98,"coach_gus_malzahn","Gus Malzahn",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,11,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Auburn",2020,99,99,"coach_kevin_steele","Kevin Steele",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,11,FALSE,"public_transition_effective_next_game","2020-12-13","https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Ball State",2020,0,99,"coach_mike_neu","Mike Neu",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"Baylor",2020,0,99,"coach_dave_aranda","Dave Aranda",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Boise State",2020,0,99,"coach_bryan_harsin","Bryan Harsin",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"Boston College",2020,0,99,"coach_jeff_hafley","Jeff Hafley",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Bowling Green",2020,0,99,"coach_scot_loeffler","Scot Loeffler",FALSE,"cfbd_coaches","high",5,5,FALSE,"single_source_coach",,
+"Buffalo",2020,0,99,"coach_lance_leipold","Lance Leipold",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"BYU",2020,0,99,"coach_kalani_sitake","Kalani Sitake",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"California",2020,0,99,"coach_justin_wilcox","Justin Wilcox",FALSE,"cfbd_coaches","high",4,4,FALSE,"single_source_coach",,
+"Central Michigan",2020,0,99,"coach_jim_mcelwain","Jim McElwain",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Charlotte",2020,0,99,"coach_will_healy","Will Healy",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Cincinnati",2020,0,99,"coach_luke_fickell","Luke Fickell",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Clemson",2020,0,99,"coach_dabo_swinney","Dabo Swinney",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Coastal Carolina",2020,0,99,"coach_jamey_chadwell","Jamey Chadwell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Colorado",2020,0,99,"coach_karl_dorrell","Karl Dorrell",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Colorado State",2020,0,99,"coach_steve_addazio","Steve Addazio",FALSE,"cfbd_coaches","high",4,4,FALSE,"single_source_coach",,
+"Connecticut",2020,0,99,"coach_randy_edsall","Randy Edsall",FALSE,"cfbd_coaches","high",0,0,FALSE,"single_source_coach",,
+"Duke",2020,0,99,"coach_david_cutcliffe","David Cutcliffe",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"East Carolina",2020,0,99,"coach_mike_houston","Mike Houston",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Eastern Michigan",2020,0,99,"coach_chris_creighton","Chris Creighton",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Florida",2020,0,99,"coach_dan_mullen","Dan Mullen",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida Atlantic",2020,0,99,"coach_willie_taggart","Willie Taggart",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Florida International",2020,0,99,"coach_butch_davis","Butch Davis",FALSE,"cfbd_coaches","high",5,5,FALSE,"single_source_coach",,
+"Florida State",2020,0,99,"coach_mike_norvell","Mike Norvell",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Fresno State",2020,0,99,"coach_kalen_deboer","Kalen DeBoer",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Georgia",2020,0,99,"coach_kirby_smart","Kirby Smart",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Georgia Southern",2020,0,99,"coach_chad_lunsford","Chad Lunsford",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Georgia State",2020,0,99,"coach_shawn_elliott","Shawn Elliott",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Georgia Tech",2020,0,99,"coach_geoff_collins","Geoff Collins",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Hawai'i",2020,0,99,"coach_todd_graham","Todd Graham",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Houston",2020,0,99,"coach_dana_holgorsen","Dana Holgorsen",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"Illinois",2020,0,15,"coach_lovie_smith","Lovie Smith",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,8,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Illinois",2020,16,99,"coach_rod_smith","Rod Smith",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,8,FALSE,"public_transition_effective_next_game","2020-12-13","https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Indiana",2020,0,99,"coach_tom_allen","Tom Allen",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"Iowa",2020,0,99,"coach_kirk_ferentz","Kirk Ferentz",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"Iowa State",2020,0,99,"coach_matt_campbell","Matt Campbell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Kansas",2020,0,99,"coach_les_miles","Les Miles",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Kansas State",2020,0,99,"coach_chris_klieman","Chris Klieman",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Kent State",2020,0,99,"coach_sean_lewis","Sean Lewis",FALSE,"cfbd_coaches","high",4,4,FALSE,"single_source_coach",,
+"Kentucky",2020,0,99,"coach_mark_stoops","Mark Stoops",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Liberty",2020,0,99,"coach_hugh_freeze","Hugh Freeze",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Louisiana",2020,0,99,"coach_billy_napier","Billy Napier",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Louisiana Tech",2020,0,99,"coach_skip_holtz","Skip Holtz",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Louisville",2020,0,99,"coach_scott_satterfield","Scott Satterfield",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"LSU",2020,0,99,"coach_ed_orgeron","Ed Orgeron",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Marshall",2020,0,99,"coach_doc_holliday","Doc Holliday",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Maryland",2020,0,99,"coach_mike_locksley","Mike Locksley",FALSE,"cfbd_coaches","high",5,5,FALSE,"single_source_coach",,
+"Massachusetts",2020,0,99,"coach_walt_bell","Walt Bell",FALSE,"cfbd_coaches","high",4,4,FALSE,"single_source_coach",,
+"Memphis",2020,0,99,"coach_ryan_silverfield","Ryan Silverfield",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Miami",2020,0,99,"coach_manny_diaz","Manny Diaz",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Miami (OH)",2020,0,99,"coach_chuck_martin","Chuck Martin",FALSE,"cfbd_coaches","high",3,3,FALSE,"single_source_coach",,
+"Michigan",2020,0,99,"coach_jim_harbaugh","Jim Harbaugh",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Michigan State",2020,0,99,"coach_mel_tucker","Mel Tucker",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"Middle Tennessee",2020,0,99,"coach_rick_stockstill","Rick Stockstill",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Minnesota",2020,0,99,"coach_pj_fleck","P.J. Fleck",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"Mississippi",2020,0,99,"coach_lane_kiffin","Lane Kiffin",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Mississippi State",2020,0,99,"coach_mike_leach","Mike Leach",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Missouri",2020,0,99,"coach_eli_drinkwitz","Eli Drinkwitz",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Navy",2020,0,99,"coach_ken_niumatalolo","Ken Niumatalolo",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Nebraska",2020,0,99,"coach_scott_frost","Scott Frost",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"Nevada",2020,0,99,"coach_jay_norvell","Jay Norvell",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"New Mexico",2020,0,99,"coach_danny_gonzales","Danny Gonzales",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"New Mexico State",2020,0,99,"coach_doug_martin","Doug Martin",FALSE,"cfbd_coaches","medium",2,1,FALSE,"single_source_coach_count_mismatch",,
+"North Carolina",2020,0,99,"coach_mack_brown","Mack Brown",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"North Carolina State",2020,0,99,"coach_dave_doeren","Dave Doeren",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"North Texas",2020,0,99,"coach_seth_littrell","Seth Littrell",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Northern Illinois",2020,0,99,"coach_thomas_hammock","Thomas Hammock",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Northwestern",2020,0,99,"coach_pat_fitzgerald","Pat Fitzgerald",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Notre Dame",2020,0,99,"coach_brian_kelly","Brian Kelly",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Ohio",2020,0,99,"coach_frank_solich","Frank Solich",FALSE,"cfbd_coaches","high",3,3,FALSE,"single_source_coach",,
+"Ohio State",2020,0,99,"coach_ryan_day","Ryan Day",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"Oklahoma",2020,0,99,"coach_lincoln_riley","Lincoln Riley",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Oklahoma State",2020,0,99,"coach_mike_gundy","Mike Gundy",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Old Dominion",2020,0,99,"coach_ricky_rahne","Ricky Rahne",FALSE,"cfbd_coaches","high",0,0,FALSE,"single_source_coach",,
+"Oregon",2020,0,99,"coach_mario_cristobal","Mario Cristobal",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"Oregon State",2020,0,99,"coach_jonathan_smith","Jonathan Smith",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"Penn State",2020,0,99,"coach_james_franklin","James Franklin",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Pittsburgh",2020,0,99,"coach_pat_narduzzi","Pat Narduzzi",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Purdue",2020,0,99,"coach_jeff_brohm","Jeff Brohm",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Rice",2020,0,99,"coach_mike_bloomgren","Mike Bloomgren",FALSE,"cfbd_coaches","high",5,5,FALSE,"single_source_coach",,
+"Rutgers",2020,0,99,"coach_greg_schiano","Greg Schiano",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"San Diego State",2020,0,99,"coach_brady_hoke","Brady Hoke",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"San José State",2020,0,99,"coach_brent_brennan","Brent Brennan",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"SMU",2020,0,99,"coach_sonny_dykes","Sonny Dykes",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"South Alabama",2020,0,99,"coach_steve_campbell","Steve Campbell",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"South Carolina",2020,0,11,"coach_will_muschamp","Will Muschamp",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,10,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"South Carolina",2020,12,99,"coach_mike_bobo","Mike Bobo",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,10,FALSE,"public_transition_effective_next_game","2020-11-15","https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"South Florida",2020,0,99,"coach_jeff_scott","Jeff Scott",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Southern California",2020,0,99,"coach_clay_helton","Clay Helton",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Southern Miss",2020,0,2,"coach_jay_hopson","Jay Hopson",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,10,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Southern Miss",2020,3,8,"coach_scotty_walden","Scotty Walden",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,10,FALSE,"public_transition_effective_next_game","2020-09-07","https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Southern Miss",2020,9,99,"coach_tim_billings","Tim Billings",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,10,FALSE,"public_transition_effective_next_game","2020-10-27","https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Stanford",2020,0,99,"coach_david_shaw","David Shaw",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Syracuse",2020,0,99,"coach_dino_babers","Dino Babers",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"TCU",2020,0,99,"coach_gary_patterson","Gary Patterson",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Temple",2020,0,99,"coach_rod_carey","Rod Carey",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"Tennessee",2020,0,99,"coach_jeremy_pruitt","Jeremy Pruitt",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Texas",2020,0,99,"coach_tom_herman","Tom Herman",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Texas A&M",2020,0,99,"coach_jimbo_fisher","Jimbo Fisher",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Texas State",2020,0,99,"coach_jake_spavital","Jake Spavital",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Texas Tech",2020,0,99,"coach_matt_wells","Matt Wells",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Toledo",2020,0,99,"coach_jason_candle","Jason Candle",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Troy",2020,0,99,"coach_chip_lindsey","Chip Lindsey",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Tulane",2020,0,99,"coach_willie_fritz","Willie Fritz",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Tulsa",2020,0,99,"coach_philip_montgomery","Philip Montgomery",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"UAB",2020,0,99,"coach_bill_clark","Bill Clark",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"UCF",2020,0,99,"coach_josh_heupel","Josh Heupel",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"UCLA",2020,0,99,"coach_chip_kelly","Chip Kelly",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"UL Monroe",2020,0,99,"coach_matt_viator","Matt Viator",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"UNLV",2020,0,99,"coach_marcus_arroyo","Marcus Arroyo",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Utah",2020,0,99,"coach_kyle_whittingham","Kyle Whittingham",FALSE,"cfbd_coaches","high",5,5,FALSE,"single_source_coach",,
+"Utah State",2020,0,10,"coach_gary_andersen","Gary Andersen",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,6,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Utah State",2020,11,99,"coach_frank_maile","Frank Maile",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,6,FALSE,"public_transition_effective_next_game","2020-11-07","https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"UTEP",2020,0,99,"coach_dana_dimel","Dana Dimel",FALSE,"cfbd_coaches","high",8,8,FALSE,"single_source_coach",,
+"UTSA",2020,0,99,"coach_jeff_traylor","Jeff Traylor",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Vanderbilt",2020,0,14,"coach_derek_mason","Derek Mason",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,9,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Vanderbilt",2020,15,99,"coach_todd_fitch","Todd Fitch",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,9,FALSE,"public_transition_effective_next_game","2020-11-29","https://en.wikipedia.org/wiki/2020_NCAA_Division_I_FBS_football_season"
+"Virginia",2020,0,99,"coach_bronco_mendenhall","Bronco Mendenhall",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Virginia Tech",2020,0,99,"coach_justin_fuente","Justin Fuente",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Wake Forest",2020,0,99,"coach_dave_clawson","Dave Clawson",FALSE,"cfbd_coaches","high",9,9,FALSE,"single_source_coach",,
+"Washington",2020,0,99,"coach_jimmy_lake","Jimmy Lake",FALSE,"cfbd_coaches","high",4,4,FALSE,"single_source_coach",,
+"Washington State",2020,0,99,"coach_nick_rolovich","Nick Rolovich",FALSE,"cfbd_coaches","high",4,4,FALSE,"single_source_coach",,
+"West Virginia",2020,0,99,"coach_neal_brown","Neal Brown",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Western Kentucky",2020,0,99,"coach_tyson_helton","Tyson Helton",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Western Michigan",2020,0,99,"coach_tim_lester","Tim Lester",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Wisconsin",2020,0,99,"coach_paul_chryst","Paul Chryst",FALSE,"cfbd_coaches","high",7,7,FALSE,"single_source_coach",,
+"Wyoming",2020,0,99,"coach_craig_bohl","Craig Bohl",FALSE,"cfbd_coaches","high",6,6,FALSE,"single_source_coach",,
+"Air Force",2021,0,99,"coach_troy_calhoun","Troy Calhoun",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Akron",2021,0,10,"coach_tom_arth","Tom Arth",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Akron",2021,11,99,"coach_oscar_rodriguez","Oscar Rodriguez",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game","2021-11-04","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Alabama",2021,0,99,"coach_nick_saban","Nick Saban",FALSE,"cfbd_coaches","high",15,15,FALSE,"single_source_coach",,
+"App State",2021,0,99,"coach_shawn_clark","Shawn Clark",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Arizona",2021,0,99,"coach_jedd_fisch","Jedd Fisch",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Arizona State",2021,0,99,"coach_herm_edwards","Herm Edwards",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Arkansas",2021,0,99,"coach_sam_pittman","Sam Pittman",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Arkansas State",2021,0,99,"coach_butch_jones","Butch Jones",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Army",2021,0,99,"coach_jeff_monken","Jeff Monken",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Auburn",2021,0,99,"coach_bryan_harsin","Bryan Harsin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Ball State",2021,0,99,"coach_mike_neu","Mike Neu",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Baylor",2021,0,99,"coach_dave_aranda","Dave Aranda",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Boise State",2021,0,99,"coach_andy_avalos","Andy Avalos",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Boston College",2021,0,99,"coach_jeff_hafley","Jeff Hafley",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Bowling Green",2021,0,99,"coach_scot_loeffler","Scot Loeffler",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Buffalo",2021,0,99,"coach_maurice_linguist","Maurice Linguist",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"BYU",2021,0,99,"coach_kalani_sitake","Kalani Sitake",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"California",2021,0,99,"coach_justin_wilcox","Justin Wilcox",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Central Michigan",2021,0,99,"coach_jim_mcelwain","Jim McElwain",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Charlotte",2021,0,99,"coach_will_healy","Will Healy",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Cincinnati",2021,0,99,"coach_luke_fickell","Luke Fickell",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Clemson",2021,0,99,"coach_dabo_swinney","Dabo Swinney",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Coastal Carolina",2021,0,99,"coach_jamey_chadwell","Jamey Chadwell",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Colorado",2021,0,99,"coach_karl_dorrell","Karl Dorrell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Colorado State",2021,0,99,"coach_steve_addazio","Steve Addazio",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Connecticut",2021,0,1,"coach_randy_edsall","Randy Edsall",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Connecticut",2021,2,99,"coach_lou_spanos","Lou Spanos",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game","2021-09-06","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Duke",2021,0,99,"coach_david_cutcliffe","David Cutcliffe",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"East Carolina",2021,0,99,"coach_mike_houston","Mike Houston",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Eastern Michigan",2021,0,99,"coach_chris_creighton","Chris Creighton",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Florida",2021,0,12,"coach_dan_mullen","Dan Mullen",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Florida",2021,13,99,"coach_greg_knox","Greg Knox",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,13,FALSE,"public_transition_effective_next_game","2021-11-21","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Florida Atlantic",2021,0,99,"coach_willie_taggart","Willie Taggart",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida International",2021,0,99,"coach_butch_davis","Butch Davis",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida State",2021,0,99,"coach_mike_norvell","Mike Norvell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Fresno State",2021,0,98,"coach_kalen_deboer","Kalen DeBoer",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Fresno State",2021,99,99,"coach_lee_marks","Lee Marks",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2021-11-29","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Georgia",2021,0,99,"coach_kirby_smart","Kirby Smart",FALSE,"cfbd_coaches","high",15,15,FALSE,"single_source_coach",,
+"Georgia Southern",2021,0,4,"coach_chad_lunsford","Chad Lunsford",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Georgia Southern",2021,5,99,"coach_kevin_whitley","Kevin Whitley",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,12,FALSE,"public_transition_effective_next_game","2021-09-26","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Georgia State",2021,0,99,"coach_shawn_elliott","Shawn Elliott",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Georgia Tech",2021,0,99,"coach_geoff_collins","Geoff Collins",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Hawai'i",2021,0,99,"coach_todd_graham","Todd Graham",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Houston",2021,0,99,"coach_dana_holgorsen","Dana Holgorsen",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Illinois",2021,0,99,"coach_bret_bielema","Bret Bielema",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Indiana",2021,0,99,"coach_tom_allen","Tom Allen",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Iowa",2021,0,99,"coach_kirk_ferentz","Kirk Ferentz",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Iowa State",2021,0,99,"coach_matt_campbell","Matt Campbell",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Kansas",2021,0,99,"coach_lance_leipold","Lance Leipold",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Kansas State",2021,0,99,"coach_chris_klieman","Chris Klieman",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Kent State",2021,0,99,"coach_sean_lewis","Sean Lewis",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Kentucky",2021,0,99,"coach_mark_stoops","Mark Stoops",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Liberty",2021,0,99,"coach_hugh_freeze","Hugh Freeze",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Louisiana",2021,0,98,"coach_billy_napier","Billy Napier",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Louisiana",2021,99,99,"coach_michael_desormeaux","Michael Desormeaux",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2021-12-05","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Louisiana Tech",2021,0,99,"coach_skip_holtz","Skip Holtz",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Louisville",2021,0,99,"coach_scott_satterfield","Scott Satterfield",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"LSU",2021,0,98,"coach_ed_orgeron","Ed Orgeron",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"LSU",2021,99,99,"coach_brad_davis","Brad Davis",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2021-11-28","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Marshall",2021,0,99,"coach_charles_huff","Charles Huff",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Maryland",2021,0,99,"coach_mike_locksley","Mike Locksley",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Massachusetts",2021,0,10,"coach_walt_bell","Walt Bell",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Massachusetts",2021,11,99,"coach_alex_miller","Alex Miller",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game","2021-11-07","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Memphis",2021,0,99,"coach_ryan_silverfield","Ryan Silverfield",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Miami",2021,0,13,"coach_manny_diaz","Manny Diaz",FALSE,"cfbd_coaches","medium",12,12,FALSE,"ordered_by_continuity_then_source_games",,
+"Miami",2021,14,99,"coach_jess_simpson","Jess Simpson",TRUE,"cfbd_coaches","medium",0,12,FALSE,"ordered_by_continuity_then_source_games",,
+"Miami (OH)",2021,0,99,"coach_chuck_martin","Chuck Martin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Michigan",2021,0,99,"coach_jim_harbaugh","Jim Harbaugh",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Michigan State",2021,0,99,"coach_mel_tucker","Mel Tucker",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Middle Tennessee",2021,0,99,"coach_rick_stockstill","Rick Stockstill",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Minnesota",2021,0,99,"coach_pj_fleck","P.J. Fleck",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Mississippi",2021,0,99,"coach_lane_kiffin","Lane Kiffin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Mississippi State",2021,0,99,"coach_mike_leach","Mike Leach",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Missouri",2021,0,99,"coach_eli_drinkwitz","Eli Drinkwitz",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Navy",2021,0,99,"coach_ken_niumatalolo","Ken Niumatalolo",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Nebraska",2021,0,99,"coach_scott_frost","Scott Frost",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Nevada",2021,0,98,"coach_jay_norvell","Jay Norvell",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Nevada",2021,99,99,"coach_vai_taua","Vai Taua",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2021-12-06","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"New Mexico",2021,0,99,"coach_danny_gonzales","Danny Gonzales",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"New Mexico State",2021,0,99,"coach_doug_martin","Doug Martin",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"North Carolina",2021,0,99,"coach_mack_brown","Mack Brown",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"North Carolina State",2021,0,99,"coach_dave_doeren","Dave Doeren",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"North Texas",2021,0,99,"coach_seth_littrell","Seth Littrell",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Northern Illinois",2021,0,99,"coach_thomas_hammock","Thomas Hammock",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Northwestern",2021,0,99,"coach_pat_fitzgerald","Pat Fitzgerald",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Notre Dame",2021,0,98,"coach_brian_kelly","Brian Kelly",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Notre Dame",2021,99,99,"coach_marcus_freeman","Marcus Freeman",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2021-11-29","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Ohio",2021,0,0,"coach_frank_solich","Frank Solich",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",0,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Ohio",2021,1,99,"coach_tim_albin","Tim Albin",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,12,FALSE,"public_transition_effective_next_game","2021-07-14","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Ohio State",2021,0,99,"coach_ryan_day","Ryan Day",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oklahoma",2021,0,98,"coach_lincoln_riley","Lincoln Riley",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Oklahoma",2021,99,99,"coach_bob_stoops","Bob Stoops",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2021-11-28","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Oklahoma State",2021,0,99,"coach_mike_gundy","Mike Gundy",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Old Dominion",2021,0,99,"coach_ricky_rahne","Ricky Rahne",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oregon",2021,0,98,"coach_mario_cristobal","Mario Cristobal",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Oregon",2021,99,99,"coach_bryan_mcclendon","Bryan McClendon",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2021-12-06","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Oregon State",2021,0,99,"coach_jonathan_smith","Jonathan Smith",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Penn State",2021,0,99,"coach_james_franklin","James Franklin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Pittsburgh",2021,0,99,"coach_pat_narduzzi","Pat Narduzzi",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Purdue",2021,0,99,"coach_jeff_brohm","Jeff Brohm",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Rice",2021,0,99,"coach_mike_bloomgren","Mike Bloomgren",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Rutgers",2021,0,99,"coach_greg_schiano","Greg Schiano",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"San Diego State",2021,0,99,"coach_brady_hoke","Brady Hoke",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"San José State",2021,0,99,"coach_brent_brennan","Brent Brennan",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"SMU",2021,0,12,"coach_sonny_dykes","Sonny Dykes",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"SMU",2021,13,99,"coach_jim_leavitt","Jim Leavitt",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,12,FALSE,"public_transition_effective_next_game","2021-11-26","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"South Alabama",2021,0,0,"coach_steve_campbell","Steve Campbell",TRUE,"cfbd_coaches","medium",0,12,FALSE,"ordered_by_continuity_then_source_games",,
+"South Alabama",2021,1,99,"coach_kane_wommack","Kane Wommack",FALSE,"cfbd_coaches","medium",12,12,FALSE,"ordered_by_continuity_then_source_games",,
+"South Carolina",2021,0,99,"coach_shane_beamer","Shane Beamer",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"South Florida",2021,0,99,"coach_jeff_scott","Jeff Scott",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Southern California",2021,0,2,"coach_clay_helton","Clay Helton",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Southern California",2021,3,99,"coach_donte_williams","Donte Williams",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game","2021-09-13","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Southern Miss",2021,0,99,"coach_will_hall","Will Hall",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Stanford",2021,0,99,"coach_david_shaw","David Shaw",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Syracuse",2021,0,99,"coach_dino_babers","Dino Babers",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"TCU",2021,0,9,"coach_gary_patterson","Gary Patterson",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"TCU",2021,10,99,"coach_jerry_kill","Jerry Kill",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,12,FALSE,"public_transition_effective_next_game","2021-10-31","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Temple",2021,0,99,"coach_rod_carey","Rod Carey",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Tennessee",2021,0,99,"coach_josh_heupel","Josh Heupel",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Texas",2021,0,99,"coach_steve_sarkisian","Steve Sarkisian",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Texas A&M",2021,0,99,"coach_jimbo_fisher","Jimbo Fisher",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Texas State",2021,0,99,"coach_jake_spavital","Jake Spavital",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Texas Tech",2021,0,8,"coach_matt_wells","Matt Wells",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Texas Tech",2021,9,99,"coach_sonny_cumbie","Sonny Cumbie",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,13,FALSE,"public_transition_effective_next_game","2021-10-25","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Toledo",2021,0,99,"coach_jason_candle","Jason Candle",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Troy",2021,0,12,"coach_chip_lindsey","Chip Lindsey",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Troy",2021,13,99,"coach_brandon_hall","Brandon Hall",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,12,FALSE,"public_transition_effective_next_game","2021-11-21","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Tulane",2021,0,99,"coach_willie_fritz","Willie Fritz",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Tulsa",2021,0,99,"coach_philip_montgomery","Philip Montgomery",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UAB",2021,0,99,"coach_bill_clark","Bill Clark",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UCF",2021,0,99,"coach_gus_malzahn","Gus Malzahn",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UCLA",2021,0,99,"coach_chip_kelly","Chip Kelly",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UL Monroe",2021,0,99,"coach_terry_bowden","Terry Bowden",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UNLV",2021,0,99,"coach_marcus_arroyo","Marcus Arroyo",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Utah",2021,0,99,"coach_kyle_whittingham","Kyle Whittingham",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Utah State",2021,0,99,"coach_blake_anderson","Blake Anderson",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"UTEP",2021,0,99,"coach_dana_dimel","Dana Dimel",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UTSA",2021,0,99,"coach_jeff_traylor","Jeff Traylor",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Vanderbilt",2021,0,99,"coach_clark_lea","Clark Lea",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Virginia",2021,0,99,"coach_bronco_mendenhall","Bronco Mendenhall",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Virginia Tech",2021,0,11,"coach_justin_fuente","Justin Fuente",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Virginia Tech",2021,12,99,"coach_jc_price","J.C. Price",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,13,FALSE,"public_transition_effective_next_game","2021-11-16","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Wake Forest",2021,0,99,"coach_dave_clawson","Dave Clawson",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Washington",2021,0,11,"coach_jimmy_lake","Jimmy Lake",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Washington",2021,12,99,"coach_bob_gregory","Bob Gregory",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game","2021-11-14","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Washington State",2021,0,7,"coach_nick_rolovich","Nick Rolovich",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"Washington State",2021,8,99,"coach_jake_dickert","Jake Dickert",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",6,13,FALSE,"public_transition_effective_next_game","2021-10-18","https://en.wikipedia.org/wiki/2021_NCAA_Division_I_FBS_football_season"
+"West Virginia",2021,0,99,"coach_neal_brown","Neal Brown",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Western Kentucky",2021,0,99,"coach_tyson_helton","Tyson Helton",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Western Michigan",2021,0,99,"coach_tim_lester","Tim Lester",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Wisconsin",2021,0,99,"coach_paul_chryst","Paul Chryst",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Wyoming",2021,0,99,"coach_craig_bohl","Craig Bohl",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Air Force",2022,0,99,"coach_troy_calhoun","Troy Calhoun",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Akron",2022,0,99,"coach_joe_moorhead","Joe Moorhead",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Alabama",2022,0,99,"coach_nick_saban","Nick Saban",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"App State",2022,0,99,"coach_shawn_clark","Shawn Clark",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Arizona",2022,0,99,"coach_jedd_fisch","Jedd Fisch",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Arizona State",2022,0,3,"coach_herm_edwards","Herm Edwards",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Arizona State",2022,4,99,"coach_shaun_aguano","Shaun Aguano",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game","2022-09-18","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Arkansas",2022,0,99,"coach_sam_pittman","Sam Pittman",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Arkansas State",2022,0,99,"coach_butch_jones","Butch Jones",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Army",2022,0,99,"coach_jeff_monken","Jeff Monken",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Auburn",2022,0,9,"coach_bryan_harsin","Bryan Harsin",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Auburn",2022,10,99,"coach_cadillac_williams","Cadillac Williams",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,12,FALSE,"public_transition_effective_next_game","2022-10-31","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Ball State",2022,0,99,"coach_mike_neu","Mike Neu",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Baylor",2022,0,99,"coach_dave_aranda","Dave Aranda",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Boise State",2022,0,99,"coach_andy_avalos","Andy Avalos",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Boston College",2022,0,99,"coach_jeff_hafley","Jeff Hafley",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Bowling Green",2022,0,99,"coach_scot_loeffler","Scot Loeffler",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Buffalo",2022,0,99,"coach_maurice_linguist","Maurice Linguist",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"BYU",2022,0,99,"coach_kalani_sitake","Kalani Sitake",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"California",2022,0,99,"coach_justin_wilcox","Justin Wilcox",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Central Michigan",2022,0,99,"coach_jim_mcelwain","Jim McElwain",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Charlotte",2022,0,8,"coach_will_healy","Will Healy",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Charlotte",2022,9,99,"coach_peter_rossomando","Peter Rossomando",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,12,FALSE,"public_transition_effective_next_game","2022-10-23","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Cincinnati",2022,0,98,"coach_luke_fickell","Luke Fickell",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Cincinnati",2022,99,99,"coach_kerry_coombs","Kerry Coombs",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2022-11-27","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Clemson",2022,0,99,"coach_dabo_swinney","Dabo Swinney",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Coastal Carolina",2022,0,98,"coach_jamey_chadwell","Jamey Chadwell",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Coastal Carolina",2022,99,99,"coach_chad_staggs","Chad Staggs",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,13,FALSE,"public_transition_effective_next_game","2022-12-04","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Colorado",2022,0,6,"coach_karl_dorrell","Karl Dorrell",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Colorado",2022,7,99,"coach_mike_sanford_jr","Mike Sanford Jr.",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,12,FALSE,"public_transition_effective_next_game","2022-10-02","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Colorado State",2022,0,99,"coach_jay_norvell","Jay Norvell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Connecticut",2022,0,99,"coach_jim_mora","Jim Mora",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Duke",2022,0,99,"coach_mike_elko","Mike Elko",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"East Carolina",2022,0,99,"coach_mike_houston","Mike Houston",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Eastern Michigan",2022,0,99,"coach_chris_creighton","Chris Creighton",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Florida",2022,0,99,"coach_billy_napier","Billy Napier",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Florida Atlantic",2022,0,99,"coach_willie_taggart","Willie Taggart",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida International",2022,0,99,"coach_mike_macintyre","Mike MacIntyre",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida State",2022,0,99,"coach_mike_norvell","Mike Norvell",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Fresno State",2022,0,99,"coach_jeff_tedford","Jeff Tedford",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Georgia",2022,0,99,"coach_kirby_smart","Kirby Smart",FALSE,"cfbd_coaches","high",15,15,FALSE,"single_source_coach",,
+"Georgia Southern",2022,0,99,"coach_clay_helton","Clay Helton",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Georgia State",2022,0,99,"coach_shawn_elliott","Shawn Elliott",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Georgia Tech",2022,0,4,"coach_geoff_collins","Geoff Collins",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Georgia Tech",2022,5,99,"coach_brent_key","Brent Key",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,12,FALSE,"public_transition_effective_next_game","2022-09-25","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Hawai'i",2022,0,99,"coach_timmy_chang","Timmy Chang",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Houston",2022,0,99,"coach_dana_holgorsen","Dana Holgorsen",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Illinois",2022,0,99,"coach_bret_bielema","Bret Bielema",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Indiana",2022,0,99,"coach_tom_allen","Tom Allen",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Iowa",2022,0,99,"coach_kirk_ferentz","Kirk Ferentz",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Iowa State",2022,0,99,"coach_matt_campbell","Matt Campbell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"James Madison",2022,0,99,"coach_curt_cignetti","Curt Cignetti",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Kansas",2022,0,99,"coach_lance_leipold","Lance Leipold",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Kansas State",2022,0,99,"coach_chris_klieman","Chris Klieman",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Kent State",2022,0,99,"coach_sean_lewis","Sean Lewis",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Kentucky",2022,0,99,"coach_mark_stoops","Mark Stoops",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Liberty",2022,0,98,"coach_hugh_freeze","Hugh Freeze",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Liberty",2022,99,99,"coach_josh_aldridge","Josh Aldridge",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2022-11-28","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Louisiana",2022,0,99,"coach_michael_desormeaux","Michael Desormeaux",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Louisiana Tech",2022,0,99,"coach_sonny_cumbie","Sonny Cumbie",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Louisville",2022,0,98,"coach_scott_satterfield","Scott Satterfield",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Louisville",2022,99,99,"coach_deion_branch","Deion Branch",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2022-12-05","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"LSU",2022,0,99,"coach_brian_kelly","Brian Kelly",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Marshall",2022,0,99,"coach_charles_huff","Charles Huff",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Maryland",2022,0,99,"coach_mike_locksley","Mike Locksley",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Massachusetts",2022,0,99,"coach_don_brown","Don Brown",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Memphis",2022,0,99,"coach_ryan_silverfield","Ryan Silverfield",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Miami",2022,0,99,"coach_mario_cristobal","Mario Cristobal",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Miami (OH)",2022,0,99,"coach_chuck_martin","Chuck Martin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Michigan",2022,0,99,"coach_jim_harbaugh","Jim Harbaugh",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Michigan State",2022,0,99,"coach_mel_tucker","Mel Tucker",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Middle Tennessee",2022,0,99,"coach_rick_stockstill","Rick Stockstill",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Minnesota",2022,0,99,"coach_pj_fleck","P.J. Fleck",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Mississippi",2022,0,99,"coach_lane_kiffin","Lane Kiffin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Mississippi State",2022,0,98,"coach_mike_leach","Mike Leach",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Mississippi State",2022,99,99,"coach_zach_arnett","Zach Arnett",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2022-12-12","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Missouri",2022,0,99,"coach_eli_drinkwitz","Eli Drinkwitz",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Navy",2022,0,99,"coach_ken_niumatalolo","Ken Niumatalolo",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Nebraska",2022,0,2,"coach_scott_frost","Scott Frost",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Nebraska",2022,3,99,"coach_mickey_joseph","Mickey Joseph",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game","2022-09-11","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Nevada",2022,0,99,"coach_ken_wilson","Ken Wilson",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"New Mexico",2022,0,99,"coach_danny_gonzales","Danny Gonzales",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"New Mexico State",2022,0,99,"coach_jerry_kill","Jerry Kill",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"North Carolina",2022,0,99,"coach_mack_brown","Mack Brown",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"North Carolina State",2022,0,99,"coach_dave_doeren","Dave Doeren",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"North Texas",2022,0,98,"coach_seth_littrell","Seth Littrell",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"North Texas",2022,99,99,"coach_phil_bennett","Phil Bennett",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2022-12-04","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Northern Illinois",2022,0,99,"coach_thomas_hammock","Thomas Hammock",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Northwestern",2022,0,99,"coach_pat_fitzgerald","Pat Fitzgerald",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Notre Dame",2022,0,99,"coach_marcus_freeman","Marcus Freeman",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Ohio",2022,0,99,"coach_tim_albin","Tim Albin",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Ohio State",2022,0,99,"coach_ryan_day","Ryan Day",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oklahoma",2022,0,99,"coach_brent_venables","Brent Venables",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oklahoma State",2022,0,99,"coach_mike_gundy","Mike Gundy",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Old Dominion",2022,0,99,"coach_ricky_rahne","Ricky Rahne",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Oregon",2022,0,99,"coach_dan_lanning","Dan Lanning",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oregon State",2022,0,99,"coach_jonathan_smith","Jonathan Smith",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Penn State",2022,0,99,"coach_james_franklin","James Franklin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Pittsburgh",2022,0,99,"coach_pat_narduzzi","Pat Narduzzi",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Purdue",2022,0,98,"coach_jeff_brohm","Jeff Brohm",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Purdue",2022,99,99,"coach_brian_brohm","Brian Brohm",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2022-12-07","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Rice",2022,0,99,"coach_mike_bloomgren","Mike Bloomgren",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Rutgers",2022,0,99,"coach_greg_schiano","Greg Schiano",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"San Diego State",2022,0,99,"coach_brady_hoke","Brady Hoke",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"San José State",2022,0,99,"coach_brent_brennan","Brent Brennan",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"SMU",2022,0,99,"coach_rhett_lashlee","Rhett Lashlee",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"South Alabama",2022,0,99,"coach_kane_wommack","Kane Wommack",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"South Carolina",2022,0,99,"coach_shane_beamer","Shane Beamer",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"South Florida",2022,0,10,"coach_jeff_scott","Jeff Scott",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"South Florida",2022,11,99,"coach_daniel_da_prato","Daniel Da Prato",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game","2022-11-06","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Southern California",2022,0,99,"coach_lincoln_riley","Lincoln Riley",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Southern Miss",2022,0,99,"coach_will_hall","Will Hall",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Stanford",2022,0,99,"coach_david_shaw","David Shaw",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Syracuse",2022,0,99,"coach_dino_babers","Dino Babers",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"TCU",2022,0,99,"coach_sonny_dykes","Sonny Dykes",FALSE,"cfbd_coaches","high",15,15,FALSE,"single_source_coach",,
+"Temple",2022,0,99,"coach_stan_drayton","Stan Drayton",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Tennessee",2022,0,99,"coach_josh_heupel","Josh Heupel",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Texas",2022,0,99,"coach_steve_sarkisian","Steve Sarkisian",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Texas A&M",2022,0,99,"coach_jimbo_fisher","Jimbo Fisher",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Texas State",2022,0,99,"coach_jake_spavital","Jake Spavital",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Texas Tech",2022,0,99,"coach_joey_mcguire","Joey McGuire",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Toledo",2022,0,99,"coach_jason_candle","Jason Candle",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Troy",2022,0,99,"coach_jon_sumrall","Jon Sumrall",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Tulane",2022,0,99,"coach_willie_fritz","Willie Fritz",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Tulsa",2022,0,99,"coach_philip_montgomery","Philip Montgomery",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UAB",2022,0,0,"coach_bill_clark","Bill Clark",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",0,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"UAB",2022,1,99,"coach_bryant_vincent","Bryant Vincent",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",13,13,FALSE,"public_transition_effective_next_game","2022-06-24","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"UCF",2022,0,99,"coach_gus_malzahn","Gus Malzahn",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"UCLA",2022,0,99,"coach_chip_kelly","Chip Kelly",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UL Monroe",2022,0,99,"coach_terry_bowden","Terry Bowden",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UNLV",2022,0,99,"coach_marcus_arroyo","Marcus Arroyo",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Utah",2022,0,99,"coach_kyle_whittingham","Kyle Whittingham",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Utah State",2022,0,99,"coach_blake_anderson","Blake Anderson",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UTEP",2022,0,99,"coach_dana_dimel","Dana Dimel",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UTSA",2022,0,99,"coach_jeff_traylor","Jeff Traylor",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Vanderbilt",2022,0,99,"coach_clark_lea","Clark Lea",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Virginia",2022,0,99,"coach_tony_elliott","Tony Elliott",FALSE,"cfbd_coaches","high",10,10,FALSE,"single_source_coach",,
+"Virginia Tech",2022,0,99,"coach_brent_pry","Brent Pry",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Wake Forest",2022,0,99,"coach_dave_clawson","Dave Clawson",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Washington",2022,0,99,"coach_kalen_deboer","Kalen DeBoer",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Washington State",2022,0,99,"coach_jake_dickert","Jake Dickert",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"West Virginia",2022,0,99,"coach_neal_brown","Neal Brown",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Western Kentucky",2022,0,99,"coach_tyson_helton","Tyson Helton",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Western Michigan",2022,0,99,"coach_tim_lester","Tim Lester",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Wisconsin",2022,0,5,"coach_paul_chryst","Paul Chryst",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Wisconsin",2022,6,99,"coach_jim_leonhard","Jim Leonhard",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,13,FALSE,"public_transition_effective_next_game","2022-10-02","https://en.wikipedia.org/wiki/2022_NCAA_Division_I_FBS_football_season"
+"Wyoming",2022,0,99,"coach_craig_bohl","Craig Bohl",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Air Force",2023,0,99,"coach_troy_calhoun","Troy Calhoun",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Akron",2023,0,99,"coach_joe_moorhead","Joe Moorhead",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Alabama",2023,0,99,"coach_nick_saban","Nick Saban",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"App State",2023,0,99,"coach_shawn_clark","Shawn Clark",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Arizona",2023,0,99,"coach_jedd_fisch","Jedd Fisch",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Arizona State",2023,0,99,"coach_kenny_dillingham","Kenny Dillingham",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Arkansas",2023,0,99,"coach_sam_pittman","Sam Pittman",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Arkansas State",2023,0,99,"coach_butch_jones","Butch Jones",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Army",2023,0,99,"coach_jeff_monken","Jeff Monken",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Auburn",2023,0,99,"coach_hugh_freeze","Hugh Freeze",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Ball State",2023,0,99,"coach_mike_neu","Mike Neu",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Baylor",2023,0,99,"coach_dave_aranda","Dave Aranda",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Boise State",2023,0,11,"coach_andy_avalos","Andy Avalos",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Boise State",2023,12,99,"coach_spencer_danielson","Spencer Danielson",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,14,FALSE,"public_transition_effective_next_game","2023-11-12","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Boston College",2023,0,99,"coach_jeff_hafley","Jeff Hafley",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Bowling Green",2023,0,99,"coach_scot_loeffler","Scot Loeffler",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Buffalo",2023,0,99,"coach_maurice_linguist","Maurice Linguist",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"BYU",2023,0,99,"coach_kalani_sitake","Kalani Sitake",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"California",2023,0,99,"coach_justin_wilcox","Justin Wilcox",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Central Michigan",2023,0,99,"coach_jim_mcelwain","Jim McElwain",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Charlotte",2023,0,99,"coach_biff_poggi","Biff Poggi",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Cincinnati",2023,0,99,"coach_scott_satterfield","Scott Satterfield",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Clemson",2023,0,99,"coach_dabo_swinney","Dabo Swinney",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Coastal Carolina",2023,0,99,"coach_tim_beck","Tim Beck",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Colorado",2023,0,99,"coach_deion_sanders","Deion Sanders",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Colorado State",2023,0,99,"coach_jay_norvell","Jay Norvell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Connecticut",2023,0,99,"coach_jim_mora","Jim Mora",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Duke",2023,0,98,"coach_mike_elko","Mike Elko",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Duke",2023,99,99,"coach_trooper_taylor","Trooper Taylor",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2023-11-27","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"East Carolina",2023,0,99,"coach_mike_houston","Mike Houston",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Eastern Michigan",2023,0,99,"coach_chris_creighton","Chris Creighton",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Florida",2023,0,99,"coach_billy_napier","Billy Napier",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida Atlantic",2023,0,99,"coach_tom_herman","Tom Herman",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida International",2023,0,99,"coach_mike_macintyre","Mike MacIntyre",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida State",2023,0,99,"coach_mike_norvell","Mike Norvell",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Fresno State",2023,0,99,"coach_jeff_tedford","Jeff Tedford",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Georgia",2023,0,99,"coach_kirby_smart","Kirby Smart",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Georgia Southern",2023,0,99,"coach_clay_helton","Clay Helton",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Georgia State",2023,0,99,"coach_shawn_elliott","Shawn Elliott",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Georgia Tech",2023,0,99,"coach_brent_key","Brent Key",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Hawai'i",2023,0,99,"coach_timmy_chang","Timmy Chang",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Houston",2023,0,99,"coach_dana_holgorsen","Dana Holgorsen",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Illinois",2023,0,99,"coach_bret_bielema","Bret Bielema",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Indiana",2023,0,99,"coach_tom_allen","Tom Allen",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Iowa",2023,0,99,"coach_kirk_ferentz","Kirk Ferentz",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Iowa State",2023,0,99,"coach_matt_campbell","Matt Campbell",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Jacksonville State",2023,0,99,"coach_rich_rodriguez","Rich Rodriguez",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"James Madison",2023,0,98,"coach_curt_cignetti","Curt Cignetti",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"James Madison",2023,99,99,"coach_damian_wroblewski","Damian Wroblewski",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2023-11-30","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Kansas",2023,0,99,"coach_lance_leipold","Lance Leipold",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Kansas State",2023,0,99,"coach_chris_klieman","Chris Klieman",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Kent State",2023,0,99,"coach_kenni_burns","Kenni Burns",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Kentucky",2023,0,99,"coach_mark_stoops","Mark Stoops",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Liberty",2023,0,99,"coach_jamey_chadwell","Jamey Chadwell",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Louisiana",2023,0,99,"coach_michael_desormeaux","Michael Desormeaux",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Louisiana Tech",2023,0,99,"coach_sonny_cumbie","Sonny Cumbie",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Louisville",2023,0,99,"coach_jeff_brohm","Jeff Brohm",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"LSU",2023,0,99,"coach_brian_kelly","Brian Kelly",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Marshall",2023,0,99,"coach_charles_huff","Charles Huff",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Maryland",2023,0,99,"coach_mike_locksley","Mike Locksley",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Massachusetts",2023,0,99,"coach_don_brown","Don Brown",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Memphis",2023,0,99,"coach_ryan_silverfield","Ryan Silverfield",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Miami",2023,0,99,"coach_mario_cristobal","Mario Cristobal",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Miami (OH)",2023,0,99,"coach_chuck_martin","Chuck Martin",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Michigan",2023,0,99,"coach_jim_harbaugh","Jim Harbaugh",FALSE,"cfbd_coaches","high",15,15,FALSE,"single_source_coach",,
+"Michigan State",2023,0,4,"coach_mel_tucker","Mel Tucker",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Michigan State",2023,5,99,"coach_harlon_barnett","Harlon Barnett",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,12,FALSE,"public_transition_effective_next_game","2023-09-27","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Middle Tennessee",2023,0,99,"coach_rick_stockstill","Rick Stockstill",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Minnesota",2023,0,99,"coach_pj_fleck","P.J. Fleck",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Mississippi",2023,0,99,"coach_lane_kiffin","Lane Kiffin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Mississippi State",2023,0,11,"coach_zach_arnett","Zach Arnett",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Mississippi State",2023,12,99,"coach_greg_knox","Greg Knox",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game","2023-11-13","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Missouri",2023,0,99,"coach_eli_drinkwitz","Eli Drinkwitz",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Navy",2023,0,99,"coach_brian_newberry","Brian Newberry",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Nebraska",2023,0,99,"coach_matt_rhule","Matt Rhule",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Nevada",2023,0,99,"coach_ken_wilson","Ken Wilson",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"New Mexico",2023,0,99,"coach_danny_gonzales","Danny Gonzales",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"New Mexico State",2023,0,99,"coach_jerry_kill","Jerry Kill",FALSE,"cfbd_coaches","high",15,15,FALSE,"single_source_coach",,
+"North Carolina",2023,0,99,"coach_mack_brown","Mack Brown",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"North Carolina State",2023,0,99,"coach_dave_doeren","Dave Doeren",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"North Texas",2023,0,99,"coach_eric_morris","Eric Morris",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Northern Illinois",2023,0,99,"coach_thomas_hammock","Thomas Hammock",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Northwestern",2023,0,0,"coach_pat_fitzgerald","Pat Fitzgerald",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",0,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Northwestern",2023,1,99,"coach_david_braun","David Braun",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",13,13,FALSE,"public_transition_effective_next_game","2023-07-10","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Notre Dame",2023,0,99,"coach_marcus_freeman","Marcus Freeman",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Ohio",2023,0,99,"coach_tim_albin","Tim Albin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Ohio State",2023,0,99,"coach_ryan_day","Ryan Day",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oklahoma",2023,0,99,"coach_brent_venables","Brent Venables",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oklahoma State",2023,0,99,"coach_mike_gundy","Mike Gundy",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Old Dominion",2023,0,99,"coach_ricky_rahne","Ricky Rahne",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oregon",2023,0,99,"coach_dan_lanning","Dan Lanning",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Oregon State",2023,0,98,"coach_jonathan_smith","Jonathan Smith",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Oregon State",2023,99,99,"coach_kefense_hynson","Kefense Hynson",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2023-11-25","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Penn State",2023,0,99,"coach_james_franklin","James Franklin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Pittsburgh",2023,0,99,"coach_pat_narduzzi","Pat Narduzzi",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Purdue",2023,0,99,"coach_ryan_walters","Ryan Walters",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Rice",2023,0,99,"coach_mike_bloomgren","Mike Bloomgren",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Rutgers",2023,0,99,"coach_greg_schiano","Greg Schiano",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Sam Houston",2023,0,99,"coach_kc_keeler","K.C. Keeler",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"San Diego State",2023,0,99,"coach_brady_hoke","Brady Hoke",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"San José State",2023,0,99,"coach_brent_brennan","Brent Brennan",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"SMU",2023,0,99,"coach_rhett_lashlee","Rhett Lashlee",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"South Alabama",2023,0,99,"coach_kane_wommack","Kane Wommack",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"South Carolina",2023,0,99,"coach_shane_beamer","Shane Beamer",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"South Florida",2023,0,99,"coach_alex_golesh","Alex Golesh",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Southern California",2023,0,99,"coach_lincoln_riley","Lincoln Riley",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Southern Miss",2023,0,99,"coach_will_hall","Will Hall",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Stanford",2023,0,99,"coach_troy_taylor","Troy Taylor",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Syracuse",2023,0,12,"coach_dino_babers","Dino Babers",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Syracuse",2023,13,99,"coach_nunzio_campanile","Nunzio Campanile",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,13,FALSE,"public_transition_effective_next_game","2023-11-19","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"TCU",2023,0,99,"coach_sonny_dykes","Sonny Dykes",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Temple",2023,0,99,"coach_stan_drayton","Stan Drayton",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Tennessee",2023,0,99,"coach_josh_heupel","Josh Heupel",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Texas",2023,0,99,"coach_steve_sarkisian","Steve Sarkisian",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Texas A&M",2023,0,11,"coach_jimbo_fisher","Jimbo Fisher",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Texas A&M",2023,12,99,"coach_elijah_robinson","Elijah Robinson",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,13,FALSE,"public_transition_effective_next_game","2023-11-12","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Texas State",2023,0,99,"coach_gj_kinne","G.J. Kinne",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Texas Tech",2023,0,99,"coach_joey_mcguire","Joey McGuire",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Toledo",2023,0,99,"coach_jason_candle","Jason Candle",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Troy",2023,0,98,"coach_jon_sumrall","Jon Sumrall",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Troy",2023,99,99,"coach_greg_gasparato","Greg Gasparato",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2023-12-08","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Tulane",2023,0,98,"coach_willie_fritz","Willie Fritz",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Tulane",2023,99,99,"coach_slade_nagle","Slade Nagle",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2023-12-03","https://en.wikipedia.org/wiki/2023_NCAA_Division_I_FBS_football_season"
+"Tulsa",2023,0,99,"coach_kevin_wilson","Kevin Wilson",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UAB",2023,0,99,"coach_trent_dilfer","Trent Dilfer",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UCF",2023,0,99,"coach_gus_malzahn","Gus Malzahn",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UCLA",2023,0,99,"coach_chip_kelly","Chip Kelly",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UL Monroe",2023,0,99,"coach_terry_bowden","Terry Bowden",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UNLV",2023,0,99,"coach_barry_odom","Barry Odom",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Utah",2023,0,99,"coach_kyle_whittingham","Kyle Whittingham",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Utah State",2023,0,99,"coach_blake_anderson","Blake Anderson",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"UTEP",2023,0,99,"coach_dana_dimel","Dana Dimel",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UTSA",2023,0,99,"coach_jeff_traylor","Jeff Traylor",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Vanderbilt",2023,0,99,"coach_clark_lea","Clark Lea",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Virginia",2023,0,99,"coach_tony_elliott","Tony Elliott",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Virginia Tech",2023,0,99,"coach_brent_pry","Brent Pry",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Wake Forest",2023,0,99,"coach_dave_clawson","Dave Clawson",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Washington",2023,0,99,"coach_kalen_deboer","Kalen DeBoer",FALSE,"cfbd_coaches","high",15,15,FALSE,"single_source_coach",,
+"Washington State",2023,0,99,"coach_jake_dickert","Jake Dickert",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"West Virginia",2023,0,99,"coach_neal_brown","Neal Brown",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Western Kentucky",2023,0,99,"coach_tyson_helton","Tyson Helton",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Western Michigan",2023,0,99,"coach_lance_taylor","Lance Taylor",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Wisconsin",2023,0,99,"coach_luke_fickell","Luke Fickell",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Wyoming",2023,0,99,"coach_craig_bohl","Craig Bohl",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Air Force",2024,0,99,"coach_troy_calhoun","Troy Calhoun",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Akron",2024,0,99,"coach_joe_moorhead","Joe Moorhead",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Alabama",2024,0,99,"coach_kalen_deboer","Kalen DeBoer",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"App State",2024,0,99,"coach_shawn_clark","Shawn Clark",FALSE,"cfbd_coaches","high",11,11,FALSE,"single_source_coach",,
+"Arizona",2024,0,99,"coach_brent_brennan","Brent Brennan",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Arizona State",2024,0,99,"coach_kenny_dillingham","Kenny Dillingham",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Arkansas",2024,0,99,"coach_sam_pittman","Sam Pittman",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Arkansas State",2024,0,99,"coach_butch_jones","Butch Jones",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Army",2024,0,99,"coach_jeff_monken","Jeff Monken",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Auburn",2024,0,99,"coach_hugh_freeze","Hugh Freeze",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Ball State",2024,0,12,"coach_mike_neu","Mike Neu",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Ball State",2024,13,99,"coach_colin_johnson","Colin Johnson",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game","2024-11-16","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Baylor",2024,0,99,"coach_dave_aranda","Dave Aranda",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Boise State",2024,0,99,"coach_spencer_danielson","Spencer Danielson",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Boston College",2024,0,99,"coach_bill_o_brien","Bill O'Brien",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Bowling Green",2024,0,99,"coach_scot_loeffler","Scot Loeffler",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Buffalo",2024,0,0,"coach_maurice_linguist","Maurice Linguist",TRUE,"cfbd_coaches","medium",0,13,FALSE,"ordered_by_continuity_then_source_games",,
+"Buffalo",2024,1,99,"coach_pete_lembo","Pete Lembo",FALSE,"cfbd_coaches","medium",13,13,FALSE,"ordered_by_continuity_then_source_games",,
+"BYU",2024,0,99,"coach_kalani_sitake","Kalani Sitake",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"California",2024,0,99,"coach_justin_wilcox","Justin Wilcox",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Central Michigan",2024,0,99,"coach_jim_mcelwain","Jim McElwain",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Charlotte",2024,0,12,"coach_biff_poggi","Biff Poggi",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Charlotte",2024,13,99,"coach_tim_brewster","Tim Brewster",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game","2024-11-18","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Cincinnati",2024,0,99,"coach_scott_satterfield","Scott Satterfield",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Clemson",2024,0,99,"coach_dabo_swinney","Dabo Swinney",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Coastal Carolina",2024,0,99,"coach_tim_beck","Tim Beck",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Colorado",2024,0,99,"coach_deion_sanders","Deion Sanders",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Colorado State",2024,0,99,"coach_jay_norvell","Jay Norvell",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Connecticut",2024,0,99,"coach_jim_mora","Jim Mora",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Duke",2024,0,99,"coach_manny_diaz","Manny Diaz",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"East Carolina",2024,0,8,"coach_mike_houston","Mike Houston",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"East Carolina",2024,9,99,"coach_blake_harrell","Blake Harrell",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",6,13,FALSE,"public_transition_effective_next_game","2024-10-20","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Eastern Michigan",2024,0,99,"coach_chris_creighton","Chris Creighton",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida",2024,0,99,"coach_billy_napier","Billy Napier",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Florida Atlantic",2024,0,12,"coach_tom_herman","Tom Herman",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Florida Atlantic",2024,13,99,"coach_chad_lunsford","Chad Lunsford",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game","2024-11-18","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Florida International",2024,0,99,"coach_mike_macintyre","Mike MacIntyre",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Florida State",2024,0,99,"coach_mike_norvell","Mike Norvell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Fresno State",2024,0,0,"coach_jeff_tedford","Jeff Tedford",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",0,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Fresno State",2024,1,99,"coach_tim_skipper","Tim Skipper",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",13,13,FALSE,"public_transition_effective_next_game","2024-07-15","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Georgia",2024,0,99,"coach_kirby_smart","Kirby Smart",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Georgia Southern",2024,0,99,"coach_clay_helton","Clay Helton",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Georgia State",2024,0,0,"coach_shawn_elliott","Shawn Elliott",TRUE,"cfbd_coaches","medium",0,12,FALSE,"ordered_by_continuity_then_source_games",,
+"Georgia State",2024,1,99,"coach_dell_mcgee","Dell McGee",FALSE,"cfbd_coaches","medium",12,12,FALSE,"ordered_by_continuity_then_source_games",,
+"Georgia Tech",2024,0,99,"coach_brent_key","Brent Key",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Hawai'i",2024,0,99,"coach_timmy_chang","Timmy Chang",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Houston",2024,0,0,"coach_dana_holgorsen","Dana Holgorsen",TRUE,"cfbd_coaches","medium",0,12,FALSE,"ordered_by_continuity_then_source_games",,
+"Houston",2024,1,99,"coach_willie_fritz","Willie Fritz",FALSE,"cfbd_coaches","medium",12,12,FALSE,"ordered_by_continuity_then_source_games",,
+"Illinois",2024,0,99,"coach_bret_bielema","Bret Bielema",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Indiana",2024,0,99,"coach_curt_cignetti","Curt Cignetti",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Iowa",2024,0,99,"coach_kirk_ferentz","Kirk Ferentz",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Iowa State",2024,0,99,"coach_matt_campbell","Matt Campbell",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Jacksonville State",2024,0,98,"coach_rich_rodriguez","Rich Rodriguez",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Jacksonville State",2024,99,99,"coach_rod_smith","Rod Smith",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2024-12-12","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"James Madison",2024,0,99,"coach_bob_chesney","Bob Chesney",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Kansas",2024,0,99,"coach_lance_leipold","Lance Leipold",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Kansas State",2024,0,99,"coach_chris_klieman","Chris Klieman",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Kennesaw State",2024,0,11,"coach_brian_bohannon","Brian Bohannon",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Kennesaw State",2024,12,99,"coach_chandler_burks","Chandler Burks",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game","2024-11-10","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Kent State",2024,0,99,"coach_kenni_burns","Kenni Burns",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Kentucky",2024,0,99,"coach_mark_stoops","Mark Stoops",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Liberty",2024,0,99,"coach_jamey_chadwell","Jamey Chadwell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Louisiana",2024,0,99,"coach_michael_desormeaux","Michael Desormeaux",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Louisiana Tech",2024,0,99,"coach_sonny_cumbie","Sonny Cumbie",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Louisville",2024,0,99,"coach_jeff_brohm","Jeff Brohm",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"LSU",2024,0,99,"coach_brian_kelly","Brian Kelly",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Marshall",2024,0,99,"coach_charles_huff","Charles Huff",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Maryland",2024,0,99,"coach_mike_locksley","Mike Locksley",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Massachusetts",2024,0,12,"coach_don_brown","Don Brown",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Massachusetts",2024,13,99,"coach_shane_montgomery","Shane Montgomery",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game","2024-11-18","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Memphis",2024,0,99,"coach_ryan_silverfield","Ryan Silverfield",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Miami",2024,0,99,"coach_mario_cristobal","Mario Cristobal",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Miami (OH)",2024,0,99,"coach_chuck_martin","Chuck Martin",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Michigan",2024,0,99,"coach_sherrone_moore","Sherrone Moore",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Michigan State",2024,0,99,"coach_jonathan_smith","Jonathan Smith",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Middle Tennessee",2024,0,99,"coach_derek_mason","Derek Mason",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Minnesota",2024,0,99,"coach_pj_fleck","P.J. Fleck",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Mississippi",2024,0,99,"coach_lane_kiffin","Lane Kiffin",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Mississippi State",2024,0,99,"coach_jeff_lebby","Jeff Lebby",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Missouri",2024,0,99,"coach_eli_drinkwitz","Eli Drinkwitz",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Navy",2024,0,99,"coach_brian_newberry","Brian Newberry",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Nebraska",2024,0,99,"coach_matt_rhule","Matt Rhule",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Nevada",2024,0,99,"coach_jeff_choate","Jeff Choate",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"New Mexico",2024,0,99,"coach_bronco_mendenhall","Bronco Mendenhall",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"New Mexico State",2024,0,99,"coach_tony_sanchez","Tony Sanchez",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"North Carolina",2024,0,13,"coach_mack_brown","Mack Brown",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"North Carolina",2024,14,99,"coach_freddie_kitchens","Freddie Kitchens",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,13,FALSE,"public_transition_effective_next_game","2024-11-26","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"North Carolina State",2024,0,99,"coach_dave_doeren","Dave Doeren",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"North Texas",2024,0,99,"coach_eric_morris","Eric Morris",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Northern Illinois",2024,0,99,"coach_thomas_hammock","Thomas Hammock",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Northwestern",2024,0,99,"coach_david_braun","David Braun",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Notre Dame",2024,0,99,"coach_marcus_freeman","Marcus Freeman",FALSE,"cfbd_coaches","high",16,16,FALSE,"single_source_coach",,
+"Ohio",2024,0,98,"coach_tim_albin","Tim Albin",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Ohio",2024,99,99,"coach_brian_smith","Brian Smith",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2024-12-07","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Ohio State",2024,0,99,"coach_ryan_day","Ryan Day",FALSE,"cfbd_coaches","high",16,16,FALSE,"single_source_coach",,
+"Oklahoma",2024,0,99,"coach_brent_venables","Brent Venables",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Oklahoma State",2024,0,99,"coach_mike_gundy","Mike Gundy",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Old Dominion",2024,0,99,"coach_ricky_rahne","Ricky Rahne",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Oregon",2024,0,99,"coach_dan_lanning","Dan Lanning",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Oregon State",2024,0,99,"coach_trent_bray","Trent Bray",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Penn State",2024,0,99,"coach_james_franklin","James Franklin",FALSE,"cfbd_coaches","high",16,16,FALSE,"single_source_coach",,
+"Pittsburgh",2024,0,99,"coach_pat_narduzzi","Pat Narduzzi",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Purdue",2024,0,99,"coach_ryan_walters","Ryan Walters",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Rice",2024,0,9,"coach_mike_bloomgren","Mike Bloomgren",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Rice",2024,10,99,"coach_pete_alamar","Pete Alamar",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",4,12,FALSE,"public_transition_effective_next_game","2024-10-27","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Rutgers",2024,0,99,"coach_greg_schiano","Greg Schiano",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Sam Houston",2024,0,98,"coach_kc_keeler","K.C. Keeler",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Sam Houston",2024,99,99,"coach_brad_cornelsen","Brad Cornelsen",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2024-12-01","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"San Diego State",2024,0,99,"coach_sean_lewis","Sean Lewis",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"San José State",2024,0,99,"coach_ken_niumatalolo","Ken Niumatalolo",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"SMU",2024,0,99,"coach_rhett_lashlee","Rhett Lashlee",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"South Alabama",2024,0,99,"coach_major_applewhite","Major Applewhite",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"South Carolina",2024,0,99,"coach_shane_beamer","Shane Beamer",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"South Florida",2024,0,99,"coach_alex_golesh","Alex Golesh",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Southern California",2024,0,99,"coach_lincoln_riley","Lincoln Riley",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Southern Miss",2024,0,8,"coach_will_hall","Will Hall",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Southern Miss",2024,9,99,"coach_reed_stringer","Reed Stringer",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,12,FALSE,"public_transition_effective_next_game","2024-10-20","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Stanford",2024,0,99,"coach_troy_taylor","Troy Taylor",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Syracuse",2024,0,99,"coach_fran_brown","Fran Brown",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"TCU",2024,0,99,"coach_sonny_dykes","Sonny Dykes",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Temple",2024,0,12,"coach_stan_drayton","Stan Drayton",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",10,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Temple",2024,13,99,"coach_everett_withers","Everett Withers",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,12,FALSE,"public_transition_effective_next_game","2024-11-17","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Tennessee",2024,0,99,"coach_josh_heupel","Josh Heupel",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Texas",2024,0,99,"coach_steve_sarkisian","Steve Sarkisian",FALSE,"cfbd_coaches","high",16,16,FALSE,"single_source_coach",,
+"Texas A&M",2024,0,99,"coach_mike_elko","Mike Elko",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Texas State",2024,0,99,"coach_gj_kinne","G.J. Kinne",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Texas Tech",2024,0,99,"coach_joey_mcguire","Joey McGuire",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Toledo",2024,0,99,"coach_jason_candle","Jason Candle",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Troy",2024,0,99,"coach_gerad_parker","Gerad Parker",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Tulane",2024,0,99,"coach_jon_sumrall","Jon Sumrall",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Tulsa",2024,0,13,"coach_kevin_wilson","Kevin Wilson",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Tulsa",2024,14,99,"coach_ryan_switzer","Ryan Switzer",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,12,FALSE,"public_transition_effective_next_game","2024-11-24","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"UAB",2024,0,99,"coach_trent_dilfer","Trent Dilfer",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UCF",2024,0,99,"coach_gus_malzahn","Gus Malzahn",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UCLA",2024,0,99,"coach_deshaun_foster","Deshaun Foster",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UL Monroe",2024,0,99,"coach_bryant_vincent","Bryant Vincent",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UNLV",2024,0,98,"coach_barry_odom","Barry Odom",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"UNLV",2024,99,99,"coach_del_alexander","Del Alexander",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,14,FALSE,"public_transition_effective_next_game","2024-12-08","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Utah",2024,0,99,"coach_kyle_whittingham","Kyle Whittingham",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Utah State",2024,0,0,"coach_blake_anderson","Blake Anderson",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",0,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Utah State",2024,1,99,"coach_nate_dreiling","Nate Dreiling",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,12,FALSE,"public_transition_effective_next_game","2024-07-18","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"UTEP",2024,0,99,"coach_scotty_walden","Scotty Walden",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"UTSA",2024,0,99,"coach_jeff_traylor","Jeff Traylor",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Vanderbilt",2024,0,99,"coach_clark_lea","Clark Lea",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Virginia",2024,0,99,"coach_tony_elliott","Tony Elliott",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Virginia Tech",2024,0,99,"coach_brent_pry","Brent Pry",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Wake Forest",2024,0,99,"coach_dave_clawson","Dave Clawson",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Washington",2024,0,99,"coach_jedd_fisch","Jedd Fisch",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Washington State",2024,0,98,"coach_jake_dickert","Jake Dickert",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Washington State",2024,99,99,"coach_pete_kaligis","Pete Kaligis",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2024-12-18","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"West Virginia",2024,0,98,"coach_neal_brown","Neal Brown",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"West Virginia",2024,99,99,"coach_chad_scott","Chad Scott",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2024-12-01","https://en.wikipedia.org/wiki/2024_NCAA_Division_I_FBS_football_season"
+"Western Kentucky",2024,0,99,"coach_tyson_helton","Tyson Helton",FALSE,"cfbd_coaches","high",14,14,FALSE,"single_source_coach",,
+"Western Michigan",2024,0,99,"coach_lance_taylor","Lance Taylor",FALSE,"cfbd_coaches","high",13,13,FALSE,"single_source_coach",,
+"Wisconsin",2024,0,99,"coach_luke_fickell","Luke Fickell",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Wyoming",2024,0,99,"coach_jay_sawvel","Jay Sawvel",FALSE,"cfbd_coaches","high",12,12,FALSE,"single_source_coach",,
+"Air Force",2025,0,99,"coach_troy_calhoun","Troy Calhoun",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Akron",2025,0,99,"coach_joe_moorhead","Joe Moorhead",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Alabama",2025,0,99,"coach_kalen_deboer","Kalen DeBoer",FALSE,"cfbd_coaches","medium",,15,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"App State",2025,0,99,"coach_dowell_loggains","Dowell Loggains",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Arizona",2025,0,99,"coach_brent_brennan","Brent Brennan",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Arizona State",2025,0,99,"coach_kenny_dillingham","Kenny Dillingham",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Arkansas",2025,0,6,"coach_sam_pittman","Sam Pittman",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Arkansas",2025,7,99,"coach_bobby_petrino","Bobby Petrino",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,12,FALSE,"public_transition_effective_next_game","2025-09-28","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Arkansas State",2025,0,99,"coach_butch_jones","Butch Jones",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Army",2025,0,99,"coach_jeff_monken","Jeff Monken",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Auburn",2025,0,10,"coach_hugh_freeze","Hugh Freeze",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Auburn",2025,11,99,"coach_dj_durkin","D.J. Durkin",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game","2025-11-02","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Ball State",2025,0,99,"coach_mike_uremovich","Mike Uremovich",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Baylor",2025,0,99,"coach_dave_aranda","Dave Aranda",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Boise State",2025,0,99,"coach_spencer_danielson","Spencer Danielson",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Boston College",2025,0,99,"coach_bill_o_brien","Bill O'Brien",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Bowling Green",2025,0,99,"coach_eddie_george","Eddie George",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Buffalo",2025,0,99,"coach_pete_lembo","Pete Lembo",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"BYU",2025,0,99,"coach_kalani_sitake","Kalani Sitake",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"California",2025,0,13,"coach_justin_wilcox","Justin Wilcox",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"California",2025,14,99,"coach_nick_rolovich","Nick Rolovich",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",2,13,FALSE,"public_transition_effective_next_game","2025-11-23","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Central Michigan",2025,0,99,"coach_matt_drinkall","Matt Drinkall",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Charlotte",2025,0,99,"coach_tim_albin","Tim Albin",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Cincinnati",2025,0,99,"coach_scott_satterfield","Scott Satterfield",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Clemson",2025,0,99,"coach_dabo_swinney","Dabo Swinney",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Coastal Carolina",2025,0,98,"coach_tim_beck","Tim Beck",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Coastal Carolina",2025,99,99,"coach_jeremiah_johnson","Jeremiah Johnson",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-11-30","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Colorado",2025,0,99,"coach_deion_sanders","Deion Sanders",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Colorado State",2025,0,8,"coach_jay_norvell","Jay Norvell",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Colorado State",2025,9,99,"coach_tyson_summers","Tyson Summers",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,12,FALSE,"public_transition_effective_next_game","2025-10-19","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Connecticut",2025,0,98,"coach_jim_mora","Jim Mora",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Connecticut",2025,99,99,"coach_gordon_sammis","Gordon Sammis",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-11-26","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Delaware",2025,0,99,"coach_ryan_carty","Ryan Carty",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Duke",2025,0,99,"coach_manny_diaz","Manny Diaz",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"East Carolina",2025,0,99,"coach_blake_harrell","Blake Harrell",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Eastern Michigan",2025,0,99,"coach_chris_creighton","Chris Creighton",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Florida",2025,0,9,"coach_billy_napier","Billy Napier",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Florida",2025,10,99,"coach_billy_gonzales","Billy Gonzales",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,12,FALSE,"public_transition_effective_next_game","2025-10-19","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Florida Atlantic",2025,0,99,"coach_zach_kittley","Zach Kittley",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Florida International",2025,0,99,"coach_willie_simmons","Willie Simmons",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Florida State",2025,0,99,"coach_mike_norvell","Mike Norvell",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Fresno State",2025,0,99,"coach_matt_entz","Matt Entz",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Georgia",2025,0,99,"coach_kirby_smart","Kirby Smart",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Georgia Southern",2025,0,99,"coach_clay_helton","Clay Helton",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Georgia State",2025,0,99,"coach_dell_mcgee","Dell McGee",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Georgia Tech",2025,0,99,"coach_brent_key","Brent Key",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Hawai'i",2025,0,99,"coach_timmy_chang","Timmy Chang",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Houston",2025,0,99,"coach_willie_fritz","Willie Fritz",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Illinois",2025,0,99,"coach_bret_bielema","Bret Bielema",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Indiana",2025,0,99,"coach_curt_cignetti","Curt Cignetti",FALSE,"cfbd_coaches","medium",,16,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Iowa",2025,0,99,"coach_kirk_ferentz","Kirk Ferentz",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Iowa State",2025,0,99,"coach_matt_campbell","Matt Campbell",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Jacksonville State",2025,0,99,"coach_charles_kelly","Charles Kelly",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"James Madison",2025,0,99,"coach_bob_chesney","Bob Chesney",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Kansas",2025,0,99,"coach_lance_leipold","Lance Leipold",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Kansas State",2025,0,99,"coach_chris_klieman","Chris Klieman",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Kennesaw State",2025,0,99,"coach_jerry_mack","Jerry Mack",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Kent State",2025,0,99,"coach_mark_carney","Mark Carney",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Kentucky",2025,0,99,"coach_mark_stoops","Mark Stoops",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Liberty",2025,0,99,"coach_jamey_chadwell","Jamey Chadwell",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Louisiana",2025,0,99,"coach_michael_desormeaux","Michael Desormeaux",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Louisiana Tech",2025,0,99,"coach_sonny_cumbie","Sonny Cumbie",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Louisville",2025,0,99,"coach_jeff_brohm","Jeff Brohm",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"LSU",2025,0,10,"coach_brian_kelly","Brian Kelly",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",8,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"LSU",2025,11,99,"coach_frank_wilson","Frank Wilson",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,13,FALSE,"public_transition_effective_next_game","2025-10-26","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Marshall",2025,0,99,"coach_tony_gibson","Tony Gibson",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Maryland",2025,0,99,"coach_mike_locksley","Mike Locksley",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Massachusetts",2025,0,99,"coach_joe_harasymiak","Joe Harasymiak",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Memphis",2025,0,98,"coach_ryan_silverfield","Ryan Silverfield",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Memphis",2025,99,99,"coach_reggie_howard","Reggie Howard",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-11-30","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Miami",2025,0,99,"coach_mario_cristobal","Mario Cristobal",FALSE,"cfbd_coaches","medium",,16,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Miami (OH)",2025,0,99,"coach_chuck_martin","Chuck Martin",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Michigan",2025,0,98,"coach_sherrone_moore","Sherrone Moore",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Michigan",2025,99,99,"coach_biff_poggi","Biff Poggi",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-12-10","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Michigan State",2025,0,99,"coach_jonathan_smith","Jonathan Smith",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Middle Tennessee",2025,0,99,"coach_derek_mason","Derek Mason",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Minnesota",2025,0,99,"coach_pj_fleck","P.J. Fleck",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Mississippi",2025,0,98,"coach_lane_kiffin","Lane Kiffin",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,15,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Mississippi",2025,99,99,"coach_pete_golding","Pete Golding",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,15,FALSE,"public_transition_effective_next_game","2025-11-30","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Mississippi State",2025,0,99,"coach_jeff_lebby","Jeff Lebby",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Missouri",2025,0,99,"coach_eli_drinkwitz","Eli Drinkwitz",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Missouri State",2025,0,98,"coach_ryan_beard","Ryan Beard",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Missouri State",2025,99,99,"coach_nick_petrino","Nick Petrino",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-12-11","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Navy",2025,0,99,"coach_brian_newberry","Brian Newberry",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Nebraska",2025,0,99,"coach_matt_rhule","Matt Rhule",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Nevada",2025,0,99,"coach_jeff_choate","Jeff Choate",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"New Mexico",2025,0,99,"coach_jason_eck","Jason Eck",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"New Mexico State",2025,0,99,"coach_tony_sanchez","Tony Sanchez",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"North Carolina",2025,0,99,"coach_bill_belichick","Bill Belichick",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"North Carolina State",2025,0,99,"coach_dave_doeren","Dave Doeren",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"North Texas",2025,0,13,"coach_eric_morris","Eric Morris",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",11,14,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"North Texas",2025,14,99,"coach_drew_svoboda","Drew Svoboda",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,14,FALSE,"public_transition_effective_next_game","2025-11-25","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Northern Illinois",2025,0,99,"coach_thomas_hammock","Thomas Hammock",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Northwestern",2025,0,99,"coach_david_braun","David Braun",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Notre Dame",2025,0,99,"coach_marcus_freeman","Marcus Freeman",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Ohio",2025,0,98,"coach_brian_smith","Brian Smith",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Ohio",2025,99,99,"coach_john_hauser","John Hauser",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-12-17","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Ohio State",2025,0,99,"coach_ryan_day","Ryan Day",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Oklahoma",2025,0,99,"coach_brent_venables","Brent Venables",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Oklahoma State",2025,0,4,"coach_mike_gundy","Mike Gundy",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Oklahoma State",2025,5,99,"coach_doug_meacham","Doug Meacham",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game","2025-09-23","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Old Dominion",2025,0,99,"coach_ricky_rahne","Ricky Rahne",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Oregon",2025,0,99,"coach_dan_lanning","Dan Lanning",FALSE,"cfbd_coaches","medium",,15,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Oregon State",2025,0,7,"coach_trent_bray","Trent Bray",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Oregon State",2025,8,99,"coach_robb_akey","Robb Akey",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",5,12,FALSE,"public_transition_effective_next_game","2025-10-12","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Penn State",2025,0,7,"coach_james_franklin","James Franklin",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",6,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Penn State",2025,8,99,"coach_terry_smith","Terry Smith",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",7,13,FALSE,"public_transition_effective_next_game","2025-10-12","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Pittsburgh",2025,0,99,"coach_pat_narduzzi","Pat Narduzzi",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Purdue",2025,0,99,"coach_barry_odom","Barry Odom",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Rice",2025,0,99,"coach_scott_abell","Scott Abell",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Rutgers",2025,0,99,"coach_greg_schiano","Greg Schiano",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Sam Houston",2025,0,99,"coach_phil_longo","Phil Longo",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"San Diego State",2025,0,99,"coach_sean_lewis","Sean Lewis",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"San José State",2025,0,99,"coach_ken_niumatalolo","Ken Niumatalolo",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"SMU",2025,0,99,"coach_rhett_lashlee","Rhett Lashlee",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"South Alabama",2025,0,99,"coach_major_applewhite","Major Applewhite",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"South Carolina",2025,0,99,"coach_shane_beamer","Shane Beamer",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"South Florida",2025,0,98,"coach_alex_golesh","Alex Golesh",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"South Florida",2025,99,99,"coach_kevin_patrick","Kevin Patrick",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-11-30","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Southern California",2025,0,99,"coach_lincoln_riley","Lincoln Riley",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Southern Miss",2025,0,98,"coach_charles_huff","Charles Huff",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Southern Miss",2025,99,99,"coach_blake_anderson","Blake Anderson",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-12-06","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Stanford",2025,0,99,"coach_frank_reich","Frank Reich",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Syracuse",2025,0,99,"coach_fran_brown","Fran Brown",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"TCU",2025,0,99,"coach_sonny_dykes","Sonny Dykes",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Temple",2025,0,99,"coach_kc_keeler","K.C. Keeler",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Tennessee",2025,0,99,"coach_josh_heupel","Josh Heupel",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Texas",2025,0,99,"coach_steve_sarkisian","Steve Sarkisian",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Texas A&M",2025,0,99,"coach_mike_elko","Mike Elko",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Texas State",2025,0,99,"coach_gj_kinne","G.J. Kinne",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Texas Tech",2025,0,99,"coach_joey_mcguire","Joey McGuire",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Toledo",2025,0,98,"coach_jason_candle","Jason Candle",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Toledo",2025,99,99,"coach_robert_weiner","Robert Weiner",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-12-06","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Troy",2025,0,99,"coach_gerad_parker","Gerad Parker",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Tulane",2025,0,99,"coach_jon_sumrall","Jon Sumrall",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Tulsa",2025,0,99,"coach_tre_lamb","Tre Lamb",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"UAB",2025,0,7,"coach_trent_dilfer","Trent Dilfer",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",6,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"UAB",2025,8,99,"coach_alex_mortensen","Alex Mortensen",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",6,12,FALSE,"public_transition_effective_next_game","2025-10-12","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"UCF",2025,0,99,"coach_scott_frost","Scott Frost",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"UCLA",2025,0,4,"coach_deshaun_foster","Deshaun Foster",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"UCLA",2025,5,99,"coach_tim_skipper","Tim Skipper",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game","2025-09-14","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"UL Monroe",2025,0,99,"coach_bryant_vincent","Bryant Vincent",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"UNLV",2025,0,99,"coach_dan_mullen","Dan Mullen",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Utah",2025,0,98,"coach_kyle_whittingham","Kyle Whittingham",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Utah",2025,99,99,"coach_morgan_scalley","Morgan Scalley",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-12-12","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Utah State",2025,0,99,"coach_bronco_mendenhall","Bronco Mendenhall",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"UTEP",2025,0,99,"coach_scotty_walden","Scotty Walden",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"UTSA",2025,0,99,"coach_jeff_traylor","Jeff Traylor",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Vanderbilt",2025,0,99,"coach_clark_lea","Clark Lea",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Virginia",2025,0,99,"coach_tony_elliott","Tony Elliott",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Virginia Tech",2025,0,3,"coach_brent_pry","Brent Pry",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",3,12,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Virginia Tech",2025,4,99,"coach_philip_montgomery","Philip Montgomery",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",9,12,FALSE,"public_transition_effective_next_game","2025-09-14","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Wake Forest",2025,0,99,"coach_jake_dickert","Jake Dickert",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Washington",2025,0,99,"coach_jedd_fisch","Jedd Fisch",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Washington State",2025,0,98,"coach_jimmy_rogers","Jimmy Rogers",FALSE,"wikipedia_season_coaching_changes","confirmed_public_transition",12,13,FALSE,"public_transition_effective_next_game",,"https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"Washington State",2025,99,99,"coach_jesse_bobbit","Jesse Bobbit",TRUE,"wikipedia_season_coaching_changes","confirmed_public_transition",1,13,FALSE,"public_transition_effective_next_game","2025-12-05","https://en.wikipedia.org/wiki/2025_NCAA_Division_I_FBS_football_season"
+"West Virginia",2025,0,99,"coach_rich_rodriguez","Rich Rodriguez",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Western Kentucky",2025,0,99,"coach_tyson_helton","Tyson Helton",FALSE,"cfbd_coaches","medium",,13,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Western Michigan",2025,0,99,"coach_lance_taylor","Lance Taylor",FALSE,"cfbd_coaches","medium",,14,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Wisconsin",2025,0,99,"coach_luke_fickell","Luke Fickell",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,
+"Wyoming",2025,0,99,"coach_jay_sawvel","Jay Sawvel",FALSE,"cfbd_coaches","medium",,12,FALSE,"single_cfbd_snapshot_without_game_counts",,

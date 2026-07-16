@@ -1,0 +1,612 @@
+---
+title: "improved2"
+author: "paul trusela"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+# Install necessary packages if not already installed
+# install.packages("cfbfastR")
+# install.packages("dplyr")
+# install.packages("caret")
+# install.packages("e1071")
+# install.packages("xgboost")
+# install.packages("randomForest")
+# install.packages("zoo")
+
+library(zoo)
+library(caret)
+library(dplyr)
+library(cfbfastR)
+library(xgboost)
+library(randomForest)
+library(reshape2)
+library(ggplot2)
+```
+
+```{r}
+if (!nzchar(Sys.getenv("CFBD_API_KEY"))) {
+  stop("CFBD_API_KEY is not set. Add it to .Renviron before running this notebook.")
+}
+cfb_pbp23_test <- load_cfb_pbp(2023:2024)
+cfb_pbp19_22_train <- load_cfb_pbp(2014:2022)
+cfb_prediction2024 <- load_cfb_pbp(2024:2025)
+```
+
+```{r}
+aggregate_game_data <- function(pbp_data, window = 4) {
+  
+  final_scores <- pbp_data %>%
+    group_by(game_id) %>%
+    filter(row_number() == n()) %>%
+    summarise(
+      pos_team_final_score = pos_team_score,  
+      def_team_final_score = def_pos_team_score,
+      pos_team = last(pos_team),
+      def_pos_team = last(def_pos_team),
+      home = last(home),
+      away = last(away),
+      week = last(week),
+      year = last(year)
+    ) %>%
+    ungroup()
+
+  team_stats <- pbp_data %>%
+    filter(!is.na(EPA)) %>%
+    group_by(year, pos_team, week) %>%
+    summarise(
+      epa_per_play = mean(EPA, na.rm = TRUE),
+      epa_per_pass = mean(EPA[play_type %in% c("Pass", "Pass Incompletion",  "Pass Reception", "Passing Touchdown" )], na.rm = TRUE),
+      epa_per_rush = mean(EPA[play_type %in% c("Rush", "Rushing Touchdown")], na.rm = TRUE),
+      wpa_per_play = mean(wpa, na.rm = TRUE)
+    ) %>%
+    ungroup()
+  
+  team_stats <- team_stats %>%
+    group_by(pos_team, year) %>%
+    arrange(week) %>%
+    mutate(
+      epa_per_play_last_n = zoo::rollapplyr(epa_per_play, window, mean, na.rm = TRUE, fill = NA, align = 'right'),
+      epa_per_pass_last_n = zoo::rollapplyr(epa_per_pass, window, mean, na.rm = TRUE, fill = NA, align = 'right'),
+      epa_per_rush_last_n = zoo::rollapplyr(epa_per_rush, window, mean, na.rm = TRUE, fill = NA, align = 'right'),
+      wpa_per_play_last_n = zoo::rollapplyr(wpa_per_play, window, mean, na.rm = TRUE, fill = NA, align = 'right')
+    ) %>%
+    ungroup()
+
+  game_data <- final_scores %>%
+    left_join(team_stats, by = c("year", "pos_team", "week")) %>%
+    rename_with(~ paste0("pos_team_", .), starts_with("epa_"), starts_with("wpa_")) %>%
+    left_join(team_stats, by = c("year", "def_pos_team" = "pos_team", "week")) %>%
+    rename_with(~ paste0("def_team_", .), starts_with("epa_"), starts_with("wpa_"))
+
+  return(game_data)
+}
+
+```
+
+```{r}
+window_size <- 1
+season_level_data_train <- aggregate_game_data(cfb_pbp19_22_train, window = window_size)
+print(season_level_data_train)
+
+window_size <- 1
+season_level_data_test <- aggregate_game_data(cfb_pbp23_test, window = window_size)
+print(season_level_data_test)
+
+window_size <- 8
+season_level_data_predict <- aggregate_game_data(cfb_prediction2024, window = window_size)
+print(season_level_data_predict)
+
+```
+
+```{r}
+clean_team_names <- function(data) {
+  data <- data %>%
+    mutate(
+      home = case_when(
+        home == "UT San Antonio" ~ "UTSA",
+        home == "Appalachian State" ~ "App State",
+        home == "UMass" ~ "Massachusetts",
+        home == "Southern Mississippi" ~ "Southern Miss",
+        home == "Connecticut" ~ "UConn",
+        home == "Louisiana Monroe" ~ "UL Monroe",
+        TRUE ~ home
+      ),
+      away = case_when(
+        away == "UT San Antonio" ~ "UTSA",
+        away == "Appalachian State" ~ "App State",
+        away == "UMass" ~ "Massachusetts",
+        away == "Southern Mississippi" ~ "Southern Miss",
+        away == "Connecticut" ~ "UConn",
+        away == "Louisiana Monroe" ~ "UL Monroe",
+        TRUE ~ away
+      )
+    ) %>%
+    filter(home != "James Madison" & away != "James Madison") %>% 
+    filter(home != "Jacksonville State" & away != "Jacksonville State") %>% 
+    filter(home != "Sam Houston" & away != "Sam Houston") %>% 
+    filter(home != "Kennesaw State" & away != "Kennesaw State")
+  
+  return(data)
+}
+
+season_level_data_train <- clean_team_names(season_level_data_train)
+season_level_data_test <- clean_team_names(season_level_data_test)
+season_level_data_predict <- clean_team_names(season_level_data_predict)
+
+head(season_level_data_train)
+head(season_level_data_test)
+head(season_level_data_predict)
+
+```
+
+```{r}
+get_sp_ratings <- function(year) {
+  sp_ratings <- cfbd_ratings_sp(year = year)
+  
+  sp_ratings <- sp_ratings %>%
+    select(team, year, rating, offense_rating, defense_rating)
+  
+  return(sp_ratings)
+}
+
+sp_ratings_all_years <- lapply(2014:2025, get_sp_ratings) %>%
+  bind_rows()
+
+head(sp_ratings_all_years)
+```
+
+```{r}
+season_level_data_train <- season_level_data_train %>%
+  mutate(
+    home_team_epa_per_play_last_n = ifelse(home == pos_team, pos_team_epa_per_play_last_n, def_team_epa_per_play_last_n),
+    home_team_epa_per_pass_last_n = ifelse(home == pos_team, pos_team_epa_per_pass_last_n, def_team_epa_per_pass_last_n),
+    home_team_epa_per_rush_last_n = ifelse(home == pos_team, pos_team_epa_per_rush_last_n, def_team_epa_per_rush_last_n),
+    home_team_wpa_per_play_last_n = ifelse(home == pos_team, wpa_per_play_last_n.x, wpa_per_play_last_n.y),
+    away_team_epa_per_play_last_n = ifelse(away == pos_team, pos_team_epa_per_play_last_n, def_team_epa_per_play_last_n),
+    away_team_epa_per_pass_last_n = ifelse(away == pos_team, pos_team_epa_per_pass_last_n, def_team_epa_per_pass_last_n),
+    away_team_epa_per_rush_last_n = ifelse(away == pos_team, pos_team_epa_per_rush_last_n, def_team_epa_per_rush_last_n),
+    away_team_wpa_per_play_last_n = ifelse(away == pos_team, wpa_per_play_last_n.x, wpa_per_play_last_n.y)
+  )
+
+
+season_level_data_train$home_team_final_score <- ifelse(season_level_data_train$home == season_level_data_train$pos_team, season_level_data_train$pos_team_final_score, season_level_data_train$def_team_final_score)
+
+season_level_data_train$away_team_final_score <- ifelse(season_level_data_train$away == season_level_data_train$pos_team, season_level_data_train$pos_team_final_score, season_level_data_train$def_team_final_score)
+
+season_level_data_train$home_away_score_dif <- (season_level_data_train$home_team_final_score - season_level_data_train$away_team_final_score)
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(sp_ratings_all_years, by = c("home" = "team", "year" = "year")) %>%
+  rename(
+    home_team_sp_rating = rating,
+    home_team_offense_rating = offense_rating,
+    home_team_defense_rating = defense_rating
+  )
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(sp_ratings_all_years, by = c("away" = "team", "year" = "year")) %>%
+  rename(
+    away_team_sp_rating = rating,
+    away_team_offense_rating = offense_rating,
+    away_team_defense_rating = defense_rating
+  )
+
+```
+
+```{r}
+get_weekly_elo_ratings <- function(year, week) {
+  tryCatch({
+    elo_ratings <- cfbd_ratings_elo(year = year, week = week)
+    elo_ratings <- elo_ratings %>%
+      select(team, year, elo)  
+    elo_ratings$week <- week  
+    return(elo_ratings)
+  }, error = function(e) {
+    message(paste("Error fetching ELO ratings for year:", year, "week:", week))
+    return(NULL)  
+  })
+}
+
+elo_ratings_all_weeks <- list()
+
+for (year in 2014:2025) {
+  for (week in 1:15) {  
+    weekly_ratings <- get_weekly_elo_ratings(year, week)
+    if (!is.null(weekly_ratings)) {
+      elo_ratings_all_weeks[[paste(year, week, sep = "_")]] <- weekly_ratings
+    }
+  }
+}
+
+elo_ratings_combined <- bind_rows(elo_ratings_all_weeks)
+
+head(elo_ratings_combined)
+elo_ratings_combined
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(elo_ratings_combined, by = c("home" = "team", "year" = "year", "week" = "week")) %>%
+  rename(home_team_elo_rating = elo)
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(elo_ratings_combined, by = c("away" = "team", "year" = "year", "week" = "week")) %>%
+  rename(away_team_elo_rating = elo)
+
+pff_team_data <- read.csv("/Users/TomTheIntern/Downloads/pff_team_data.csv", header = TRUE, stringsAsFactors = FALSE)
+pff_team_data$RECORD <- NULL
+pff_team_data <- pff_team_data %>% select(-Coverage)
+
+coach_data <- read.csv("/Users/TomTheIntern/Downloads/coach_ratings.csv", header = TRUE, stringsAsFactors = FALSE)
+
+injury_data <- read.csv("/Users/TomTheIntern/Downloads/final_for_sure_1.csv", header = TRUE, stringsAsFactors = FALSE)
+
+injury_data <- injury_data %>%
+  select(-X, -name) %>%                   
+  group_by(team, season) %>%              
+  summarize(
+    injured_worth = sum(injured_worth, na.rm = TRUE),
+    worth = sum(worth, na.rm = TRUE),
+    .groups = "keep"                    
+  )
+
+
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(pff_team_data, by = c("home" = "team", "year" = "year")) %>%
+  rename(home_pf = PF,
+         home_pa = PA ,  
+         home_over = Overall, 
+         home_off = Offense,
+         home_pass = Passing, 
+         home_pblk = Pass_Block,
+         home_recv = Receiving,
+         home_run = Running,
+         home_rblk = Run_Block, 
+         home_def = Defense,
+         home_rdef = Run_Defense, 
+         home_tack = Tackling,
+         home_prsh = Pass_Rush,
+         )
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(pff_team_data, by = c("away" = "team", "year" = "year")) %>%
+  rename(away_pf = PF,
+         away_pa = PA ,  
+         away_over = Overall, 
+         away_off = Offense,
+         away_pass = Passing, 
+         away_pblk = Pass_Block,
+         away_recv = Receiving,
+         away_run = Running,
+         away_rblk = Run_Block, 
+         away_def = Defense,
+         away_rdef = Run_Defense, 
+         away_tack = Tackling,
+         away_prsh = Pass_Rush
+         )
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(coach_data, by = c("home" = "school", "year" = "year"), relationship = "many-to-many") %>%
+  rename(home_rating = rating)
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(coach_data, by = c("away" = "school", "year" = "year"), relationship = "many-to-many") %>%
+  rename(away_rating = rating)
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(injury_data, by = c("home" = "team", "year" = "season")) %>%
+  rename(home_injured_worth = injured_worth,
+         home_worth = worth)
+
+season_level_data_train <- season_level_data_train %>%
+  left_join(injury_data, by = c("away" = "team", "year" = "season")) %>%
+  rename(away_injured_worth = injured_worth,
+         away_worth = worth)
+
+train_dat <- season_level_data_train[, c(6:7, 26:33, 36:44)]  
+train_dat_clean <- na.omit(train_dat)
+
+train_control <- trainControl(method="cv", number=10)
+grid <- expand.grid(mtry=c(6))
+final_model <- train(home_away_score_dif ~ . -home -away, data=train_dat_clean, method="rf", trControl=train_control, tuneGrid=grid)
+print(final_model)
+
+rf_model <- final_model$finalModel
+importance_type2 <- importance(rf_model, type = 2)
+print(importance_type2)
+```
+
+```{r}
+colnames(pff_team_data)
+```
+
+```{r}
+season_level_data_test <- season_level_data_test %>%
+  mutate(
+    home_team_epa_per_play_last_n = ifelse(home == pos_team, pos_team_epa_per_play_last_n, def_team_epa_per_play_last_n),
+    home_team_epa_per_pass_last_n = ifelse(home == pos_team, pos_team_epa_per_pass_last_n, def_team_epa_per_pass_last_n),
+    home_team_epa_per_rush_last_n = ifelse(home == pos_team, pos_team_epa_per_rush_last_n, def_team_epa_per_rush_last_n),
+    home_team_wpa_per_play_last_n = ifelse(home == pos_team, wpa_per_play_last_n.x, wpa_per_play_last_n.y),
+    away_team_epa_per_play_last_n = ifelse(away == pos_team, pos_team_epa_per_play_last_n, def_team_epa_per_play_last_n),
+    away_team_epa_per_pass_last_n = ifelse(away == pos_team, pos_team_epa_per_pass_last_n, def_team_epa_per_pass_last_n),
+    away_team_epa_per_rush_last_n = ifelse(away == pos_team, pos_team_epa_per_rush_last_n, def_team_epa_per_rush_last_n),
+    away_team_wpa_per_play_last_n = ifelse(away == pos_team, wpa_per_play_last_n.x, wpa_per_play_last_n.y)
+  )
+
+
+season_level_data_test$home_team_final_score <- ifelse(season_level_data_test$home == season_level_data_test$pos_team, season_level_data_test$pos_team_final_score, season_level_data_test$def_team_final_score)
+
+season_level_data_test$away_team_final_score <- ifelse(season_level_data_test$away == season_level_data_test$pos_team, season_level_data_test$pos_team_final_score, season_level_data_test$def_team_final_score)
+
+season_level_data_test$home_away_score_dif <- (season_level_data_test$home_team_final_score - season_level_data_test$away_team_final_score)
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(sp_ratings_all_years, by = c("home" = "team", "year" = "year")) %>%
+  rename(
+    home_team_sp_rating = rating,
+    home_team_offense_rating = offense_rating,
+    home_team_defense_rating = defense_rating
+  )
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(sp_ratings_all_years, by = c("away" = "team", "year" = "year")) %>%
+  rename(
+    away_team_sp_rating = rating,
+    away_team_offense_rating = offense_rating,
+    away_team_defense_rating = defense_rating
+  )
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(elo_ratings_combined, by = c("home" = "team", "year" = "year", "week" = "week")) %>%
+  rename(home_team_elo_rating = elo)
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(elo_ratings_combined, by = c("away" = "team", "year" = "year", "week" = "week")) %>%
+  rename(away_team_elo_rating = elo)
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(pff_team_data, by = c("home" = "team", "year" = "year")) %>%
+  rename(home_pf = PF,
+         home_pa = PA ,  
+         home_over = Overall, 
+         home_off = Offense,
+         home_pass = Passing, 
+         home_pblk = Pass_Block,
+         home_recv = Receiving,
+         home_run = Running,
+         home_rblk = Run_Block, 
+         home_def = Defense,
+         home_rdef = Run_Defense, 
+         home_tack = Tackling,
+         home_prsh = Pass_Rush
+         )
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(pff_team_data, by = c("away" = "team", "year" = "year")) %>%
+  rename(away_pf = PF,
+         away_pa = PA ,  
+         away_over = Overall, 
+         away_off = Offense,
+         away_pass = Passing, 
+         away_pblk = Pass_Block,
+         away_recv = Receiving,
+         away_run = Running,
+         away_rblk = Run_Block, 
+         away_def = Defense,
+         away_rdef = Run_Defense, 
+         away_tack = Tackling,
+         away_prsh = Pass_Rush
+         )
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(coach_data, by = c("home" = "school", "year" = "year"), relationship = "many-to-many") %>%
+  rename(home_rating = rating)
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(coach_data, by = c("away" = "school", "year" = "year"), relationship = "many-to-many") %>%
+  rename(away_rating = rating)
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(injury_data, by = c("home" = "team", "year" = "season"), relationship = "many-to-many") %>%
+  rename(home_injured_worth = injured_worth,
+         home_worth = worth)
+
+season_level_data_test <- season_level_data_test %>%
+  left_join(injury_data, by = c("away" = "team", "year" = "season"), relationship = "many-to-many") %>%
+  rename(away_injured_worth = injured_worth,
+         away_worth = worth)
+
+test_dat <- season_level_data_test[, c(6:7, 26:33, 36:44,49:59, 64:74)]  
+test_dat_clean <- na.omit(test_dat)
+
+cfb_prediction <- predict(final_model, test_dat_clean)
+
+binary_predictions <- ifelse(cfb_prediction >= 0, "win", "loss")
+actual_values <- ifelse(test_dat_clean$home_away_score_dif >= 0, "win", "loss")
+
+actual_data <- as.data.frame(cfb_prediction)
+
+confusion <- confusionMatrix(as.factor(binary_predictions), as.factor(actual_values))
+
+print(confusion)
+
+```
+
+```{r}
+
+season_level_data_predict <- season_level_data_predict %>%
+  mutate(
+    home_team_epa_per_play_last_n = ifelse(home == pos_team, pos_team_epa_per_play_last_n, def_team_epa_per_play_last_n),
+    home_team_epa_per_pass_last_n = ifelse(home == pos_team, pos_team_epa_per_pass_last_n, def_team_epa_per_pass_last_n),
+    home_team_epa_per_rush_last_n = ifelse(home == pos_team, pos_team_epa_per_rush_last_n, def_team_epa_per_rush_last_n),
+    home_team_wpa_per_play_last_n = ifelse(home == pos_team, wpa_per_play_last_n.x, wpa_per_play_last_n.y),
+    away_team_epa_per_play_last_n = ifelse(away == pos_team, pos_team_epa_per_play_last_n, def_team_epa_per_play_last_n),
+    away_team_epa_per_pass_last_n = ifelse(away == pos_team, pos_team_epa_per_pass_last_n, def_team_epa_per_pass_last_n),
+    away_team_epa_per_rush_last_n = ifelse(away == pos_team, pos_team_epa_per_rush_last_n, def_team_epa_per_rush_last_n),
+    away_team_wpa_per_play_last_n = ifelse(away == pos_team, wpa_per_play_last_n.x, wpa_per_play_last_n.y)
+  )
+ season_level_data_predict <- na.omit(season_level_data_predict)
+
+season_level_data_predict$home_team_final_score <- ifelse(season_level_data_predict$home == season_level_data_predict$pos_team, season_level_data_predict$pos_team_final_score, season_level_data_predict$def_team_final_score)
+
+season_level_data_predict$away_team_final_score <- ifelse(season_level_data_predict$away == season_level_data_predict$pos_team, season_level_data_predict$pos_team_final_score, season_level_data_predict$def_team_final_score)
+
+season_level_data_predict$home_away_score_dif <- (season_level_data_predict$home_team_final_score - season_level_data_predict$away_team_final_score)
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(sp_ratings_all_years, by = c("home" = "team", "year" = "year")) %>%
+  rename(
+    home_team_sp_rating = rating,
+    home_team_offense_rating = offense_rating,
+    home_team_defense_rating = defense_rating
+  )
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(sp_ratings_all_years, by = c("away" = "team", "year" = "year")) %>%
+  rename(
+    away_team_sp_rating = rating,
+    away_team_offense_rating = offense_rating,
+    away_team_defense_rating = defense_rating
+  )
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(elo_ratings_combined, by = c("home" = "team", "year" = "year", "week" = "week")) %>%
+  rename(home_team_elo_rating = elo)
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(elo_ratings_combined, by = c("away" = "team", "year" = "year", "week" = "week")) %>%
+  rename(away_team_elo_rating = elo)
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(pff_team_data, by = c("home" = "team", "year" = "year")) %>%
+  rename(home_pf = PF,
+         home_pa = PA ,  
+         home_over = Overall, 
+         home_off = Offense,
+         home_pass = Passing, 
+         home_pblk = Pass_Block,
+         home_recv = Receiving,
+         home_run = Running,
+         home_rblk = Run_Block, 
+         home_def = Defense,
+         home_rdef = Run_Defense, 
+         home_tack = Tackling,
+         home_prsh = Pass_Rush
+         )
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(pff_team_data, by = c("away" = "team", "year" = "year")) %>%
+  rename(away_pf = PF,
+         away_pa = PA ,  
+         away_over = Overall, 
+         away_off = Offense,
+         away_pass = Passing, 
+         away_pblk = Pass_Block,
+         away_recv = Receiving,
+         away_run = Running,
+         away_rblk = Run_Block, 
+         away_def = Defense,
+         away_rdef = Run_Defense, 
+         away_tack = Tackling,
+         away_prsh = Pass_Rush
+         )
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(coach_data, by = c("home" = "school", "year" = "year"), relationship = "many-to-many") %>%
+  rename(home_rating = rating)
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(coach_data, by = c("away" = "school", "year" = "year"), relationship = "many-to-many") %>%
+  rename(away_rating = rating)
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(injury_data, by = c("home" = "team", "year" = "season"), relationship = "many-to-many") %>%
+  rename(home_injured_worth = injured_worth,
+         home_worth = worth)
+
+season_level_data_predict <- season_level_data_predict %>%
+  left_join(injury_data, by = c("away" = "team", "year" = "season"), relationship = "many-to-many") %>%
+  rename(away_injured_worth = injured_worth,
+         away_worth = worth)
+
+predict_dat <- season_level_data_predict[, c(6:9, 26:33, 36:44)]
+predict_dat_clean <- na.omit(predict_dat)
+
+```
+
+```{r}
+print(names(predict_dat_clean))
+```
+
+
+```{r}
+
+#funtion to predict the winner of a provided game, hypothetical or real
+
+#needs the name of the home team passed, the away team passed, the actual model, + some sort of data
+
+#in the example provided Nolan passed the home team (Georgia) and the away team (Ole Miss)
+
+#he passed the final model
+
+#and the predict clean data
+predict_winner <- function(home_team, away_team, model, data) {
+  
+  home_game <- data %>%
+    filter(home == home_team) %>%
+    arrange(desc(year), desc(week)) %>%
+    summarise(across(where(is.numeric), ~ mean(.x, na.rm = TRUE)))
+  
+  away_game <- data %>%
+    filter(away == away_team) %>%
+    arrange(desc(year), desc(week)) %>%
+    summarise(across(where(is.numeric), ~ mean(.x, na.rm = TRUE)))
+
+  new_row <- data.frame(
+    home = home_team,
+    away = away_team,
+    home_away_score_dif = NA, 
+    home_team_epa_per_play_last_n = home_game$home_team_epa_per_play_last_n,
+    home_team_epa_per_pass_last_n = home_game$home_team_epa_per_pass_last_n,
+    home_team_epa_per_rush_last_n = home_game$home_team_epa_per_rush_last_n,
+    home_team_wpa_per_play_last_n = home_game$home_team_wpa_per_play_last_n,
+    away_team_epa_per_play_last_n = away_game$away_team_epa_per_play_last_n,
+    away_team_epa_per_pass_last_n = away_game$away_team_epa_per_pass_last_n,
+    away_team_epa_per_rush_last_n = away_game$away_team_epa_per_rush_last_n,
+    away_team_wpa_per_play_last_n = away_game$away_team_wpa_per_play_last_n,
+    home_team_sp_rating = home_game$home_team_sp_rating,
+    home_team_offense_rating = home_game$home_team_offense_rating,
+    home_team_defense_rating = home_game$home_team_defense_rating,
+    away_team_sp_rating = away_game$away_team_sp_rating,
+    away_team_offense_rating = away_game$away_team_offense_rating,
+    away_team_defense_rating = away_game$away_team_defense_rating,
+    home_team_elo_rating = home_game$home_team_elo_rating,
+    away_team_elo_rating = away_game$away_team_elo_rating
+    )
+  
+  prediction <- predict(model, new_row)
+
+  predicted_winner <- ifelse(prediction >= 0, home_team, away_team)
+  
+  return(list(predicted_winner = predicted_winner, score_differential = prediction))
+}
+
+```
+
+```{r}
+unique_schools <- unique(c(predict_dat_clean$home, predict_dat_clean$away))
+sorted_schools <- sort(unique_schools)
+print(sorted_schools)
+```
+
+```{r}
+away_team <- "Utah"
+home_team <- "BYU"
+
+result <- predict_winner(home_team, away_team, final_model, predict_dat_clean)
+print(paste("Predicted winner:", result$predicted_winner))
+print(paste("Predicted score differential:", result$score_differential))
+```

@@ -13,10 +13,15 @@ knitr::opts_chunk$set(echo = TRUE)
 library(cfbfastR) # Load cfbfastR
 library(dplyr)
 library(tidyverse)
+library(purrr)
 ```
 
 ```{r}
-coach_import <- cfbd_coaches()
+if (!nzchar(Sys.getenv("CFBD_API_KEY"))) {
+  stop("CFBD_API_KEY is not set. Add it to .Renviron before running this notebook.")
+}
+
+coach_import <- cfbfastR::cfbd_coaches(year = 2025)
 
 all_coach <- coach_import |>
   select(first_name, last_name, school, year, games, wins, srs) |>
@@ -33,11 +38,38 @@ coach_2014 <- coach_import |>
 
 coach_2014 <- na.omit(coach_2014)
 
-coach_2014 <- coach_data[!(coach_2014$FullName == "Marcus Freeman" & coach_2014$year == 2021), ]
-
-coach_2014$win_per <- coach_2014$wins/coach_2014$games
+coach_2014 <- all_coach[!(coach_2014$FullName == "Marcus Freeman" & coach_2014$year == 2021), ]
+write.csv(coach_2014, "coaches_2014.csv", row.names = FALSE)
+coach_2025 <- read.csv("coaches_2014_1.csv")
+coach_2025 <- coach_2025 %>% select(-losses)
 ```
 
+```{r}
+# Get all coaches from 2014–2025
+all_coach_data <- map_dfr(2014:2024, function(y) {
+  message("Pulling year: ", y)
+  df <- cfbd_coaches(year = y)
+  df$year <- y
+  df
+})
+
+```
+
+```{r}
+all_coach_data <- all_coach_data %>%
+  unnest_wider(year) %>%
+  select(
+    id, first_name, last_name, school, year,
+    total_wins = total_wins, total_losses = total_losses,
+    conference, position
+  ) %>%
+  mutate(
+    FullName = paste(first_name, last_name),
+    games = total_wins + total_losses,
+    win_percent = ifelse(games > 0, total_wins / games, NA_real_)
+  )
+
+```
 ####### START HERE ######
 ```{r}
 all_coach_data = read.csv("all_coach_data.csv") # Load in cleaned csv file
@@ -102,7 +134,7 @@ export_csv = all_coach_data |>
 season_2024 = all_coach_data |>
   filter(year == 2024)
 
-write.csv(export_csv, file = "coach_ratings.csv")
+write.csv(export_csv, file = "coach_ratings_1.csv")
 ```
 
 

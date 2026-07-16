@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+.Renviron
+.RDataTmp*
+cfb_v2/data/*.duckdb*
+cfb_v2/output/
+cfb_v2/cache/

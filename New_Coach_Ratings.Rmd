@@ -1,0 +1,141 @@
+---
+title: "Updated Coaches ratings"
+author: "Nolan Santacroce"
+date: "2025-10-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(cfbfastR)
+library(dplyr)
+library(purrr)
+library(tidyr)
+
+if (!nzchar(Sys.getenv("CFBD_API_KEY"))) {
+  stop("CFBD_API_KEY is not set. Add it to .Renviron before running this notebook.")
+}
+
+# Pull and combine 2014–2024
+coach_hist <- map_dfr(2014:2024, function(y) {
+  message("Pulling year: ", y)
+  df <- cfbd_coaches(year = y)
+  df$year <- y
+  df
+})
+
+#Loading the 2025 data manually
+coach_import <- cfbfastR::cfbd_coaches(year = 2025)
+
+all_coach <- coach_import |>
+  select(first_name, last_name, school, year, games, wins, srs) |>
+  mutate(FullName = paste(first_name, last_name)) |>  # Create FullName column
+  select(-first_name, -last_name)  |> 
+  select(FullName, everything())
+
+coach_2014 <- coach_import |>
+  select(first_name, last_name, school, year, games, wins, srs) |>
+  mutate(FullName = paste(first_name, last_name)) |>  # Create FullName column
+  select(-first_name, -last_name)  |> 
+  select(FullName, everything()) |>
+  filter(year >= 2014)
+
+coach_2014 <- na.omit(coach_2014)
+
+coach_2014 <- all_coach[!(coach_2014$FullName == "Marcus Freeman" & coach_2014$year == 2021), ]
+write.csv(coach_2014, "coaches_2014.csv", row.names = FALSE)
+```
+
+```{r}
+coach_2025 <- read.csv("coaches_2014_1.csv")
+coach_2025 <- coach_2025 %>% select(-losses)
+coach_2025 <- coach_2025 %>%  mutate(win_per = ifelse(games > 0, wins / games, NA_real_)
+                            ) %>% select(FullName, school, year, games,wins, srs, win_per)
+
+```
+
+
+```{r}
+coach_hist <- coach_hist %>%
+  select(
+    first_name,
+    last_name,
+    school,
+    year,
+    games,
+    wins,
+    srs
+  ) %>%
+  mutate(
+    FullName = paste(first_name, last_name),
+    win_per = ifelse(games > 0, wins / games, NA_real_)
+  ) %>%
+  select(FullName, school, year, games, wins, srs, win_per)
+
+
+```
+
+```{r}
+all_coach_data <- bind_rows(coach_hist, coach_2025)
+all_coach_data
+```
+
+#Creating the functions
+```{r}
+library(dplyr)
+
+# Cumulative mean win percentage
+calculate_mean_win_percentage <- function(df) {
+  df %>%
+    arrange(FullName, year) %>%
+    group_by(FullName) %>%
+    mutate(MeanWinPercentage = cummean(win_per)) %>%
+    ungroup()
+}
+
+# Cumulative mean SRS
+calculate_mean_srs <- function(df) {
+  df %>%
+    arrange(FullName, year) %>%
+    group_by(FullName) %>%
+    mutate(MeanSrs = cummean(srs)) %>%
+    ungroup()
+}
+
+# Years coached counter
+calculate_years_coached <- function(df) {
+  df %>%
+    arrange(FullName, year) %>%
+    group_by(FullName) %>%
+    mutate(YearsCoached = row_number()) %>%
+    ungroup()
+}
+```
+
+#Applying the functions
+```{r}
+all_coach_data <- all_coach_data %>%
+  calculate_mean_win_percentage() %>%
+  calculate_mean_srs() %>%
+  calculate_years_coached()
+```
+
+#Creating the final rating
+```{r}
+all_coach_data <- all_coach_data %>%
+  mutate(
+    rating = MeanSrs + MeanWinPercentage + (YearsCoached * 0.5)
+  )
+export_csv = all_coach_data |>
+  filter(year >= 2014)
+
+season_2025 = all_coach_data |>
+  filter(year == 2025)
+
+#write.csv(export_csv, file = "coach_ratings.csv")
+```

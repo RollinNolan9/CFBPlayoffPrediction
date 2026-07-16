@@ -1,0 +1,322 @@
+---
+title: "Final CFB Prediction Model"
+author: "Nolan Santacroce"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = TRUE)
+
+library(cfbfastR)
+library(caret)
+library(dplyr)
+library(ggplot2)
+library(randomForest)
+library(tidyr)
+library(zoo)
+
+source("cfb_model_rebuild.R")
+
+if (Sys.getenv("CFBD_API_KEY") == "") {
+  message("Set CFBD_API_KEY in .Renviron before running CFBD rating pulls.")
+}
+```
+
+## Model Configuration
+
+This version intentionally removes raw `home` and `away` team names from the model inputs. The model only sees current/as-of team quality differentials, coach-context differentials, home-field/neutral-site context, and optional experimental feature groups.
+
+```{r config}
+MODEL_YEARS <- 2014:2025
+TRAIN_YEARS <- 2014:2024
+PREDICT_YEAR <- 2025
+
+# Default excludes PFF because it can overrate some G5 teams and is noisy across seasons.
+PFF_GROUP <- "none"
+
+# Season-level injury totals are useful for playoff context but leak information for weekly ATS.
+# Keep FALSE for weekly/backtest work until a week-specific injury file is available.
+INCLUDE_SEASON_INJURIES <- FALSE
+PRESEASON_INPUT_FILE <- "preseason_team_inputs.csv"
+
+FIRST_BACKTEST_YEAR <- 2018
+MAX_WEEK <- 18
+```
+
+## Data Loading
+
+```{r load-data}
+pbp_all <- cfbfastR::load_cfb_pbp(MODEL_YEARS)
+
+sp_ratings_all <- fetch_sp_ratings(MODEL_YEARS)
+elo_ratings_all <- fetch_weekly_elo_ratings(MODEL_YEARS, weeks = 1:MAX_WEEK)
+
+coach_raw <- read_coach_data("coach_ratings.csv")
+pff_raw <- read_pff_data("pff_team_data.csv")
+preseason_raw <- read_preseason_team_inputs(PRESEASON_INPUT_FILE)
+injury_raw <- read_injury_data("final_for_sure_1.csv")
+game_lines <- load_game_lines("game_lines.csv")
+```
+
+## Coach Rating Audit
+
+The coach file is cleaned to one row per `school-year`, with the primary coach selected by games coached. Ratings are based only on prior coach history, so a coach's current-season performance is not leaked into games from that season.
+
+```{r coach-audit}
+coach_duplicate_keys <- coach_raw %>%
+  count(school, year, name = "rows") %>%
+  filter(rows > 1) %>%
+  arrange(desc(rows), school, year)
+
+coach_clean <- build_clean_coach_features(coach_raw)
+
+coach_duplicate_keys %>% head(20)
+
+coach_clean %>%
+  filter(team %in% c("Alabama", "Clemson", "Indiana", "SMU")) %>%
+  arrange(team, year) %>%
+  select(
+    team, year, coach_name, coach_rating_pre,
+    coach_career_win_pct_before, coach_srs_mean_before,
+    coach_recent3_srs_before, coach_school_tenure_before,
+    midseason_coach_change
+  )
+```
+
+## Build Modeling Table
+
+Every model row is one game. For each team, the feature snapshot is the latest information available before that game's week. The final feature set is made of home-minus-away differentials, so old brand strength is not directly learned through team names.
+
+Week 0/1 games are tagged as `preseason`, Weeks 2-4 as `early_season`, and Week 5+ as `in_season`. Current-season form features are zero-weighted for Week 0/1, partially weighted in Weeks 2-4, and fully weighted once the season has enough data.
+
+```{r build-model-table}
+model_table <- build_game_model_table(
+  pbp = pbp_all,
+  sp_ratings = sp_ratings_all,
+  elo_ratings = elo_ratings_all,
+  coach_raw = coach_raw,
+  pff_raw = pff_raw,
+  preseason_raw = preseason_raw,
+  injury_raw = injury_raw,
+  lines = game_lines,
+  pff_group = PFF_GROUP,
+  include_season_injuries = INCLUDE_SEASON_INJURIES,
+  max_week = MAX_WEEK
+)
+
+feature_cols <- default_feature_columns(
+  model_table,
+  pff_group = PFF_GROUP,
+  include_season_injuries = INCLUDE_SEASON_INJURIES
+)
+
+feature_cols
+
+model_table %>%
+  summarise(
+    games = n(),
+    seasons = n_distinct(year),
+    features = length(feature_cols),
+    preseason_games = sum(game_phase == "preseason"),
+    early_season_games = sum(game_phase == "early_season"),
+    in_season_games = sum(game_phase == "in_season"),
+    ats_games_with_lines = sum(!is.na(close_spread_home)),
+    preseason_input_rows = nrow(preseason_raw)
+  )
+```
+
+## Week 0/1 Preseason Model
+
+The preseason model layer uses prior-season/team-history features, cleaned coach context, optional preseason priors, and the light manual preseason file. It does not use current-season rolling EPA/WPA for Week 0/1.
+
+```{r preseason-input-contract}
+names(read_preseason_team_inputs(PRESEASON_INPUT_FILE))
+
+preseason_manual_match_cols <- intersect(
+  c("projected_qb_tier_diff", "preseason_power_adjustment_diff"),
+  names(model_table)
+)
+
+preseason_model_rows <- model_table %>% filter(game_phase == "preseason")
+preseason_manual_rows_matched <- if (length(preseason_manual_match_cols) == 0) {
+  0
+} else {
+  sum(rowSums(!is.na(preseason_model_rows[, preseason_manual_match_cols, drop = FALSE])) > 0)
+}
+
+tibble(
+  games = nrow(preseason_model_rows),
+  current_form_features_used = sum(abs(coalesce(preseason_model_rows$off_epa_last3_phase_weighted, 0)) > 0),
+  preseason_manual_rows_matched = preseason_manual_rows_matched
+)
+```
+
+```{r week01-backtest}
+week01_backtest_comparison <- compare_week01_models(
+  model_table,
+  first_eval_year = FIRST_BACKTEST_YEAR,
+  last_eval_year = max(MODEL_YEARS),
+  pff_group = PFF_GROUP
+)
+
+week01_backtest_comparison
+```
+
+## Rolling Backtest
+
+The backtest trains on all prior seasons, applies recency-based row weighting, then predicts the next season. This exposes whether the model is adapting to current team quality rather than carrying too much historical Alabama/Clemson style brand weight.
+
+```{r rolling-backtest}
+rolling_backtest <- run_rolling_backtest(
+  model_table,
+  first_eval_year = FIRST_BACKTEST_YEAR,
+  last_eval_year = max(MODEL_YEARS),
+  min_train_year = min(MODEL_YEARS),
+  feature_cols = feature_cols
+)
+
+rolling_backtest$metrics
+```
+
+```{r rolling-backtest-plot}
+rolling_backtest$metrics %>%
+  ggplot(aes(x = eval_year, y = su_accuracy)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title = "Rolling Straight-Up Accuracy by Evaluation Season",
+    x = "Evaluation season",
+    y = "Straight-up accuracy"
+  ) +
+  theme_minimal()
+```
+
+## Final Training and Diagnostics
+
+```{r final-model}
+final_model <- train_margin_model(
+  model_table,
+  train_years = TRAIN_YEARS,
+  feature_cols = feature_cols,
+  half_life_years = 3,
+  max_multiplier = 6
+)
+
+final_model$model
+
+season_predictions <- model_table %>%
+  filter(year == PREDICT_YEAR) %>%
+  predict_model_table(final_model, .)
+
+evaluate_predictions(season_predictions)
+diagnostic_slices(season_predictions)
+```
+
+```{r variable-importance}
+varImp(final_model$model)
+```
+
+## PFF Experiments
+
+Run this chunk only when you want to test whether PFF improves out-of-sample results. PFF is excluded from the default model unless one of these groups improves rolling playoff and ATS metrics.
+
+```{r pff-experiments, eval=FALSE}
+pff_group_results <- evaluate_pff_groups(
+  pbp = pbp_all,
+  sp_ratings = sp_ratings_all,
+  elo_ratings = elo_ratings_all,
+  coach_raw = coach_raw,
+  pff_raw = pff_raw,
+  preseason_raw = preseason_raw,
+  injury_raw = injury_raw,
+  lines = game_lines,
+  groups = c("none", "overall", "unit", "trenches", "pass_rush"),
+  first_eval_year = FIRST_BACKTEST_YEAR
+)
+
+pff_group_results
+```
+
+## Matchup Prediction
+
+The matchup helper uses as-of snapshots from the rebuilt model table. `spread_home` follows the standard convention where a home favorite is negative, for example `-6.5`.
+
+```{r matchup-example, eval=FALSE}
+predict_matchup(
+  home_team = "Indiana",
+  away_team = "Clemson",
+  season = 2025,
+  week = 16,
+  model_bundle = final_model,
+  model_table = model_table,
+  neutral_site = TRUE,
+  spread_home = NA_real_
+)
+```
+
+## Weekly Article Prep
+
+Use `predict_week()` for Week 0/1 or any weekly card. The output is model-only: margin, winner, ATS edge, confidence, and top feature drivers.
+
+```{r predict-week-example, eval=FALSE}
+week_card <- tibble(
+  season = c(2025, 2025),
+  week = c(1, 1),
+  home = c("Indiana", "Alabama"),
+  away = c("Clemson", "SMU"),
+  neutral_site = c(FALSE, TRUE),
+  open_spread_home = c(NA_real_, NA_real_),
+  close_spread_home = c(NA_real_, NA_real_)
+)
+
+predict_week(
+  schedule = week_card,
+  model_bundle = final_model,
+  model_table = model_table
+)
+```
+
+## Betting Lines Contract
+
+Add closing/opening spreads to `game_lines.csv` when available. `close_spread_home` should be negative when the home team is favored and positive when the home team is an underdog.
+
+Required columns:
+
+```{r line-columns, echo=FALSE}
+names(load_game_lines("game_lines.csv"))
+```
+
+## Preseason Input Contract
+
+Fill `preseason_team_inputs.csv` once before the season. Suggested scale: `projected_qb_tier` from 1-5 where 5 is elite, continuity fields as 0/1, and `preseason_power_adjustment` as your manual points adjustment relative to the model's baseline.
+
+The lower-maintenance workflow is to paste/download public source tables into the source CSVs, then generate `preseason_team_inputs.csv`. Your own entries should go in `preseason_manual_overrides.csv`, which is applied last.
+
+Source files:
+
+- `preseason_source_returning_starters.csv`: returning starters/snap percentages
+- `preseason_source_portal.csv`: transfer portal team rank/score
+- `preseason_source_staff.csv`: current and prior head coach/coordinator names
+- `preseason_manual_overrides.csv`: QB tier, power adjustment, and any continuity fixes
+
+```{r automated-preseason-inputs, eval=FALSE}
+automated_preseason <- build_automated_preseason_inputs(
+  season = 2026,
+  team_context = attr(model_table, "model_components")$team_snapshots,
+  output_path = PRESEASON_INPUT_FILE
+)
+
+automated_preseason %>%
+  arrange(returning_starter_value_rank) %>%
+  select(
+    team, season, returning_starter_value_rank, returning_starter_value,
+    returning_starters_total, quality_context_score, portal_net_rating,
+    projected_qb_tier, preseason_power_adjustment
+  ) %>%
+  head(25)
+```
