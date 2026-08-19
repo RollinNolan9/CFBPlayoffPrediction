@@ -99,7 +99,8 @@ v2_schema_sql <- function() {
        home_win_probability DOUBLE, market_home_spread DOUBLE,
        ats_edge_home DOUBLE, home_cover_probability DOUBLE,
        straight_up_pick VARCHAR, ats_pick VARCHAR, pick_status VARCHAR,
-       confidence_tier VARCHAR, forced_pick BOOLEAN, injury_scenario VARCHAR,
+       confidence_tier VARCHAR, forced_pick BOOLEAN, fbs_transition VARCHAR,
+       injury_scenario VARCHAR,
        top_drivers VARCHAR, model_version VARCHAR, published BOOLEAN,
        created_at TIMESTAMP
      )",
@@ -123,6 +124,9 @@ v2_init_schema <- function(con) {
   DBI::dbExecute(
     con, paste("ALTER TABLE injury_snapshots ADD COLUMN IF NOT EXISTS",
                "availability_probability DOUBLE")
+  )
+  DBI::dbExecute(
+    con, "ALTER TABLE prediction_snapshots ADD COLUMN IF NOT EXISTS fbs_transition VARCHAR"
   )
   coach_columns <- c(
     assignment_confidence = "VARCHAR", source_games = "INTEGER",

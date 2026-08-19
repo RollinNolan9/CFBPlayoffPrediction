@@ -336,8 +336,14 @@ items are:
    production inputs under the `ps_` prefix; Week 1 polls stay diagnostic-only.
    Production runs now require frozen preseason priors covering the predicted
    season through Week 4.
-3. Build an FCS-to-FBS bridge and transition-specific uncertainty.
-4. Complete prior history for the three unmapped 2026 head coaches.
+3. Build an FCS-to-FBS bridge and transition-specific uncertainty — done.
+   `cfb_v2/bridge.R` calibrates against the historical movers and crossover games,
+   flags transition games, inflates uncertainty, and blocks high-confidence picks
+   when bridge variance dominates.
+4. Complete prior history for the three unmapped 2026 head coaches — done via the
+   sourced `coach_history_manual.csv` contract (Polasek modeled from his 2024 FCS
+   title season; Pritchard and Carter documented neutral). Append Polasek's
+   verified 2025 season when available.
 5. Automate the final 2026 preseason data refresh.
 
 Do not treat PFF, portal rankings, weather, conference labels, or raw poll rank as

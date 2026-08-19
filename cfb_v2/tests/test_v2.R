@@ -7,7 +7,7 @@ project_dir <- if (file.exists(file.path(getwd(), "cfb_v2", "config.R"))) {
 }
 for (file in c("config.R", "store.R", "features.R", "coaches.R", "adapters.R",
                "models.R", "coach_migration.R", "historical_data.R", "preseason.R",
-               "workflow.R")) {
+               "bridge.R", "workflow.R")) {
   source(file.path(project_dir, "cfb_v2", file))
 }
 config <- cfb_v2_config(project_dir, 2026)
@@ -361,6 +361,139 @@ test_that("preseason challengers recover a planted week-one signal", {
   expect_true(all(is.finite(
     summary$uncertainty_coverage[summary$slice == "all_week_0_1"]
   )))
+})
+
+test_that("fcs-to-fbs bridge calibrates, flags, and guards confidence", {
+  membership <- rbind(
+    data.frame(team = c("Old1", "Old2"), season = 2023, classification = "fbs"),
+    data.frame(team = c("Old1", "Old2", "Mover1", "Mover2"), season = 2024,
+               classification = "fbs"),
+    data.frame(team = c("Old1", "Old2", "Mover1", "Mover2", "NDSU"), season = 2025,
+               classification = "fbs")
+  )
+  flags <- combine_membership(membership)
+  transitions <- fbs_transition_teams(flags)
+  expect_equal(sort(paste(transitions$team, transitions$season)),
+               c("Mover1 2024", "Mover2 2024", "NDSU 2025"))
+
+  team_games <- data.frame(
+    team = c("Mover1", "Mover1", "Mover2", "Mover2", "Anchor", "Old1"),
+    season = 2024,
+    net_efficiency = c(-0.2, -0.3, 0.1, 0.0, -0.4, 0.2),
+    margin = c(-10, -20, 3, -3, -30, 10), stringsAsFactors = FALSE
+  )
+  team_games$offense_epa <- c(-.1, -.2, .1, 0, -.3, .2)
+  team_games$success_rate <- c(.35, .33, .42, .40, .30, .48)
+  bridge <- calibrate_fbs_bridge(team_games, flags, config)
+  expect_equal(bridge$prior_net_efficiency, mean(c(-0.25, 0.05, -0.4)))
+  expect_equal(bridge$margin_sd, max(config$bridge$sd_floor, sd(c(-15, 0))))
+  expect_error(
+    calibrate_fbs_bridge(team_games[team_games$team == "Old1", ], flags, config),
+    "historical first-year"
+  )
+
+  features <- data.frame(
+    team = c("NDSU", "Old1"), season = 2025,
+    prior_season = c(NA, 0.15), trailing_3yr = c(NA, 0.1),
+    preseason_prior = c(NA, 0.2), offense_rating = c(0, .2),
+    success_rate = c(0, .48), power_rating = c(7, 5),
+    source_games = c(0, 5), games_played = c(0, 5),
+    stringsAsFactors = FALSE
+  )
+  bridged <- apply_fbs_bridge_features(features, transitions, bridge)
+  expect_equal(bridged$prior_season, c(bridge$prior_net_efficiency, 0.15))
+  expect_equal(bridged$offense_rating[1], bridge$feature_priors[["offense_epa"]])
+  expect_equal(bridged$success_rate[1], bridge$feature_priors[["success_rate"]])
+  expect_equal(bridged$power_rating[1], 7)
+  expect_equal(bridged$fbs_transition, c(TRUE, FALSE))
+
+  matchup <- data.frame(
+    game_id = "g0", season = 2025, week = 1, home = "NDSU", away = "Old1",
+    home_source_games = 0, away_source_games = 5,
+    home_games_played = 0, away_games_played = 5,
+    home_prior_season = NA_real_, away_prior_season = .15,
+    home_success_rate = 0, away_success_rate = .48,
+    prior_season_diff = NA_real_, success_rate_diff = -.48,
+    prior_history_weight = 1, preseason_weight = 1,
+    stringsAsFactors = FALSE
+  )
+  backtest_features <- apply_fbs_bridge_backtest_features(
+    matchup, team_games, flags, config
+  )
+  expect_true(backtest_features$fbs_transition_game)
+  expect_true(is.finite(backtest_features$prior_season_diff))
+  expect_equal(backtest_features$home_success_rate,
+               bridge$feature_priors[["success_rate"]])
+  expect_gt(backtest_features$fbs_bridge_sd, 0)
+
+  schedule <- data.frame(
+    game_id = c("g1", "g2"), season = 2025, week = 1,
+    home = c("NDSU", "Old1"), away = c("Old1", "Old2"),
+    neutral_site = FALSE, stringsAsFactors = FALSE
+  )
+  predictions <- data.frame(
+    game_id = c("g1", "g2"), expected_margin = c(6, 6), fair_spread = c(-6, -6),
+    margin_sd = 9, market_home_spread = -3, forced_pick = FALSE,
+    pick_status = "official_pick", confidence_tier = "high",
+    home_win_probability = .8, ats_edge_home = 3, home_cover_probability = .6,
+    straight_up_pick = c("NDSU", "Old1"), ats_pick = c("NDSU", "Old1"),
+    stringsAsFactors = FALSE
+  )
+  guarded <- apply_fbs_bridge_predictions(predictions, schedule, transitions,
+                                          bridge, config)
+  expect_equal(guarded$fbs_transition, c("home", ""))
+  expect_equal(guarded$margin_sd[1], sqrt(81 + bridge$margin_sd^2))
+  expect_equal(guarded$margin_sd[2], 9)
+  expect_equal(guarded$confidence_tier, c("low", "high"))
+  expect_equal(guarded$pick_status, c("transition_review", "official_pick"))
+  late_schedule <- schedule[1, , drop = FALSE]
+  late_schedule$week <- 10
+  late <- apply_fbs_bridge_predictions(predictions[1, , drop = FALSE], late_schedule,
+                                       transitions, bridge, config)
+  expect_lt(late$margin_sd, guarded$margin_sd[1])
+})
+
+test_that("manual coach history adds sourced lower-level seasons only", {
+  history <- data.frame(
+    coach_id = "coach_a", team = "X", season = 2024, week = 99, games = 13,
+    wins = 9, above_expectation = 5, level = "fbs", context_strength = .7,
+    target_context_strength = .7, playoff_appearances = 0, titles = 0,
+    source = "public", stringsAsFactors = FALSE
+  )
+  manual <- data.frame(
+    coach_id = "coach_tim_polasek", season = 2024, week = 99, games = 16,
+    wins = 14, above_expectation = NA_real_, level = "fcs",
+    context_strength = .45, target_context_strength = .55,
+    playoff_appearances = 1, titles = 1, source = "manual_fcs_record",
+    source_url = "u", notes = "n", stringsAsFactors = FALSE
+  )
+  merged <- merge_manual_coach_history(history, manual)
+  expect_equal(nrow(merged), 2)
+  ratings <- build_coach_ratings(merged, 2026, 1, .65, config)
+  polasek <- ratings[ratings$coach_id == "coach_tim_polasek", ]
+  expect_gt(polasek$rating, 0)
+  expect_lte(polasek$portability, config$coach$portability_cap)
+
+  neutral <- manual
+  neutral$coach_id <- "coach_tavita_pritchard"
+  neutral$games <- 0
+  neutral$wins <- 0
+  neutral$level <- "nfl"
+  neutral$playoff_appearances <- 0
+  neutral$titles <- 0
+  ratings2 <- build_coach_ratings(merge_manual_coach_history(history, neutral),
+                                  2026, 1, .65, config)
+  pritchard <- ratings2[ratings2$coach_id == "coach_tavita_pritchard", ]
+  expect_equal(pritchard$rating, 0)
+
+  collision <- manual
+  collision$coach_id <- "coach_a"
+  collision$week <- 98
+  expect_error(merge_manual_coach_history(history, collision),
+               "replace public rows")
+  unsourced <- manual
+  unsourced$source <- ""
+  expect_error(merge_manual_coach_history(history, unsourced), "explicit source")
 })
 
 test_that("coach intervals are week-aware and reject overlap", {

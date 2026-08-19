@@ -51,6 +51,7 @@ source(file.path(project_dir, "cfb_v2", "models.R"))
 source(file.path(project_dir, "cfb_v2", "coach_migration.R"))
 source(file.path(project_dir, "cfb_v2", "historical_data.R"))
 source(file.path(project_dir, "cfb_v2", "preseason.R"))
+source(file.path(project_dir, "cfb_v2", "bridge.R"))
 source(file.path(project_dir, "cfb_v2", "workflow.R"))
 
 options(warn = 1)
