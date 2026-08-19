@@ -302,6 +302,9 @@ build_v2_backtest_predictions <- function(data, rolling, model_name) {
   closing <- as.numeric(value("closing_home_spread", NA_real_))
   actual <- prediction$actual
   expected <- prediction$expected_margin
+  bridge_sd <- as.numeric(value("fbs_bridge_sd", 0))
+  bridge_sd[!is.finite(bridge_sd)] <- 0
+  margin_sd <- sqrt(prediction$margin_sd^2 + bridge_sd^2)
   actual_cover_margin <- actual + closing
   model_edge <- expected + closing
   ats_valid <- is.finite(actual_cover_margin) & actual_cover_margin != 0 &
@@ -320,10 +323,11 @@ build_v2_backtest_predictions <- function(data, rolling, model_name) {
     postseason_type = value("postseason_type", "regular"),
     is_cfp = as.logical(value("is_cfp", FALSE)),
     neutral_site = as.logical(value("neutral_site", FALSE)),
+    fbs_transition_game = as.logical(value("fbs_transition_game", FALSE)),
     new_coach_game = paste(value("home", ""), rows$season, sep = "\r") %in% new_coach |
       paste(value("away", ""), rows$season, sep = "\r") %in% new_coach,
     actual_margin = actual, expected_margin = expected,
-    fair_margin = prediction$fair_margin, margin_sd = prediction$margin_sd,
+    fair_margin = prediction$fair_margin, margin_sd = margin_sd,
     absolute_error = abs(actual - expected),
     winner_correct = sign(actual) == sign(expected),
     closing_home_spread = closing, model_edge = model_edge,
@@ -600,6 +604,15 @@ run_v2_backtest <- function(config) {
   training <- utils::read.csv(training_path, check.names = FALSE,
                               na.strings = c("", "NA"))
   validation <- prepare_training_data(training, config)
+  membership_flags <- combine_membership(read_csv_if_present(
+    file.path(config$data_dir, "historical_fbs_membership.csv"), required = TRUE
+  ))
+  historical_team_games <- read_csv_if_present(
+    file.path(config$data_dir, "historical_team_games.csv"), required = TRUE
+  )
+  validation$data <- apply_fbs_bridge_backtest_features(
+    validation$data, historical_team_games, membership_flags, config
+  )
   priors <- read_csv_if_present(
     file.path(config$data_dir, "preseason_team_priors.csv"), required = FALSE
   )
@@ -688,13 +701,6 @@ run_v2_backtest <- function(config) {
     )
   }
   predictions <- do.call(rbind, prediction_sets)
-  transitions <- fbs_transition_teams(combine_membership(read_csv_if_present(
-    file.path(config$data_dir, "historical_fbs_membership.csv")
-  )))
-  transition_key <- paste(transitions$team, transitions$season)
-  predictions$fbs_transition_game <-
-    paste(predictions$home, predictions$season) %in% transition_key |
-    paste(predictions$away, predictions$season) %in% transition_key
   summary <- summarize_v2_backtest(predictions)
   coach_comparison <- coach$comparison
   coach_comparison$selected <- abs(coach_comparison$recent_share - coach$recent_share) <
@@ -858,7 +864,7 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
   )
   if (!is.null(bridge)) {
     predictions <- apply_fbs_bridge_predictions(
-      predictions, schedule, transitions, bridge, config,
+      predictions, matchup, transitions, bridge, config,
       ats_threshold = ats_threshold, ats_model = ats_model
     )
   } else {

@@ -368,7 +368,6 @@ test_that("fcs-to-fbs bridge calibrates, flags, and guards confidence", {
     data.frame(team = c("Old1", "Old2"), season = 2023, classification = "fbs"),
     data.frame(team = c("Old1", "Old2", "Mover1", "Mover2"), season = 2024,
                classification = "fbs"),
-    data.frame(team = "Anchor", season = 2024, classification = "fcs"),
     data.frame(team = c("Old1", "Old2", "Mover1", "Mover2", "NDSU"), season = 2025,
                classification = "fbs")
   )
@@ -383,6 +382,8 @@ test_that("fcs-to-fbs bridge calibrates, flags, and guards confidence", {
     net_efficiency = c(-0.2, -0.3, 0.1, 0.0, -0.4, 0.2),
     margin = c(-10, -20, 3, -3, -30, 10), stringsAsFactors = FALSE
   )
+  team_games$offense_epa <- c(-.1, -.2, .1, 0, -.3, .2)
+  team_games$success_rate <- c(.35, .33, .42, .40, .30, .48)
   bridge <- calibrate_fbs_bridge(team_games, flags, config)
   expect_equal(bridge$prior_net_efficiency, mean(c(-0.25, 0.05, -0.4)))
   expect_equal(bridge$margin_sd, max(config$bridge$sd_floor, sd(c(-15, 0))))
@@ -394,11 +395,36 @@ test_that("fcs-to-fbs bridge calibrates, flags, and guards confidence", {
   features <- data.frame(
     team = c("NDSU", "Old1"), season = 2025,
     prior_season = c(NA, 0.15), trailing_3yr = c(NA, 0.1),
-    preseason_prior = c(NA, 0.2), stringsAsFactors = FALSE
+    preseason_prior = c(NA, 0.2), offense_rating = c(0, .2),
+    success_rate = c(0, .48), power_rating = c(7, 5),
+    source_games = c(0, 5), games_played = c(0, 5),
+    stringsAsFactors = FALSE
   )
   bridged <- apply_fbs_bridge_features(features, transitions, bridge)
   expect_equal(bridged$prior_season, c(bridge$prior_net_efficiency, 0.15))
+  expect_equal(bridged$offense_rating[1], bridge$feature_priors[["offense_epa"]])
+  expect_equal(bridged$success_rate[1], bridge$feature_priors[["success_rate"]])
+  expect_equal(bridged$power_rating[1], 7)
   expect_equal(bridged$fbs_transition, c(TRUE, FALSE))
+
+  matchup <- data.frame(
+    game_id = "g0", season = 2025, week = 1, home = "NDSU", away = "Old1",
+    home_source_games = 0, away_source_games = 5,
+    home_games_played = 0, away_games_played = 5,
+    home_prior_season = NA_real_, away_prior_season = .15,
+    home_success_rate = 0, away_success_rate = .48,
+    prior_season_diff = NA_real_, success_rate_diff = -.48,
+    prior_history_weight = 1, preseason_weight = 1,
+    stringsAsFactors = FALSE
+  )
+  backtest_features <- apply_fbs_bridge_backtest_features(
+    matchup, team_games, flags, config
+  )
+  expect_true(backtest_features$fbs_transition_game)
+  expect_true(is.finite(backtest_features$prior_season_diff))
+  expect_equal(backtest_features$home_success_rate,
+               bridge$feature_priors[["success_rate"]])
+  expect_gt(backtest_features$fbs_bridge_sd, 0)
 
   schedule <- data.frame(
     game_id = c("g1", "g2"), season = 2025, week = 1,
@@ -420,6 +446,11 @@ test_that("fcs-to-fbs bridge calibrates, flags, and guards confidence", {
   expect_equal(guarded$margin_sd[2], 9)
   expect_equal(guarded$confidence_tier, c("low", "high"))
   expect_equal(guarded$pick_status, c("transition_review", "official_pick"))
+  late_schedule <- schedule[1, , drop = FALSE]
+  late_schedule$week <- 10
+  late <- apply_fbs_bridge_predictions(predictions[1, , drop = FALSE], late_schedule,
+                                       transitions, bridge, config)
+  expect_lt(late$margin_sd, guarded$margin_sd[1])
 })
 
 test_that("manual coach history adds sourced lower-level seasons only", {
@@ -457,6 +488,7 @@ test_that("manual coach history adds sourced lower-level seasons only", {
 
   collision <- manual
   collision$coach_id <- "coach_a"
+  collision$week <- 98
   expect_error(merge_manual_coach_history(history, collision),
                "replace public rows")
   unsourced <- manual

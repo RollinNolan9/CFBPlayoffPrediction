@@ -60,9 +60,12 @@ merge_manual_coach_history <- function(history, manual) {
   if (any(is.na(manual$source) | !nzchar(manual$source))) {
     stop("Every manual coach history row needs an explicit source.", call. = FALSE)
   }
-  key <- function(x) paste(x$coach_id, as.integer(x$season), as.integer(x$week),
-                           sep = "\r")
-  collision <- key(manual) %in% key(history)
+  key <- function(x) paste(x$coach_id, as.integer(x$season), sep = "\r")
+  manual_key <- key(manual)
+  if (anyDuplicated(manual_key)) {
+    stop("Manual coach history contains duplicate coach-season rows.", call. = FALSE)
+  }
+  collision <- manual_key %in% key(history)
   if (any(collision)) {
     stop("Manual coach history would replace public rows for: ",
          paste(unique(manual$coach_id[collision]), collapse = ", "),

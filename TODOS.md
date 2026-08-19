@@ -4,17 +4,17 @@
 
 ### Correct Turnover Rate
 
-**Status:** Code and tests landed. `build_team_game_efficiencies_v2` now builds the
-rate from interception and lost-fumble plays only (excluding failed fourth downs,
-defensive scores, and special-teams changes of possession that the upstream
-cfbfastR flags also count) and persists the raw `turnover_lost_rate` numerator for
-audit. The committed foundation CSVs still hold the old havoc-derived values until
-the local rebuild below is run.
+**Status:** Code, tests, and the cached foundation rebuild are complete.
+`build_team_game_efficiencies_v2` now builds the rate from interception and
+lost-fumble plays only (excluding failed fourth downs, defensive scores, and
+special-teams changes of possession that the upstream cfbfastR flags also count).
+Foundation run `foundation_2020_2025_20260720T171313Z` rebuilt 1,340,044 PBP rows,
+5,115 games, and 10,230 team-game rows with the raw `turnover_lost_rate` numerator.
+The correlation between `turnover_rate_regressed` and `havoc_allowed` fell from
+0.967 in the stale foundation to 0.125 after the correction.
 
-**Remaining:** Rebuild the historical foundation
-(`--mode=build-foundation --seasons=2020:2025 --overwrite=true`), rerun
-`--mode=backtest`, and regenerate the August 29 dry run on a machine with the CFBD
-key and PBP cache.
+**Remaining:** Rerun `--mode=backtest` against the rebuilt foundation and regenerate
+the August 29 dry run.
 
 **What:** Build `turnover_rate_regressed` from turnover-only scrimmage plays instead
 of `havoc_allowed`, then rebuild the historical foundation and rerun every rolling
@@ -72,16 +72,16 @@ accuracy, ATS accuracy, calibration, and conference diagnostic slices.
 ### Build FCS-to-FBS Bridge
 
 **Status:** Code and tests landed. `cfb_v2/bridge.R` detects first-year FBS teams from
-membership, calibrates a conservative prior and margin uncertainty against the six
+membership, calibrates feature priors and margin uncertainty against the six
 historical movers (James Madison 2022 through Delaware/Missouri State 2025) plus the
-FCS sides of crossover games, fills only the missing history fields, inflates
-`margin_sd`, writes a visible `fbs_transition` flag into predictions and the DuckDB
-snapshot, forces low confidence and `transition_review` status when bridge variance
-dominates, and adds an `fbs_transition` slice to both backtest reports.
+FCS sides of crossover games, repairs missing or zero-placeholder transition inputs,
+and applies the same fold-safe behavior in rolling backtests. Transition uncertainty
+fades with games played, predictions retain a visible `fbs_transition` flag, and
+bridge-dominated projections fall to low confidence and `transition_review` status.
 
-**Remaining:** Rerun `--mode=backtest` locally to review the transition slice, and
-keep 2026 membership rows for North Dakota State and Sacramento State in
-`membership.csv` so the Week 1 run flags them.
+**Remaining:** Rerun `--mode=backtest` against the rebuilt foundation to review the
+transition slice, and keep 2026 membership rows for North Dakota State and
+Sacramento State in `membership.csv` so the Week 1 run flags them.
 
 **What:** Create a conservative prior and added uncertainty for first-year FBS teams,
 starting with North Dakota State and Sacramento State in 2026.
