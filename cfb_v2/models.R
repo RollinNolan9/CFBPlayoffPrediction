@@ -172,10 +172,197 @@ predict.cfb_ensemble <- function(object, newdata, ...) {
   )
 }
 
+preseason_blend_share <- function(week, config,
+                                  base_share = config$preseason$challenger_share) {
+  if (length(base_share) != 1L || !is.finite(base_share) ||
+      base_share < 0 || base_share > 1) {
+    stop("Preseason challenger share must be one number between zero and one.",
+         call. = FALSE)
+  }
+  pmax(0, pmin(1, base_share * preseason_feature_weight(week, config)))
+}
+
+preseason_blend_share_for_data <- function(data, config,
+                                           base_share = config$preseason$challenger_share) {
+  week <- if ("phase_week" %in% names(data)) {
+    as.integer(data$phase_week)
+  } else as.integer(data$week)
+  postseason <- if ("postseason_type" %in% names(data)) {
+    !is.na(data$postseason_type) & data$postseason_type != "regular"
+  } else rep(FALSE, nrow(data))
+  if ("game_phase" %in% names(data)) {
+    postseason <- postseason | (!is.na(data$game_phase) &
+                                  data$game_phase == "postseason")
+  }
+  week[postseason] <- 99L
+  preseason_blend_share(week, config, base_share)
+}
+
+blend_rolling_predictions <- function(data, foundation, preseason, config,
+                                      base_share = config$preseason$challenger_share) {
+  foundation_prediction <- foundation$predictions
+  preseason_prediction <- preseason$predictions
+  assert_unique_keys(foundation_prediction, c("row_id", "test_season"),
+                     "foundation rolling predictions")
+  assert_unique_keys(preseason_prediction, c("row_id", "test_season"),
+                     "preseason rolling predictions")
+  key <- paste(foundation_prediction$row_id, foundation_prediction$test_season,
+               sep = "\r")
+  preseason_key <- paste(preseason_prediction$row_id,
+                         preseason_prediction$test_season, sep = "\r")
+  index <- match(key, preseason_key)
+  if (anyNA(index) || length(index) != nrow(preseason_prediction)) {
+    stop("Foundation and preseason rolling predictions cover different folds.",
+         call. = FALSE)
+  }
+  preseason_prediction <- preseason_prediction[index, , drop = FALSE]
+  if (!isTRUE(all.equal(foundation_prediction$actual,
+                        preseason_prediction$actual))) {
+    stop("Foundation and preseason rolling outcomes do not align.", call. = FALSE)
+  }
+
+  rows <- foundation_prediction$row_id
+  share <- preseason_blend_share_for_data(
+    data[rows, , drop = FALSE], config, base_share
+  )
+  expected <- (1 - share) * foundation_prediction$expected_margin +
+    share * preseason_prediction$expected_margin
+  phase <- if ("game_phase" %in% names(data)) data$game_phase[rows] else
+    game_phase(data$week[rows])
+  calibration <- fit_error_calibration(
+    expected, foundation_prediction$actual, phase, config
+  )
+  calibrated <- apply_error_calibration(calibration, expected, phase)
+
+  prediction <- foundation_prediction
+  prediction$lambda <- NA_real_
+  prediction$expected_margin <- expected
+  prediction$fair_margin <- calibrated$fair_margin
+  prediction$margin_sd <- calibrated$margin_sd
+  prediction$error <- prediction$actual - expected
+  prediction$absolute_error <- abs(prediction$error)
+  prediction$foundation_expected_margin <- foundation_prediction$expected_margin
+  prediction$preseason_expected_margin <- preseason_prediction$expected_margin
+  prediction$preseason_challenger_share <- share
+  prediction$preseason_adjustment <- expected -
+    foundation_prediction$expected_margin
+
+  list(
+    best_lambda = NA_real_,
+    scores = data.frame(
+      lambda = NA_real_, absolute_error = mean(prediction$absolute_error),
+      stringsAsFactors = FALSE
+    ),
+    predictions = prediction,
+    calibration = calibration,
+    foundation = foundation,
+    preseason = preseason,
+    base_share = base_share
+  )
+}
+
+make_preseason_blend <- function(foundation_model, preseason_model, calibration,
+                                 config,
+                                 base_share = config$preseason$challenger_share) {
+  if (!inherits(foundation_model, "cfb_ensemble") ||
+      !inherits(preseason_model, "cfb_ensemble")) {
+    stop("Preseason blends require two fitted CFB ensembles.", call. = FALSE)
+  }
+  structure(list(
+    version = config$version,
+    foundation = foundation_model,
+    preseason = preseason_model,
+    calibration = calibration,
+    base_share = base_share,
+    config = config,
+    features = union(foundation_model$features, preseason_model$features)
+  ), class = "cfb_preseason_blend")
+}
+
+predict.cfb_preseason_blend <- function(object, newdata, ...) {
+  foundation <- predict(object$foundation, newdata)
+  preseason <- predict(object$preseason, newdata)
+  share <- preseason_blend_share_for_data(
+    newdata, object$config, object$base_share
+  )
+  base <- (1 - share) * foundation$base_margin + share * preseason$base_margin
+  nonlinear <- (1 - share) * foundation$nonlinear_adjustment +
+    share * preseason$nonlinear_adjustment
+  expected <- (1 - share) * foundation$expected_margin +
+    share * preseason$expected_margin
+  phase <- if ("game_phase" %in% names(newdata)) newdata$game_phase else
+    game_phase(newdata$week)
+  calibrated <- apply_error_calibration(object$calibration, expected, phase)
+  data.frame(
+    base_margin = base,
+    nonlinear_adjustment = nonlinear,
+    expected_margin = expected,
+    fair_margin = calibrated$fair_margin,
+    margin_sd = calibrated$margin_sd,
+    foundation_expected_margin = foundation$expected_margin,
+    preseason_expected_margin = preseason$expected_margin,
+    preseason_challenger_share = share,
+    preseason_raw_delta = preseason$expected_margin - foundation$expected_margin,
+    preseason_adjustment = expected - foundation$expected_margin,
+    stringsAsFactors = FALSE
+  )
+}
+
+align_contribution_columns <- function(contributions, features) {
+  aligned <- matrix(0, nrow = nrow(contributions), ncol = length(features),
+                    dimnames = list(NULL, features))
+  aligned[, colnames(contributions)] <- contributions
+  aligned
+}
+
 ridge_feature_contributions <- function(model, new_data) {
+  if (inherits(model, "cfb_preseason_blend")) {
+    foundation <- ridge_feature_contributions(model$foundation, new_data)
+    preseason <- ridge_feature_contributions(model$preseason, new_data)
+    features <- union(colnames(foundation), colnames(preseason))
+    foundation <- align_contribution_columns(foundation, features)
+    preseason <- align_contribution_columns(preseason, features)
+    share <- preseason_blend_share_for_data(
+      new_data, model$config, model$base_share
+    )
+    return(sweep(foundation, 1, 1 - share, `*`) +
+             sweep(preseason, 1, share, `*`))
+  }
   x <- bake_numeric_recipe(model$ridge$recipe, new_data)
   beta <- model$ridge$coefficients[-1]
   sweep(x, 2, beta, `*`)
+}
+
+ridge_intercept_contribution <- function(model, new_data) {
+  if (inherits(model, "cfb_preseason_blend")) {
+    share <- preseason_blend_share_for_data(
+      new_data, model$config, model$base_share
+    )
+    return((1 - share) * model$foundation$ridge$coefficients[[1]] +
+             share * model$preseason$ridge$coefficients[[1]])
+  }
+  rep(model$ridge$coefficients[[1]], nrow(new_data))
+}
+
+ridge_standardized_coefficients <- function(model, new_data = NULL) {
+  if (!inherits(model, "cfb_preseason_blend")) {
+    return(model$ridge$coefficients[-1])
+  }
+  if (is.null(new_data)) {
+    share <- model$base_share
+  } else {
+    share <- mean(preseason_blend_share_for_data(
+      new_data, model$config, model$base_share
+    ))
+  }
+  features <- union(model$foundation$features, model$preseason$features)
+  foundation <- setNames(rep(0, length(features)), features)
+  preseason <- foundation
+  foundation[names(model$foundation$ridge$coefficients)[-1]] <-
+    model$foundation$ridge$coefficients[-1]
+  preseason[names(model$preseason$ridge$coefficients)[-1]] <-
+    model$preseason$ridge$coefficients[-1]
+  (1 - share) * foundation + share * preseason
 }
 
 ridge_feature_drivers <- function(model, new_data, top_n = 4L) {
@@ -268,6 +455,11 @@ make_game_picks <- function(prediction, schedule, market_home_spread = NA_real_,
   confidence_probability <- pmax(home_win, 1 - home_win)
   confidence <- ifelse(confidence_probability >= 0.75, "high",
                        ifelse(confidence_probability >= 0.62, "medium", "low"))
+  large_spread <- has_market & abs(market) > config$ats$large_spread_review
+  review <- large_spread &
+    status %in% c("official_pick", "forced_model_pick")
+  status[review] <- "large_spread_review"
+  confidence[large_spread] <- "low"
   data.frame(
     expected_margin = expected, fair_spread = -fair, margin_sd = sd,
     home_win_probability = home_win, market_home_spread = market,
@@ -322,6 +514,13 @@ predict_week <- function(model, schedule, matchup_features, market_home_spread =
   picks$away <- schedule$away
   picks$season <- schedule$season
   picks$week <- schedule$week
+  diagnostic_columns <- intersect(
+    c("foundation_expected_margin", "preseason_expected_margin",
+      "preseason_challenger_share", "preseason_raw_delta",
+      "preseason_adjustment"),
+    names(predictions)
+  )
+  for (column in diagnostic_columns) picks[[column]] <- predictions[[column]]
   picks$top_drivers <- ridge_feature_drivers(model, matchup_features)
   picks$injury_scenario <- injury_details
 

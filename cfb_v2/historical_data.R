@@ -52,11 +52,11 @@ load_compact_pbp_season <- function(season, config, refresh = FALSE) {
 
 load_cfbd_schedule_season <- function(season, config, refresh = FALSE,
                                       allow_missing_key = TRUE) {
-  require_v2_package("cfbfastR")
   cache_dir <- file.path(config$project_dir, "cfb_v2", "cache", "schedules")
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
   path <- file.path(cache_dir, paste0("cfbd_schedule_", season, ".rds"))
   if (!refresh && file.exists(path)) return(readRDS(path))
+  require_v2_package("cfbfastR")
   if (!cfbfastR::has_cfbd_key()) {
     message(
       "CFBD_API_KEY is not configured; using the audited ESPN schedule fallback for ",
@@ -77,8 +77,12 @@ load_cfbd_schedule_season <- function(season, config, refresh = FALSE,
     stringsAsFactors = FALSE
   )
   columns <- union(names(regular), names(postseason))
-  for (column in setdiff(columns, names(regular))) regular[[column]] <- NA
-  for (column in setdiff(columns, names(postseason))) postseason[[column]] <- NA
+  for (column in setdiff(columns, names(regular))) {
+    regular[[column]] <- rep(NA, nrow(regular))
+  }
+  for (column in setdiff(columns, names(postseason))) {
+    postseason[[column]] <- rep(NA, nrow(postseason))
+  }
   schedule <- rbind(regular[columns], postseason[columns])
   schedule <- schedule[!duplicated(as.character(schedule$game_id)), , drop = FALSE]
   if (!nrow(schedule)) {
@@ -271,7 +275,7 @@ standardize_cfbd_schedule <- function(schedule) {
   home <- canonical_team(column_value(schedule, c("home_team", "home"), ""))
   away <- canonical_team(column_value(schedule, c("away_team", "away"), ""))
   kickoff_raw <- column_value(schedule, c("start_date", "kickoff"))
-  kickoff <- as.POSIXct(kickoff_raw, tz = "UTC")
+  kickoff <- parse_utc_datetime(kickoff_raw)
   source_type <- tolower(as.character(
     column_value(schedule, c("season_type", "season_type_name"), "regular")
   ))

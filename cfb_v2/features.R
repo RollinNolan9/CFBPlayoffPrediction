@@ -1,16 +1,38 @@
 canonical_team <- function(x) {
   x <- trimws(as.character(x))
+  is_utf8 <- validUTF8(x)
+  ascii <- rep(NA_character_, length(x))
+  ascii[is_utf8] <- iconv(
+    x[is_utf8], from = "UTF-8", to = "ASCII//TRANSLIT", sub = ""
+  )
+  ascii[!is_utf8] <- iconv(
+    x[!is_utf8], from = "latin1", to = "ASCII//TRANSLIT", sub = ""
+  )
+  x[!is.na(ascii)] <- ascii[!is.na(ascii)]
   aliases <- c(
     "UConn" = "Connecticut", "UCONN" = "Connecticut",
     "UMass" = "Massachusetts", "UMASS" = "Massachusetts",
     "USC" = "Southern California", "Miami (FL)" = "Miami",
     "Miami (Ohio)" = "Miami (OH)", "Ole Miss" = "Mississippi",
-    "NC State" = "North Carolina State",
-    "San Jose State" = "San José State"
+    "NC State" = "North Carolina State"
   )
   hit <- match(x, names(aliases))
   x[!is.na(hit)] <- unname(aliases[hit[!is.na(hit)]])
   x
+}
+
+parse_utc_datetime <- function(x) {
+  if (inherits(x, "POSIXt")) return(as.POSIXct(x, tz = "UTC"))
+  text <- trimws(as.character(x))
+  text[text %in% c("", "NA", "N/A")] <- NA_character_
+  text <- sub("Z$", "", text)
+  result <- as.POSIXct(rep(NA_real_, length(text)), origin = "1970-01-01", tz = "UTC")
+  for (format in c("%Y-%m-%dT%H:%M:%OS", "%Y-%m-%d %H:%M:%OS", "%Y-%m-%d")) {
+    missing <- is.na(result) & !is.na(text)
+    if (!any(missing)) break
+    result[missing] <- as.POSIXct(text[missing], format = format, tz = "UTC")
+  }
+  result
 }
 
 game_phase <- function(week) {

@@ -1,0 +1,63 @@
+<script>
+(() => {
+  const table = document.getElementById("picks-table");
+  if (!table) return;
+
+  const body = table.querySelector("tbody");
+  const rows = Array.from(body.querySelectorAll("tr"));
+  const buttons = Array.from(document.querySelectorAll(".filter-button"));
+  const search = document.getElementById("pick-search");
+  const sort = document.getElementById("pick-sort");
+  const visibleCount = document.getElementById("visible-count");
+  let activeFilter = "all";
+
+  const matchesFilter = (row) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "provisional") return row.dataset.provisional === "true";
+    if (activeFilter === "injury") return row.dataset.injury === "true";
+    return row.dataset.status === activeFilter;
+  };
+
+  const compareRows = (a, b) => {
+    if (sort.value === "edge_desc") return Number(b.dataset.edge) - Number(a.dataset.edge);
+    if (sort.value === "edge_asc") return Number(a.dataset.edge) - Number(b.dataset.edge);
+    if (sort.value === "matchup") return a.dataset.search.localeCompare(b.dataset.search);
+    return Number(a.dataset.order) - Number(b.dataset.order);
+  };
+
+  const applyState = () => {
+    const query = search.value.trim().toLowerCase();
+    rows.sort(compareRows).forEach((row) => body.appendChild(row));
+    let count = 0;
+    rows.forEach((row) => {
+      const visible = matchesFilter(row) && (!query || row.dataset.search.includes(query));
+      row.hidden = !visible;
+      if (visible) count += 1;
+    });
+    visibleCount.textContent = `${count} ${count === 1 ? "game" : "games"}`;
+  };
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      activeFilter = button.dataset.filter;
+      buttons.forEach((candidate) => {
+        const active = candidate === button;
+        candidate.classList.toggle("active", active);
+        candidate.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      applyState();
+    });
+  });
+  search.addEventListener("input", applyState);
+  sort.addEventListener("change", applyState);
+
+  document.addEventListener("toggle", (event) => {
+    if (!(event.target instanceof HTMLDetailsElement) || !event.target.open) return;
+    document.querySelectorAll(".row-details[open]").forEach((details) => {
+      if (details !== event.target) details.open = false;
+    });
+  }, true);
+
+  applyState();
+})();
+</script>

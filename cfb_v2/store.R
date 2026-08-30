@@ -95,6 +95,9 @@ v2_schema_sql <- function() {
        run_id VARCHAR, game_id VARCHAR, snapshot_type VARCHAR, season INTEGER,
        week INTEGER, as_of TIMESTAMP, home VARCHAR, away VARCHAR,
        expected_margin DOUBLE, fair_spread DOUBLE, margin_sd DOUBLE,
+       foundation_expected_margin DOUBLE, preseason_expected_margin DOUBLE,
+       preseason_challenger_share DOUBLE, preseason_raw_delta DOUBLE,
+       preseason_adjustment DOUBLE,
        expected_total DOUBLE, total_sd DOUBLE,
        home_win_probability DOUBLE, market_home_spread DOUBLE,
        ats_edge_home DOUBLE, home_cover_probability DOUBLE,
@@ -121,6 +124,20 @@ v2_init_schema <- function(con) {
   DBI::dbExecute(
     con, "ALTER TABLE prediction_snapshots ADD COLUMN IF NOT EXISTS total_sd DOUBLE"
   )
+  blend_columns <- c(
+    foundation_expected_margin = "DOUBLE",
+    preseason_expected_margin = "DOUBLE",
+    preseason_challenger_share = "DOUBLE",
+    preseason_raw_delta = "DOUBLE",
+    preseason_adjustment = "DOUBLE"
+  )
+  for (column in names(blend_columns)) {
+    DBI::dbExecute(
+      con,
+      paste("ALTER TABLE prediction_snapshots ADD COLUMN IF NOT EXISTS", column,
+            blend_columns[[column]])
+    )
+  }
   DBI::dbExecute(
     con, paste("ALTER TABLE injury_snapshots ADD COLUMN IF NOT EXISTS",
                "availability_probability DOUBLE")

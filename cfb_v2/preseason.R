@@ -38,7 +38,10 @@ pull_cfbd_preseason_polls <- function(season, config, refresh = FALSE) {
 as_share <- function(x) {
   x <- as.numeric(x)
   finite <- x[is.finite(x)]
-  if (length(finite) && max(finite) > 1.5) x <- x / 100
+  # CFBD PPA shares can legitimately exceed 1 or be strongly negative when
+  # the team denominator is near zero. Detect the dominant unit scale instead
+  # of letting one PPA outlier rescale every team.
+  if (length(finite) && mean(abs(finite) <= 2) < 0.5) x <- x / 100
   x
 }
 
@@ -53,6 +56,13 @@ preseason_challenger_feature_names <- function() {
   c("returning_ppa_pct", "returning_passing_ppa_pct", "returning_usage_pct",
     "talent_percentile", "preseason_poll_vote_share", "retained_quality",
     "replacement_capacity", "hype_gap")
+}
+
+preseason_feature_profile <- function(config,
+                                      profile = c("full", "returning_only")) {
+  profile <- match.arg(profile)
+  if (profile == "full") config$preseason$production_features else
+    config$preseason$fallback_features
 }
 
 normalize_returning_production <- function(raw, season) {
@@ -89,6 +99,42 @@ normalize_team_talent <- function(raw, season) {
   if (!is.na(season_column)) {
     out <- out[as.integer(raw[[season_column]]) == as.integer(season), , drop = FALSE]
   }
+  out
+}
+
+build_returning_only_priors <- function(returning, prior_strength, season,
+                                        teams = character()) {
+  season <- as.integer(season)
+  assert_columns(prior_strength, c("team", "season", "strength"), "prior strength")
+  returning <- normalize_returning_production(returning, season)
+  assert_unique_keys(returning, "team", "returning production")
+
+  team_universe <- sort(unique(c(returning$team, canonical_team(teams))))
+  team_universe <- team_universe[!is.na(team_universe) & nzchar(team_universe)]
+  if (!length(team_universe)) {
+    stop("Returning-production fallback has no teams for ", season, ".", call. = FALSE)
+  }
+
+  prior <- prior_strength[as.integer(prior_strength$season) == season - 1L, , drop = FALSE]
+  prior_teams <- canonical_team(prior$team)
+  prior_value <- as.numeric(prior$strength[match(team_universe, prior_teams)])
+  index <- match(team_universe, returning$team)
+  returning_ppa <- returning$returning_ppa_pct[index]
+
+  out <- data.frame(
+    team = team_universe,
+    season = season,
+    returning_ppa_pct = returning_ppa,
+    returning_passing_ppa_pct = returning$returning_passing_ppa_pct[index],
+    returning_usage_pct = returning$returning_usage_pct[index],
+    stringsAsFactors = FALSE
+  )
+  out$retained_quality <- returning_ppa * percentile_rank(prior_value)
+  out$returning_data_available <- !is.na(index)
+  out$preseason_profile <- "returning_only_no_current_talent"
+  out$source <- "cfbd_returning_no_current_talent"
+  out$captured_at <- format(Sys.time(), tz = "UTC", usetz = TRUE)
+  assert_unique_keys(out, c("team", "season"), "returning-only preseason priors")
   out
 }
 
@@ -185,16 +231,76 @@ build_preseason_team_priors <- function(returning, talent, polls, membership,
   out
 }
 
+preseason_membership_for_season <- function(membership, talent, season,
+                                             minimum_teams = 100L) {
+  assert_columns(membership, c("team", "season", "classification"), "membership")
+  season <- as.integer(season)
+  existing <- membership[
+    as.integer(membership$season) == season &
+      tolower(membership$classification) == "fbs", , drop = FALSE
+  ]
+  if (nrow(existing)) return(membership)
+
+  current <- normalize_team_talent(talent, season)
+  current <- current[!is.na(current$team) & nzchar(current$team), , drop = FALSE]
+  assert_unique_keys(current, "team", "current-season talent")
+  if (nrow(current) < as.integer(minimum_teams)) {
+    stop("No FBS membership rows exist for ", season,
+         " and the current talent source has only ", nrow(current),
+         " unique teams.", call. = FALSE)
+  }
+
+  message("Using the ", nrow(current), "-team 247 talent universe as ", season,
+          " FBS membership because the historical foundation ends before that season.")
+  rbind(
+    membership[c("team", "season", "classification")],
+    data.frame(team = current$team, season = season, classification = "fbs",
+               stringsAsFactors = FALSE)
+  )
+}
+
+merge_preseason_priors <- function(existing, replacement, overwrite = FALSE) {
+  if (is.null(existing)) existing <- data.frame()
+  assert_columns(replacement, c("team", "season"), "replacement preseason priors")
+  assert_unique_keys(replacement, c("team", "season"), "replacement preseason priors")
+  seasons <- sort(unique(as.integer(replacement$season)))
+
+  if (nrow(existing)) {
+    assert_columns(existing, c("team", "season"), "existing preseason priors")
+    assert_unique_keys(existing, c("team", "season"), "existing preseason priors")
+    overlap <- intersect(seasons, unique(as.integer(existing$season)))
+    if (length(overlap) && !overwrite) {
+      stop("preseason_team_priors.csv already contains season(s) ",
+           paste(overlap, collapse = ", "),
+           ". Rerun with overwrite=TRUE only after reviewing them.", call. = FALSE)
+    }
+    existing <- existing[!as.integer(existing$season) %in% seasons, , drop = FALSE]
+  }
+
+  if (!nrow(existing)) {
+    replacement <- replacement[order(as.integer(replacement$season),
+                                     replacement$team), , drop = FALSE]
+    rownames(replacement) <- NULL
+    return(replacement)
+  }
+
+  columns <- union(names(existing), names(replacement))
+  for (column in setdiff(columns, names(existing))) {
+    existing[[column]] <- rep(NA, nrow(existing))
+  }
+  for (column in setdiff(columns, names(replacement))) {
+    replacement[[column]] <- rep(NA, nrow(replacement))
+  }
+  combined <- rbind(existing[columns], replacement[columns])
+  combined <- combined[order(as.integer(combined$season), combined$team), , drop = FALSE]
+  rownames(combined) <- NULL
+  assert_unique_keys(combined, c("team", "season"), "preseason priors")
+  combined
+}
+
 build_preseason_priors <- function(config, seasons, refresh = FALSE, overwrite = FALSE) {
   target <- file.path(config$data_dir, "preseason_team_priors.csv")
-  if (file.exists(target) && !overwrite) {
-    existing <- tryCatch(utils::read.csv(target, nrows = 1),
-                         error = function(e) data.frame())
-    if (nrow(existing)) {
-      stop("preseason_team_priors.csv already contains rows. ",
-           "Rerun with overwrite=TRUE only after reviewing it.", call. = FALSE)
-    }
-  }
+  existing <- read_csv_if_present(target, required = FALSE)
   membership <- read_csv_if_present(
     file.path(config$data_dir, "historical_fbs_membership.csv"), required = TRUE
   )
@@ -208,15 +314,19 @@ build_preseason_priors <- function(config, seasons, refresh = FALSE, overwrite =
   names(prior_strength)[names(prior_strength) == "net_efficiency"] <- "strength"
 
   rows <- lapply(seasons, function(season) {
+    returning <- pull_cfbd_returning_production(season, config, refresh)
+    talent <- pull_cfbd_team_talent(season, config, refresh)
+    polls <- pull_cfbd_preseason_polls(season, config, refresh)
+    season_membership <- preseason_membership_for_season(
+      membership, talent, season
+    )
     build_preseason_team_priors(
-      returning = pull_cfbd_returning_production(season, config, refresh),
-      talent = pull_cfbd_team_talent(season, config, refresh),
-      polls = pull_cfbd_preseason_polls(season, config, refresh),
-      membership = membership, prior_strength = prior_strength,
+      returning = returning, talent = talent, polls = polls,
+      membership = season_membership, prior_strength = prior_strength,
       season = season, config = config
     )
   })
-  priors <- do.call(rbind, rows)
+  priors <- merge_preseason_priors(existing, do.call(rbind, rows), overwrite)
   write_foundation_csv(priors, target)
   coverage <- stats::aggregate(
     list(teams = priors$team), list(season = priors$season), length

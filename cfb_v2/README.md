@@ -12,6 +12,9 @@ history, design decisions, verification commands, and current limitations.
   polls, betting lines, FPI, PFF, or public power ratings.
 - The ATS layer is separate. It calibrates the pure model's out-of-sample margin edge
   against a market spread and cannot feed the CFP bracket model.
+- Market spreads above 21 points retain a model side but are marked
+  `large_spread_review` and reported with low confidence; their cached forced-side
+  ATS accuracy is below 50%.
 - Full production training begins in 2021. The 2020 season receives half weight.
   Earlier seasons and non-CFP bowls receive zero weight.
 - Team-form and coach histories exclude FCS games and non-CFP bowls. The core uses
@@ -19,9 +22,11 @@ history, design decisions, verification commands, and current limitations.
   challenger only.
 - Preseason roster, quarterback, portal, and returning-production inputs are multiplied
   by `100/60/30/10/0%` in Weeks `0-1/2/3/4/5+`.
-- Frozen preseason returning-production and 247 talent features (the validated
-  talent variant) are production inputs under the `ps_` prefix and follow the same
-  fade. Week 1 AP/Coaches poll features remain diagnostic-only challengers.
+- Frozen preseason returning-production and 247 talent features feed a separate full
+  preseason challenger under the `ps_` prefix. Production blends 80% foundation with
+  20% challenger in Weeks 0/1; the challenger share falls to 12%/6%/2% in Weeks
+  2/3/4 and is exactly zero from Week 5, including every postseason game.
+  Week 1 AP/Coaches poll features remain diagnostic-only challengers.
   Production runs require `cfb_v2/data/preseason_team_priors.csv`, including
   coverage of the predicted season through Week 4.
 - Prior-season team performance is capped at 10% from Week 8 onward.
@@ -124,12 +129,14 @@ season — 2020 COVID opt-outs (Connecticut, Old Dominion in 2021) and first-yea
 FBS members (Jacksonville State, Sam Houston in 2023) pass with visibly empty
 returning fields instead.
 
-The six talent-variant features were promoted to production after beating the core
-on Week 0/1 and full-season margin MAE in every honest rolling fold. When the
-priors file has rows, `--mode=backtest` evaluates the production core (with `ps_`
-features) against a `preseason_ablation_challenger` (production without them,
-monitoring what the promotion keeps earning) and a `preseason_hype_challenger`
-(production plus the diagnostic Week 1 poll features). A fold uses preseason
+The six talent-variant features improved Week 0/1 margin MAE, but the uncapped full
+model reduced straight-up accuracy and produced an unsupported 75.5-point 2026 USC
+projection. Production therefore uses the rolling-tested 80/20 blend. On 384 held-out
+Week 0/1 games it improved foundation MAE from 15.30 to 14.97 while retaining the
+foundation's 84.4% winner accuracy. `--mode=backtest` reports `ridge_core` as that
+blend, `preseason_ablation_challenger` as the foundation control, and
+`preseason_full_challenger` as the uncapped profile. It also retains the
+`preseason_hype_challenger` with diagnostic Week 1 poll features. A fold uses preseason
 features only when at least two frozen seasons predate its test season; earlier
 folds evaluate the pre-promotion set, because one covered season of faded rows
 cannot support the extra collinear features. The Week 0/1 diagnostics land in
@@ -144,23 +151,81 @@ preseason AP/Coaches sentiment misleads relative to prior on-field results (the
 their marginal value at roughly a tenth of the talent signal, confirming the
 exclusion.
 
+## Week 0/1 production runs
+
+After freezing the current preseason priors, generate the August 29 card with:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' `
+  .\cfb_v2\dry_run_aug29_2026.R --refresh=false
+```
+
+Generate the preliminary Week 1 article slate, excluding games that start before the
+Friday, September 4 at 1 p.m. Eastern publication cutoff, with:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' `
+  .\cfb_v2\dry_run_aug29_2026.R --slate=week1 --refresh=true
+```
+
+The command reads the frozen 2021-2026 priors, fits the foundation, returning-only,
+and full-preseason controls, and leads with the 80/20 production blend. It snapshots
+the selected DraftKings/FanDuel market, writes all four component margins, and builds
+an exact blended feature-contribution chart. Use `--refresh=true` only to refresh the
+market source; frozen team priors are changed through `--mode=build-preseason`.
+
+Every run writes a new source ledger, prediction CSV, report, feature chart, and
+self-contained `dashboard.html` under its timestamped output directory. Missing
+returning rows and FCS-to-FBS transitions remain visible. Use `--refresh=false` to
+replay the latest cached CFBD market snapshot.
+
+## Static dashboard
+
+Week 0/1 dry runs and normal article/live runs automatically render a static Quarto
+dashboard beside the prediction CSV. The Slate page is the article card; Model vs
+Market contains edge and feature diagnostics; Availability keeps injury, provisional,
+and coach-review flags visible. The full card can be searched, sorted, and filtered
+without a server.
+
+Quarto CLI must be available on `PATH`. Confirm it once on a new machine with:
+
+```powershell
+quarto --version
+```
+
+Rerender the most recent saved prediction snapshot without rerunning the model:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v2\render_dashboard.R
+```
+
+Or render a specific CSV:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v2\render_dashboard.R `
+  --predictions="cfb_v2/output/2026/week_1_preliminary/<run-id>/predictions.csv"
+```
+
+The generated HTML embeds its styles, scripts, and charts in one file. Open it
+directly for a screenshot or upload that file to any static host for a read-only URL.
+
 ## Weekly command
 
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v2.R `
-  --mode=article --season=2026 --week=1 --as-of="2026-08-28 13:00:00"
+  --mode=article --season=2026 --week=1 --as-of="2026-09-04 13:00:00"
 ```
 
 The `--as-of` value is interpreted in `America/New_York`. The output includes expected
 home margin, median fair spread, uncertainty, straight-up pick, ATS edge, cover
-probability, confidence, injury scenarios, and top model drivers. CSV and Parquet
-copies are written beneath `cfb_v2/output/<season>/week_<week>`.
+probability, confidence, injury scenarios, and top model drivers. CSV, Parquet, and
+static dashboard copies are written beneath `cfb_v2/output/<season>/week_<week>`.
 
 To require a side in a game that would normally pass:
 
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v2.R `
-  --mode=article --season=2026 --week=1 --as-of="2026-08-28 13:00:00" `
+  --mode=article --season=2026 --week=1 --as-of="2026-09-04 13:00:00" `
   --force=401752001
 ```
 

@@ -1,0 +1,471 @@
+---
+title: "CFB Model Card"
+format:
+  dashboard:
+    theme: cosmo
+    css: dashboard.css
+    orientation: rows
+    scrolling: true
+    embed-resources: true
+    include-after-body: dashboard-after-body.html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| context: setup
+project_dir <- Sys.getenv("CFB_DASHBOARD_PROJECT_DIR", unset = "")
+prediction_path <- Sys.getenv("CFB_DASHBOARD_PREDICTIONS", unset = "")
+if (!nzchar(project_dir) || !nzchar(prediction_path)) {
+  stop("Render through cfb_v2/render_dashboard.R so the snapshot is explicit.")
+}
+source(file.path(project_dir, "cfb_v2", "dashboard.R"))
+raw_predictions <- utils::read.csv(
+  prediction_path, stringsAsFactors = FALSE, check.names = FALSE,
+  na.strings = c("", "NA", "N/A", "null")
+)
+picks <- prepare_dashboard_predictions(raw_predictions)
+
+season_value <- unique(stats::na.omit(picks$season))
+week_value <- unique(stats::na.omit(picks$week))
+season_label <- if (length(season_value)) season_value[1] else "Current"
+week_label <- if (length(week_value)) week_value[1] else "Slate"
+snapshot_values <- picks$snapshot_time[!is.na(picks$snapshot_time) & nzchar(picks$snapshot_time)]
+snapshot_label <- if (length(snapshot_values)) snapshot_values[1] else
+  format(file.info(prediction_path)$mtime, "%Y-%m-%d %H:%M %Z")
+provider_values <- unique(picks$market_provider_display[
+  !is.na(picks$market_provider_display) & nzchar(picks$market_provider_display)
+])
+provider_label <- if (length(provider_values)) paste(provider_values, collapse = " + ") else "Market"
+profile_values <- unique(picks$preseason_profile[
+  !is.na(picks$preseason_profile) & nzchar(picks$preseason_profile)
+])
+profile_label <- if (length(profile_values)) profile_values[1] else "Production model"
+
+official <- picks[picks$status_group == "official", , drop = FALSE]
+reviews <- picks[picks$status_group == "review", , drop = FALSE]
+forced <- picks[picks$status_group == "forced", , drop = FALSE]
+provisional <- picks[picks$provisional_flag, , drop = FALSE]
+injury_rows <- picks[picks$injury_flag, , drop = FALSE]
+
+status_colors <- c(
+  official = "#17745a", review = "#b86b12", forced = "#66717d", pass = "#8a929b"
+)
+
+metric_item <- function(value, label, tone = "neutral") {
+  htmltools::div(
+    class = paste("metric-item", paste0("metric-", tone)),
+    htmltools::span(class = "metric-value", value),
+    htmltools::span(class = "metric-label", label)
+  )
+}
+
+pick_board <- function(data, limit = 8L, empty = "No selections") {
+  data <- data[order(data$pick_edge, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
+  data <- utils::head(data, limit)
+  if (!nrow(data)) return(htmltools::div(class = "empty-state compact-empty", empty))
+  htmltools::div(
+    class = "pick-list",
+    lapply(seq_len(nrow(data)), function(i) {
+      row <- data[i, ]
+      htmltools::div(
+        class = "pick-row",
+        htmltools::div(
+          class = "pick-copy",
+          htmltools::span(class = "pick-side", row$ats_pick_line),
+          htmltools::span(class = "pick-matchup", row$game_label)
+        ),
+        htmltools::div(
+          class = "pick-numbers",
+          htmltools::span(class = "pick-model", row$model_line),
+          htmltools::span(
+            class = "pick-edge",
+            ifelse(is.finite(row$pick_edge), sprintf("%+.1f", row$pick_edge), "-")
+          )
+        )
+      )
+    })
+  )
+}
+
+status_badge <- function(group, label) {
+  htmltools::span(class = paste("status-badge", paste0("status-", group)), label)
+}
+
+details_cell <- function(row) {
+  component_rows <- c(
+    paste("Foundation", row$foundation_model_line),
+    paste("Returning", row$returning_model_line),
+    paste("Preseason", row$preseason_model_line)
+  )
+  component_rows <- component_rows[!grepl("Unavailable$", component_rows)]
+  coaches <- paste(trimws(row$away_coach), "at", trimws(row$home_coach))
+  coaches <- if (coaches == "at") "Not recorded" else coaches
+  scenario <- if (is.na(row$injury_scenario) || !nzchar(row$injury_scenario)) {
+    "most_likely"
+  } else row$injury_scenario
+  htmltools::tags$details(
+    class = "row-details",
+    htmltools::tags$summary(
+      title = "Show model drivers and availability",
+      htmltools::span(`aria-hidden` = "true", "+"),
+      htmltools::span(class = "sr-only", "Show details")
+    ),
+    htmltools::div(
+      class = "detail-panel",
+      htmltools::div(
+        htmltools::strong("Drivers"),
+        htmltools::p(ifelse(nzchar(row$top_drivers), row$top_drivers, "Not recorded"))
+      ),
+      htmltools::div(
+        htmltools::strong("Availability"),
+        htmltools::p(scenario)
+      ),
+      htmltools::div(
+        htmltools::strong("Components"),
+        htmltools::p(if (length(component_rows)) paste(component_rows, collapse = " | ") else
+          "Not recorded")
+      ),
+      htmltools::div(
+        htmltools::strong("Coaches"),
+        htmltools::p(coaches)
+      )
+    )
+  )
+}
+
+edge_meter <- function(value) {
+  width <- if (is.finite(value)) min(100, max(0, abs(value) / 20 * 100)) else 0
+  htmltools::div(
+    class = "edge-cell",
+    htmltools::span(class = "edge-number", ifelse(is.finite(value), sprintf("%+.1f", value), "-")),
+    htmltools::span(
+      class = "edge-track",
+      htmltools::span(class = "edge-fill", style = paste0("width:", sprintf("%.1f", width), "%"))
+    )
+  )
+}
+
+picks_table <- function(data) {
+  max_edge <- max(abs(data$pick_edge), na.rm = TRUE)
+  if (!is.finite(max_edge)) max_edge <- 1
+  header <- htmltools::tags$thead(
+    htmltools::tags$tr(
+      lapply(
+        c("Game", "Market", "Model", "ATS side", "Edge", "Cover", "SU pick",
+          "Confidence", "Status", ""),
+        htmltools::tags$th
+      )
+    )
+  )
+  body <- htmltools::tags$tbody(
+    lapply(seq_len(nrow(data)), function(i) {
+      row <- data[i, ]
+      provisional_value <- ifelse(row$provisional_flag, "true", "false")
+      injury_value <- ifelse(row$injury_flag, "true", "false")
+      htmltools::tags$tr(
+        `data-status` = row$status_group,
+        `data-provisional` = provisional_value,
+        `data-injury` = injury_value,
+        `data-search` = tolower(paste(row$game_label, row$ats_pick_line, row$data_flag)),
+        `data-edge` = ifelse(is.finite(row$pick_edge), sprintf("%.6f", row$pick_edge), "-999"),
+        `data-order` = row$row_order,
+        htmltools::tags$td(
+          class = "game-cell",
+          htmltools::span(class = "away-team", row$away),
+          htmltools::span(class = "at-label", "at"),
+          htmltools::span(class = "home-team", row$home)
+        ),
+        htmltools::tags$td(class = "line-cell", row$market_line),
+        htmltools::tags$td(class = "line-cell model-cell", row$model_line),
+        htmltools::tags$td(class = "ats-cell", row$ats_pick_line),
+        htmltools::tags$td(edge_meter(row$pick_edge)),
+        htmltools::tags$td(
+          class = "probability-cell",
+          ifelse(is.finite(row$pick_cover_probability),
+                 sprintf("%.1f%%", 100 * row$pick_cover_probability), "-")
+        ),
+        htmltools::tags$td(row$straight_up_pick),
+        htmltools::tags$td(
+          class = "confidence-cell",
+          htmltools::span(
+            class = paste("confidence-label", paste0("confidence-", tolower(row$reported_confidence))),
+            row$reported_confidence
+          )
+        ),
+        htmltools::tags$td(status_badge(row$status_group, row$status_label)),
+        htmltools::tags$td(class = "details-cell", details_cell(row))
+      )
+    })
+  )
+  htmltools::div(
+    class = "table-shell",
+    htmltools::tags$table(id = "picks-table", class = "picks-table", header, body)
+  )
+}
+
+issue_table <- function(data) {
+  if (!nrow(data)) {
+    return(htmltools::div(class = "empty-state", "No flagged games in this snapshot."))
+  }
+  htmltools::div(
+    class = "issue-list",
+    lapply(seq_len(nrow(data)), function(i) {
+      row <- data[i, ]
+      htmltools::div(
+        class = "issue-row",
+        htmltools::div(
+          htmltools::strong(row$game_label),
+          htmltools::span(class = "issue-pick", row$ats_pick_line)
+        ),
+        htmltools::div(
+          class = "issue-detail",
+          htmltools::span(row$data_flag),
+          htmltools::span(row$injury_scenario)
+        )
+      )
+    })
+  )
+}
+```
+
+# Slate
+
+## Row {height=118}
+
+```{r}
+htmltools::div(
+  class = "snapshot-strip",
+  htmltools::div(
+    class = "snapshot-title",
+    htmltools::span(class = "snapshot-kicker", paste(season_label, "Week", week_label)),
+    htmltools::strong("Model and market card"),
+    htmltools::span(class = "snapshot-meta", paste(provider_label, "snapshot", snapshot_label))
+  ),
+  htmltools::div(
+    class = "metric-strip",
+    metric_item(nrow(picks), "Games"),
+    metric_item(nrow(official), "Official", "positive"),
+    metric_item(nrow(reviews), "Review", "warning"),
+    metric_item(nrow(forced), "Forced", "muted"),
+    metric_item(nrow(injury_rows), "Injury flags", if (nrow(injury_rows)) "danger" else "neutral")
+  )
+)
+```
+
+## Row {height=420}
+
+### Normal Card
+
+```{r}
+pick_board(official, 8L, "No official selections")
+```
+
+### Review Board
+
+```{r}
+pick_board(reviews, 8L, "No review selections")
+```
+
+### Forced Sides
+
+```{r}
+pick_board(forced, 8L, "No forced selections")
+```
+
+## Row {height=780}
+
+### Full Card
+
+```{r}
+htmltools::div(
+  class = "table-toolbar",
+  htmltools::div(
+    class = "filter-group", role = "group", `aria-label` = "Filter picks",
+    htmltools::tags$button(type = "button", class = "filter-button active", `data-filter` = "all", `aria-pressed` = "true", "All"),
+    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "official", `aria-pressed` = "false", "Official"),
+    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "review", `aria-pressed` = "false", "Review"),
+    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "forced", `aria-pressed` = "false", "Forced"),
+    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "provisional", `aria-pressed` = "false", "Provisional"),
+    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "injury", `aria-pressed` = "false", "Injuries")
+  ),
+  htmltools::div(
+    class = "table-controls",
+    htmltools::tags$label(class = "sr-only", `for` = "pick-search", "Search teams"),
+    htmltools::tags$input(id = "pick-search", type = "search", placeholder = "Search teams", autocomplete = "off"),
+    htmltools::tags$label(class = "sr-only", `for` = "pick-sort", "Sort picks"),
+    htmltools::tags$select(
+      id = "pick-sort",
+      htmltools::tags$option(value = "original", "Slate order"),
+      htmltools::tags$option(value = "edge_desc", "Largest edge"),
+      htmltools::tags$option(value = "edge_asc", "Smallest edge"),
+      htmltools::tags$option(value = "matchup", "Matchup")
+    ),
+    htmltools::span(id = "visible-count", class = "visible-count", paste(nrow(picks), "games"))
+  )
+)
+picks_table(picks)
+```
+
+# Model vs Market
+
+## Row {height=560}
+
+### Fair Margin vs Market
+
+```{r}
+plot_data <- picks[is.finite(picks$market_home_spread) & is.finite(picks$expected_margin), ]
+plot_data$market_home_margin <- -plot_data$market_home_spread
+plot_data$plot_status <- factor(
+  plot_data$status_group, levels = c("official", "review", "forced", "pass")
+)
+label_rows <- utils::head(
+  plot_data[order(abs(plot_data$pick_edge), decreasing = TRUE), ], 7L
+)
+limit <- max(abs(c(plot_data$market_home_margin, plot_data$expected_margin)), na.rm = TRUE)
+limit <- max(7, ceiling(limit / 5) * 5)
+ggplot2::ggplot(
+  plot_data,
+  ggplot2::aes(x = market_home_margin, y = expected_margin, color = plot_status)
+) +
+  ggplot2::geom_abline(slope = 1, intercept = 0, color = "#9aa2aa", linewidth = .7) +
+  ggplot2::geom_hline(yintercept = 0, color = "#d4d8dc", linewidth = .5) +
+  ggplot2::geom_vline(xintercept = 0, color = "#d4d8dc", linewidth = .5) +
+  ggplot2::geom_point(size = 3.2, alpha = .9) +
+  ggplot2::geom_text(
+    data = label_rows,
+    ggplot2::aes(label = paste(away, "@", home)),
+    size = 3.1, nudge_y = 2.2, check_overlap = TRUE, show.legend = FALSE,
+    color = "#1c2731"
+  ) +
+  ggplot2::scale_color_manual(values = status_colors, drop = FALSE) +
+  ggplot2::coord_cartesian(xlim = c(-limit, limit), ylim = c(-limit, limit)) +
+  ggplot2::labs(
+    x = "Market-implied home margin", y = "Model home margin", color = NULL
+  ) +
+  ggplot2::theme_minimal(base_size = 12) +
+  ggplot2::theme(
+    panel.grid.minor = ggplot2::element_blank(),
+    legend.position = "bottom",
+    plot.margin = ggplot2::margin(12, 18, 8, 8)
+  )
+```
+
+### Largest Model Edges
+
+```{r}
+edge_plot <- picks[is.finite(picks$pick_edge), ]
+edge_plot <- utils::head(edge_plot[order(edge_plot$pick_edge, decreasing = TRUE), ], 14L)
+edge_plot$game_axis <- factor(edge_plot$game_label, levels = rev(edge_plot$game_label))
+ggplot2::ggplot(
+  edge_plot,
+  ggplot2::aes(x = pick_edge, y = game_axis, fill = status_group)
+) +
+  ggplot2::geom_col(width = .64) +
+  ggplot2::geom_text(
+    ggplot2::aes(label = ats_pick_line), hjust = -0.08, size = 3.2,
+    color = "#1c2731"
+  ) +
+  ggplot2::scale_fill_manual(values = status_colors, guide = "none") +
+  ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0, .32))) +
+  ggplot2::labs(x = "Points versus market", y = NULL) +
+  ggplot2::theme_minimal(base_size = 11) +
+  ggplot2::theme(
+    panel.grid.major.y = ggplot2::element_blank(),
+    panel.grid.minor = ggplot2::element_blank(),
+    plot.margin = ggplot2::margin(12, 90, 8, 8)
+  )
+```
+
+## Row {height=620}
+
+### Feature Importance
+
+```{r}
+feature_chart <- file.path(dirname(prediction_path), "feature_importance.png")
+if (file.exists(feature_chart)) {
+  knitr::include_graphics(feature_chart)
+} else {
+  htmltools::div(class = "empty-state", "Feature-importance output is not available for this snapshot.")
+}
+```
+
+### Snapshot Details
+
+```{r}
+htmltools::div(
+  class = "snapshot-details",
+  htmltools::tags$dl(
+    htmltools::tags$dt("Season"), htmltools::tags$dd(season_label),
+    htmltools::tags$dt("Week"), htmltools::tags$dd(week_label),
+    htmltools::tags$dt("Market"), htmltools::tags$dd(provider_label),
+    htmltools::tags$dt("Captured"), htmltools::tags$dd(snapshot_label),
+    htmltools::tags$dt("Profile"), htmltools::tags$dd(profile_label),
+    htmltools::tags$dt("Prediction file"), htmltools::tags$dd(basename(prediction_path))
+  ),
+  htmltools::p(
+    class = "snapshot-note",
+    "Confidence describes straight-up outcome confidence. ATS conviction is represented by edge, cover probability, and pick status."
+  )
+)
+```
+
+# Availability
+
+## Row {height=180}
+
+```{r}
+htmltools::div(
+  class = "availability-strip",
+  metric_item(nrow(injury_rows), "Injury scenarios", if (nrow(injury_rows)) "danger" else "positive"),
+  metric_item(nrow(provisional), "Provisional games", if (nrow(provisional)) "warning" else "positive"),
+  metric_item(sum(picks$data_flag != "standard", na.rm = TRUE), "Data flags", "muted")
+)
+```
+
+## Row {height=520}
+
+### Injury Scenarios
+
+```{r}
+if (!nrow(injury_rows)) {
+  htmltools::div(
+    class = "empty-state availability-empty",
+    htmltools::strong("No injury adjustments in this snapshot"),
+    htmltools::span("Questionable high-usage players will appear here with in/out margins.")
+  )
+} else issue_table(injury_rows)
+```
+
+### Provisional and Data Review
+
+```{r}
+issue_table(provisional)
+```
+
+## Row {height=520}
+
+### Coach Alignment
+
+```{r}
+coach_rows <- picks[nzchar(picks$home_coach) | nzchar(picks$away_coach), , drop = FALSE]
+if (!nrow(coach_rows)) {
+  htmltools::div(class = "empty-state", "Coach assignments are not included in this snapshot.")
+} else {
+  htmltools::div(
+    class = "coach-grid",
+    lapply(seq_len(nrow(coach_rows)), function(i) {
+      row <- coach_rows[i, ]
+      history_flag <- !isTRUE(row$home_coach_history) || !isTRUE(row$away_coach_history)
+      htmltools::div(
+        class = paste("coach-row", if (history_flag) "coach-review" else ""),
+        htmltools::strong(row$game_label),
+        htmltools::span(paste(row$away_coach, "|", row$home_coach)),
+        if (history_flag) htmltools::span(class = "coach-flag", "History review")
+      )
+    })
+  )
+}
+```

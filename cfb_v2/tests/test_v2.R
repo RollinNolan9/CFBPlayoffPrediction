@@ -7,10 +7,92 @@ project_dir <- if (file.exists(file.path(getwd(), "cfb_v2", "config.R"))) {
 }
 for (file in c("config.R", "store.R", "features.R", "coaches.R", "adapters.R",
                "models.R", "coach_migration.R", "historical_data.R", "preseason.R",
-               "bridge.R", "workflow.R")) {
+               "bridge.R", "workflow.R", "dashboard.R")) {
   source(file.path(project_dir, "cfb_v2", file))
 }
 config <- cfb_v2_config(project_dir, 2026)
+
+test_that("dashboard normalizes weekly predictions without presentation columns", {
+  raw <- data.frame(
+    game_id = "g1", home = "Notre Dame", away = "Wisconsin",
+    expected_margin = 28.1, market_home_spread = -20.5,
+    home_cover_probability = .66, ats_pick = "Notre Dame",
+    straight_up_pick = "Notre Dame", pick_status = "official_pick",
+    confidence_tier = "high", stringsAsFactors = FALSE
+  )
+  dashboard <- prepare_dashboard_predictions(raw)
+  expect_equal(dashboard$market_line, "Notre Dame -20.5")
+  expect_equal(dashboard$model_line, "Notre Dame -28.1")
+  expect_equal(dashboard$ats_pick_line, "Notre Dame -20.5")
+  expect_equal(dashboard$pick_edge, 7.6)
+  expect_equal(dashboard$pick_cover_probability, .66)
+  expect_equal(dashboard$status_group, "official")
+  expect_false(dashboard$injury_flag)
+})
+
+test_that("dashboard replaces blank optional fields conservatively", {
+  raw <- data.frame(
+    game_id = "g1", home = "Notre Dame", away = "Wisconsin",
+    expected_margin = 4, market_home_spread = -2.5,
+    straight_up_pick = NA_character_, pick_status = NA_character_,
+    confidence_tier = NA_character_, injury_scenario = NA_character_,
+    data_flag = NA_character_, home_coach = NA_character_,
+    away_coach = NA_character_, market_provider = NA_character_,
+    line_source = NA_character_, stringsAsFactors = FALSE
+  )
+  dashboard <- prepare_dashboard_predictions(raw)
+  expect_equal(dashboard$straight_up_pick, "Notre Dame")
+  expect_equal(dashboard$status_group, "pass")
+  expect_equal(dashboard$reported_confidence, "low")
+  expect_equal(dashboard$market_provider_display, "Market")
+  expect_equal(dashboard$home_coach, "")
+  expect_false(dashboard$injury_flag)
+  expect_false(dashboard$provisional_flag)
+})
+
+test_that("CFBD ISO timestamps retain their kickoff time", {
+  raw <- data.frame(
+    game_id = "g1", season = 2026L, week = 1L,
+    start_date = "2026-09-04T22:30:00.000Z",
+    home_team = "Eastern Michigan", away_team = "San Jose State",
+    home_division = "fbs", away_division = "fbs", completed = FALSE,
+    stringsAsFactors = FALSE
+  )
+  schedule <- standardize_cfbd_schedule(raw)
+  expect_equal(
+    format(schedule$kickoff, "%Y-%m-%d %H:%M:%S", tz = "UTC"),
+    "2026-09-04 22:30:00"
+  )
+})
+
+test_that("current FBS coach mappings resolve project aliases deterministically", {
+  raw <- data.frame(
+    Team = c("USC Trojans", "UConn Huskies", "NC State Wolfpack",
+             "Ohio Bobcats", "Ohio State Buckeyes", "Miami Hurricanes",
+             "Miami RedHawks", "Texas Longhorns", "Texas A&M Aggies"),
+    `Head coach` = c("Lincoln Riley", "Jason Candle", "Dave Doeren",
+                     "Brian Smith", "Ryan Day", "Mario Cristobal",
+                     "Chuck Martin", "Steve Sarkisian", "Mike Elko"),
+    `First season` = c("2022", "2026", "2013", "2025", "2019", "2022",
+                       "2014", "2021", "2024"),
+    check.names = FALSE
+  )
+  current <- normalize_current_coach_table(
+    raw, 2026, as.POSIXct("2026-08-30", tz = "UTC"), "test"
+  )
+  mapped <- match_current_fbs_coaches(
+    c("Southern California", "Connecticut", "North Carolina State", "Ohio",
+      "Miami", "Miami (OH)", "Texas"),
+    current
+  )
+  expect_equal(
+    mapped$coach_name,
+    c("Lincoln Riley", "Jason Candle", "Dave Doeren", "Brian Smith",
+      "Mario Cristobal", "Chuck Martin", "Steve Sarkisian")
+  )
+  expect_equal(mapped$coach_id[2], "coach_jason_candle")
+  expect_equal(mapped$source_team[4], "Ohio Bobcats")
+})
 
 test_that("preseason inputs fade completely after week four", {
   expect_equal(preseason_feature_weight(0:6, config), c(1, 1, .6, .3, .1, 0, 0))
@@ -194,6 +276,123 @@ test_that("preseason priors are one normalized row per FBS team-season", {
                                 polls, membership, prior_strength, 2024, config),
     "missing FBS teams"
   )
+})
+
+test_that("preseason model share is capped at twenty percent and phase faded", {
+  expect_equal(
+    preseason_blend_share(0:6, config),
+    c(.20, .20, .12, .06, .02, 0, 0)
+  )
+  postseason <- data.frame(
+    week = 1L, phase_week = 99L, game_phase = "postseason",
+    postseason_type = "cfp"
+  )
+  expect_equal(preseason_blend_share_for_data(postseason, config), 0)
+})
+
+test_that("rolling preseason blend aligns folds and uses each test game's week", {
+  data <- data.frame(
+    season = 2025, week = 1:5, game_phase = game_phase(1:5)
+  )
+  rolling <- function(expected) {
+    actual <- c(7, 3, -1, 10, 4)
+    list(predictions = data.frame(
+      row_id = 1:5, test_season = 2025, lambda = 2,
+      actual = actual, expected_margin = expected, fair_margin = expected,
+      margin_sd = 10, error = actual - expected,
+      absolute_error = abs(actual - expected)
+    ))
+  }
+  foundation <- rolling(rep(0, 5))
+  preseason <- rolling(rep(10, 5))
+  blended <- blend_rolling_predictions(data, foundation, preseason, config)
+
+  expect_equal(blended$predictions$expected_margin, c(2, 1.2, .6, .2, 0))
+  expect_equal(blended$predictions$preseason_challenger_share,
+               c(.20, .12, .06, .02, 0))
+})
+
+test_that("returning-only fallback never manufactures current talent", {
+  returning <- data.frame(
+    season = 2026, team = c("Alpha", "Beta"),
+    percent_ppa = c(70, 40), percent_passing_ppa = c(80, 30),
+    usage = c(65, 45), stringsAsFactors = FALSE
+  )
+  prior_strength <- data.frame(
+    team = c("Alpha", "Beta"), season = 2025, strength = c(.3, -.1),
+    stringsAsFactors = FALSE
+  )
+  priors <- build_returning_only_priors(
+    returning, prior_strength, 2026, teams = c("Alpha", "New FBS")
+  )
+
+  expect_equal(preseason_feature_profile(config, "returning_only"),
+               config$preseason$fallback_features)
+  expect_false(any(c("talent_percentile", "replacement_capacity") %in%
+                     names(priors)))
+  expect_equal(priors$returning_ppa_pct[priors$team == "Alpha"], .7)
+  expect_false(priors$returning_data_available[priors$team == "New FBS"])
+  expect_true(is.na(priors$retained_quality[priors$team == "New FBS"]))
+  expect_true(all(priors$preseason_profile ==
+                    "returning_only_no_current_talent"))
+})
+
+test_that("current talent supplies FBS membership after the historical foundation ends", {
+  membership <- data.frame(
+    team = c("Alpha", "Beta"), season = 2025,
+    classification = "fbs", stringsAsFactors = FALSE
+  )
+  talent <- data.frame(
+    year = 2026, school = c("Alpha", "Beta", "New FBS"),
+    talent = c(900, 700, 500), stringsAsFactors = FALSE
+  )
+
+  expect_message(
+    current <- preseason_membership_for_season(
+      membership, talent, 2026, minimum_teams = 3L
+    ),
+    "3-team 247 talent universe"
+  )
+  expect_equal(sort(current$team[current$season == 2026]),
+               c("Alpha", "Beta", "New FBS"))
+  expect_true(all(current$classification[current$season == 2026] == "fbs"))
+
+  existing <- rbind(
+    membership,
+    data.frame(team = "Official", season = 2026, classification = "fbs",
+               stringsAsFactors = FALSE)
+  )
+  expect_identical(preseason_membership_for_season(existing, talent, 2026), existing)
+})
+
+test_that("preseason prior updates preserve frozen seasons", {
+  existing <- data.frame(
+    team = c("Alpha", "Beta"), season = c(2024, 2025),
+    value = c(.2, .4), captured_at = c("old-2024", "old-2025"),
+    stringsAsFactors = FALSE
+  )
+  current <- data.frame(
+    team = "Gamma", season = 2026, value = .8, captured_at = "new-2026",
+    stringsAsFactors = FALSE
+  )
+  appended <- merge_preseason_priors(existing, current)
+  expect_equal(appended$season, 2024:2026)
+  expect_equal(appended$captured_at[appended$season == 2025], "old-2025")
+
+  replacement <- data.frame(
+    team = "Beta", season = 2025, value = .6, captured_at = "new-2025",
+    stringsAsFactors = FALSE
+  )
+  expect_error(merge_preseason_priors(existing, replacement),
+               "already contains season")
+  replaced <- merge_preseason_priors(existing, replacement, overwrite = TRUE)
+  expect_equal(replaced$value[replaced$season == 2025], .6)
+  expect_equal(replaced$captured_at[replaced$season == 2024], "old-2024")
+})
+
+test_that("returning-production scale ignores legitimate PPA outliers", {
+  expect_equal(as_share(c(.25, .50, 9.4, -5)), c(.25, .50, 9.4, -5))
+  expect_equal(as_share(c(25, 50, 90)), c(.25, .50, .90))
 })
 
 test_that("returning production may only be missing without prior FBS games", {
@@ -536,7 +735,9 @@ test_that("coach identities normalize punctuated initials consistently", {
   expect_equal(coach_id_from_name("D.J. Durkin"), coach_id_from_name("DJ Durkin"))
   expect_equal(coach_id_from_name("J. C. Price"), coach_id_from_name("JC Price"))
   expect_equal(canonical_team("UMass"), "Massachusetts")
-  expect_equal(canonical_team("San Jose State"), "San José State")
+  accented <- paste0("San Jos", intToUtf8(233), " State")
+  expect_equal(canonical_team(accented), "San Jose State")
+  expect_equal(canonical_team("San Jose State"), "San Jose State")
 })
 
 test_that("coach count mismatches preserve a transition and assign remainder to successor", {
@@ -725,6 +926,55 @@ test_that("ridge base model extrapolates beyond historical twenty-point predicti
                prediction$base_margin)
 })
 
+test_that("preseason blend predictions and feature drivers reconstruct exactly", {
+  set.seed(20260827)
+  training <- data.frame(
+    season = rep(2021:2025, each = 24), week = 1,
+    game_phase = "preseason", core_diff = stats::rnorm(120),
+    ps_talent_percentile_diff = stats::rnorm(120)
+  )
+  training$margin <- 5 * training$core_diff +
+    8 * training$ps_talent_percentile_diff + stats::rnorm(120, 0, 2)
+  foundation <- fit_cfb_ensemble(
+    training, features = "core_diff", lambda = 2, config = config,
+    fit_nonlinear = FALSE
+  )
+  preseason <- fit_cfb_ensemble(
+    training, features = c("core_diff", "ps_talent_percentile_diff"),
+    lambda = 2, config = config, fit_nonlinear = FALSE
+  )
+  training_foundation <- predict(foundation, training)$expected_margin
+  training_preseason <- predict(preseason, training)$expected_margin
+  training_expected <- .8 * training_foundation + .2 * training_preseason
+  calibration <- fit_error_calibration(
+    training_expected, training$margin, training$game_phase, config
+  )
+  model <- make_preseason_blend(
+    foundation, preseason, calibration, config
+  )
+  new_data <- data.frame(
+    week = c(1, 5), game_phase = game_phase(c(1, 5)),
+    core_diff = c(1, 1), ps_talent_percentile_diff = c(1, 1)
+  )
+  prediction <- predict(model, new_data)
+  foundation_prediction <- predict(foundation, new_data)$expected_margin
+  preseason_prediction <- predict(preseason, new_data)$expected_margin
+
+  expect_equal(
+    prediction$expected_margin,
+    c(.8 * foundation_prediction[1] + .2 * preseason_prediction[1],
+      foundation_prediction[2])
+  )
+  expect_equal(prediction$preseason_challenger_share, c(.2, 0))
+  contributions <- ridge_feature_contributions(model, new_data)
+  expect_equal(
+    ridge_intercept_contribution(model, new_data) + rowSums(contributions),
+    prediction$expected_margin
+  )
+  expect_true(all(c("core_diff", "ps_talent_percentile_diff") %in%
+                    colnames(contributions)))
+})
+
 test_that("core home field is constant and neutral sites remain zero", {
   expect_equal(resolve_home_field(c(TRUE, FALSE)), c(0, 2.4))
 })
@@ -763,6 +1013,17 @@ test_that("forced model picks select the higher-probability side without hiding 
   expect_true(is.na(normal$ats_pick))
   expect_equal(forced$pick_status, "forced_model_pick")
   expect_equal(forced$ats_pick, "Notre Dame")
+})
+
+test_that("large spreads keep the model side but require review", {
+  prediction <- data.frame(expected_margin = 40, fair_margin = 40, margin_sd = 12)
+  schedule <- data.frame(home = "Favorite", away = "Underdog")
+  pick <- make_game_picks(
+    prediction, schedule, -28.5, TRUE, config = config
+  )
+  expect_equal(pick$ats_pick, "Favorite")
+  expect_equal(pick$pick_status, "large_spread_review")
+  expect_equal(pick$confidence_tier, "low")
 })
 
 test_that("eligibility includes P4, Notre Dame, UConn, ranked, and contenders", {

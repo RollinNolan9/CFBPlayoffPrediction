@@ -53,6 +53,7 @@ source(file.path(project_dir, "cfb_v2", "historical_data.R"))
 source(file.path(project_dir, "cfb_v2", "preseason.R"))
 source(file.path(project_dir, "cfb_v2", "bridge.R"))
 source(file.path(project_dir, "cfb_v2", "workflow.R"))
+source(file.path(project_dir, "cfb_v2", "dashboard.R"))
 
 options(warn = 1)
 cli <- parse_args(args)
@@ -98,6 +99,11 @@ if (cli$mode == "init") {
   cat("Run:", result$run_id, "\n")
   cat("CSV:", result$csv, "\n")
   cat("Parquet:", result$parquet, "\n")
+  dashboard <- render_cfb_dashboard(
+    result$csv, project_dir, dirname(result$csv),
+    sub("\\.csv$", "_dashboard.html", basename(result$csv), ignore.case = TRUE)
+  )
+  cat("Dashboard:", dashboard, "\n")
   print(result$predictions[c("away", "home", "expected_margin", "fair_spread",
                              "straight_up_pick", "ats_pick", "pick_status",
                              "confidence_tier")])
