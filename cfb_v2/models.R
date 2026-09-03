@@ -125,7 +125,10 @@ apply_error_calibration <- function(calibration, predicted, phase) {
   uncertainty <- calibration$groups$margin_sd[index]
   adjustment[!is.finite(adjustment)] <- calibration$global_median
   uncertainty[!is.finite(uncertainty)] <- calibration$global_sd
-  list(fair_margin = predicted + adjustment, margin_sd = uncertainty)
+  # Residual groups calibrate uncertainty only. Their median is not a second
+  # point prediction, especially because margin buckets are sign-symmetric.
+  list(fair_margin = predicted, margin_sd = uncertainty,
+       median_residual = adjustment)
 }
 
 fit_cfb_ensemble <- function(data, target = "margin", features = NULL, weights = NULL,
@@ -174,9 +177,9 @@ predict.cfb_ensemble <- function(object, newdata, ...) {
 
 preseason_blend_share <- function(week, config,
                                   base_share = config$preseason$challenger_share) {
-  if (length(base_share) != 1L || !is.finite(base_share) ||
-      base_share < 0 || base_share > 1) {
-    stop("Preseason challenger share must be one number between zero and one.",
+  if (!length(base_share) || any(!is.finite(base_share)) ||
+      any(base_share < 0 | base_share > 1)) {
+    stop("Preseason challenger share must be between zero and one.",
          call. = FALSE)
   }
   pmax(0, pmin(1, base_share * preseason_feature_weight(week, config)))
@@ -195,7 +198,21 @@ preseason_blend_share_for_data <- function(data, config,
                                   data$game_phase == "postseason")
   }
   week[postseason] <- 99L
-  preseason_blend_share(week, config, base_share)
+  share <- rep(base_share, length.out = nrow(data))
+  if ("preseason_roster_rebuild_score" %in% names(data)) {
+    score <- as.numeric(data$preseason_roster_rebuild_score)
+    score[!is.finite(score)] <- 0
+    threshold <- config$preseason$rebuild_score_threshold
+    ceiling <- config$preseason$rebuild_score_ceiling
+    if (!is.finite(threshold) || !is.finite(ceiling) || ceiling <= threshold) {
+      stop("Preseason rebuild score ceiling must exceed its threshold.",
+           call. = FALSE)
+    }
+    fraction <- pmax(0, pmin(1, (score - threshold) / (ceiling - threshold)))
+    share <- share +
+      (config$preseason$rebuild_challenger_share_ceiling - share) * fraction
+  }
+  preseason_blend_share(week, config, share)
 }
 
 blend_rolling_predictions <- function(data, foundation, preseason, config,
@@ -378,16 +395,25 @@ select_ats_threshold <- function(validation, config) {
   candidates <- config$ats$threshold_grid
   scored <- lapply(seq_len(nrow(candidates)), function(i) {
     threshold <- candidates[i, ]
-    selected <- abs(validation$edge) >= threshold$min_edge &
+    selected <- !is.na(validation$covered) &
+      abs(validation$edge) >= threshold$min_edge &
       pmax(validation$cover_probability, 1 - validation$cover_probability) >=
       threshold$min_cover_probability
     picks <- sum(selected, na.rm = TRUE)
     accuracy <- if (picks) mean(validation$covered[selected], na.rm = TRUE) else NA_real_
-    data.frame(candidates[i, ], picks = picks, accuracy = accuracy,
-               score = ifelse(picks >= 20, accuracy - 0.002 / sqrt(picks), -Inf))
+    validated <- picks >= config$ats$minimum_validation_picks &
+      is.finite(accuracy) & accuracy >= config$ats$break_even_accuracy
+    data.frame(
+      candidates[i, ], picks = picks, accuracy = accuracy,
+      validated = validated,
+      score = ifelse(validated, accuracy - 0.002 / sqrt(picks), -Inf)
+    )
   })
   scored <- do.call(rbind, scored)
-  scored[which.max(scored$score), , drop = FALSE]
+  diagnostic_score <- ifelse(is.finite(scored$accuracy), scored$accuracy, -Inf)
+  index <- if (any(scored$validated)) which.max(scored$score) else
+    which.max(diagnostic_score)
+  scored[index, , drop = FALSE]
 }
 
 fit_ats_residual_model <- function(validation, minimum_rows = 100L) {
@@ -415,7 +441,7 @@ fit_ats_residual_model <- function(validation, minimum_rows = 100L) {
 
 predict_ats_home_cover <- function(object, expected_margin, home_spread, margin_sd) {
   fallback <- stats::pnorm((expected_margin + home_spread) / margin_sd)
-  if (is.null(object)) return(fallback)
+  if (is.null(object)) return(rep(0.5, length(fallback)))
   edge_z <- (expected_margin + home_spread) / pmax(5, margin_sd)
   new_data <- data.frame(
     edge_z = edge_z,
@@ -434,34 +460,42 @@ predict_ats_home_cover <- function(object, expected_margin, home_spread, margin_
 make_game_picks <- function(prediction, schedule, market_home_spread = NA_real_,
                             force_pick = FALSE, ats_threshold = NULL, ats_model = NULL,
                             config) {
-  if (is.null(ats_threshold)) ats_threshold <- config$ats$threshold_grid[2, ]
+  threshold_validated <- !is.null(ats_threshold) &&
+    "validated" %in% names(ats_threshold) &&
+    isTRUE(as.logical(ats_threshold$validated[[1]])) && !is.null(ats_model)
+  if (is.null(ats_threshold)) {
+    ats_threshold <- config$ats$threshold_grid[2, , drop = FALSE]
+  }
   expected <- prediction$expected_margin
-  fair <- prediction$fair_margin
   sd <- pmax(config$model$uncertainty_floor, prediction$margin_sd)
   home_win <- stats::pnorm(expected / sd)
   market <- as.numeric(market_home_spread)
   edge <- expected + market
   home_cover <- predict_ats_home_cover(ats_model, expected, market, sd)
   has_market <- is.finite(market)
-  preferred_home <- home_cover >= 0.5
+  preferred_home <- ifelse(home_cover > 0.5, TRUE,
+                           ifelse(home_cover < 0.5, FALSE, edge >= 0))
   ats_pick <- ifelse(!has_market, NA_character_,
                      ifelse(preferred_home, schedule$home, schedule$away))
-  qualifies <- has_market & abs(edge) >= ats_threshold$min_edge &
+  qualifies <- threshold_validated & has_market &
+    abs(edge) >= ats_threshold$min_edge &
     pmax(home_cover, 1 - home_cover) >= ats_threshold$min_cover_probability
   status <- ifelse(!has_market, "no_line", ifelse(qualifies, "official_pick", "pass"))
-  status[force_pick & has_market & !qualifies] <- "forced_model_pick"
+  status[force_pick & has_market & !qualifies] <- "article_pick"
   ats_pick[status == "pass"] <- NA_character_
   straight_up <- ifelse(home_win >= 0.5, schedule$home, schedule$away)
-  confidence_probability <- pmax(home_win, 1 - home_win)
+  confidence_probability <- ifelse(
+    has_market, pmax(home_cover, 1 - home_cover), pmax(home_win, 1 - home_win)
+  )
   confidence <- ifelse(confidence_probability >= 0.75, "high",
                        ifelse(confidence_probability >= 0.62, "medium", "low"))
   large_spread <- has_market & abs(market) > config$ats$large_spread_review
   review <- large_spread &
-    status %in% c("official_pick", "forced_model_pick")
+    status %in% c("official_pick", "article_pick")
   status[review] <- "large_spread_review"
   confidence[large_spread] <- "low"
   data.frame(
-    expected_margin = expected, fair_spread = -fair, margin_sd = sd,
+    expected_margin = expected, fair_spread = -expected, margin_sd = sd,
     home_win_probability = home_win, market_home_spread = market,
     ats_edge_home = edge, home_cover_probability = home_cover,
     straight_up_pick = straight_up, ats_pick = ats_pick, pick_status = status,
@@ -529,7 +563,7 @@ predict_week <- function(model, schedule, matchup_features, market_home_spread =
       "conflict_flag" %in% names(injuries) & as.logical(injuries$conflict_flag)
     ])
     picks$pick_status[picks$game_id %in% conflict_games &
-                        picks$pick_status %in% c("official_pick", "forced_model_pick")] <-
+                        picks$pick_status %in% c("official_pick", "article_pick")] <-
       "injury_conflict_review"
   }
   picks
@@ -638,7 +672,7 @@ grade_prediction_card <- function(predictions, outcomes, closing_lines) {
   groups <- list(
     all_projections = rep(TRUE, nrow(data)),
     qualifying_picks = data$pick_status == "official_pick",
-    forced_model_picks = data$pick_status == "forced_model_pick"
+    article_picks = data$pick_status %in% c("article_pick", "forced_model_pick")
   )
   summary <- do.call(rbind, lapply(names(groups), function(group) {
     keep <- groups[[group]]

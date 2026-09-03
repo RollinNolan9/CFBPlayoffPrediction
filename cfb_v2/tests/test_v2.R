@@ -28,6 +28,11 @@ test_that("dashboard normalizes weekly predictions without presentation columns"
   expect_equal(dashboard$pick_cover_probability, .66)
   expect_equal(dashboard$status_group, "official")
   expect_false(dashboard$injury_flag)
+
+  raw$pick_status <- "article_pick"
+  article <- prepare_dashboard_predictions(raw)
+  expect_equal(article$status_group, "article")
+  expect_equal(article$status_label, "Article pick")
 })
 
 test_that("dashboard replaces blank optional fields conservatively", {
@@ -239,6 +244,23 @@ test_that("preseason priors are one normalized row per FBS team-season", {
   )
   talent <- data.frame(year = 2024, school = c("Alpha", "Beta"),
                        talent = c(900, 700), stringsAsFactors = FALSE)
+  portal <- data.frame(
+    season = 2024,
+    first_name = c("Transfer", "Transfer", "Transfer"),
+    last_name = c("One", "Two", "Three"),
+    position = c("QB", "WR", "RB"),
+    origin = c("Old A", "Old B", "Old C"),
+    destination = c("Alpha", "Alpha", "Beta"),
+    transfer_date = c("2024-01-10", "2024-05-01", "2024-01-15"),
+    rating = c(.90, .88, .86), stringsAsFactors = FALSE
+  )
+  player_ppa <- data.frame(
+    season = 2023,
+    name = c("Transfer One", "Transfer Two", "Transfer Three"),
+    team = c("Old A", "Old B", "Old C"),
+    position = c("QB", "WR", "RB"),
+    total_PPA_all = c(100, 50, 20), stringsAsFactors = FALSE
+  )
   polls <- data.frame(
     poll = c("AP Top 25", "AP Top 25", "Coaches Poll", "Coaches Poll"),
     school = c("Alpha", "Gamma", "Alpha", "Gamma"),
@@ -249,7 +271,8 @@ test_that("preseason priors are one normalized row per FBS team-season", {
     strength = c(0.30, 0.00, -0.20), stringsAsFactors = FALSE
   )
   priors <- build_preseason_team_priors(returning, talent, polls, membership,
-                                        prior_strength, 2024, config)
+                                        prior_strength, 2024, config,
+                                        portal = portal, player_ppa = player_ppa)
   expect_equal(nrow(priors), 3)
   expect_equal(anyDuplicated(priors[c("team", "season")]), 0L)
   expect_false(any(c("conference", "rank") %in% names(priors)))
@@ -267,6 +290,20 @@ test_that("preseason priors are one normalized row per FBS team-season", {
   expect_equal(gamma$preseason_poll_vote_share, mean(c(900 / 1500, 850 / 1400)))
   expect_equal(alpha$retained_quality, 0.8 * 1)
   expect_equal(alpha$replacement_capacity, 1 * (1 - 0.8))
+  expect_equal(alpha$portal_incoming_count, 2L)
+  expect_equal(alpha$portal_incoming_percentile, 1)
+  expect_equal(alpha$portal_replacement_capacity, 1 * (1 - 0.7))
+  expect_equal(gamma$portal_incoming_percentile, 0)
+  expect_equal(alpha$portal_offense_ppa, 112.5)
+  expect_gt(alpha$portal_offense_score, beta$portal_offense_score)
+  expect_equal(alpha$portal_offense_matched_count, 2L)
+  expect_equal(alpha$portal_offense_match_rate, 1)
+  expect_gt(alpha$portal_offense_replacement,
+            beta$portal_offense_replacement)
+  expect_equal(alpha$roster_rebuild_score,
+               max(0, alpha$portal_offense_replacement))
+  expect_equal(alpha$roster_rebuild_flag,
+               alpha$roster_rebuild_score > config$preseason$rebuild_score_threshold)
   expect_equal(alpha$hype_gap, 0)
   expect_equal(beta$hype_gap, 1 / 3 - 2 / 3)
   expect_equal(gamma$hype_gap, 2 / 3 - 1 / 3)
@@ -278,7 +315,26 @@ test_that("preseason priors are one normalized row per FBS team-season", {
   )
 })
 
-test_that("preseason model share is capped at twenty percent and phase faded", {
+test_that("preseason source failures are not cached and player names are portable", {
+  local_config <- config
+  local_config$project_dir <- tempfile("cfb_preseason_cache_")
+  withr::local_envvar(CFBD_API_KEY = "test-key")
+  expect_error(
+    pull_preseason_source(
+      local_config, "empty_test", 2026, FALSE, function(year) data.frame()
+    ),
+    "empty response was not cached"
+  )
+  expect_false(file.exists(preseason_cache_path(local_config, "empty_test", 2026)))
+
+  apostrophe <- intToUtf8(0x2019)
+  expect_equal(
+    canonical_player_name(paste0("La", apostrophe, "Damian Webb")),
+    "ladamianwebb"
+  )
+})
+
+test_that("preseason model share is phase faded and rebuild capped", {
   expect_equal(
     preseason_blend_share(0:6, config),
     c(.20, .20, .12, .06, .02, 0, 0)
@@ -288,6 +344,11 @@ test_that("preseason model share is capped at twenty percent and phase faded", {
     postseason_type = "cfp"
   )
   expect_equal(preseason_blend_share_for_data(postseason, config), 0)
+  rebuild <- data.frame(
+    week = c(1L, 2L, 5L), game_phase = game_phase(c(1L, 2L, 5L)),
+    postseason_type = "regular", preseason_roster_rebuild_score = 2.7
+  )
+  expect_equal(preseason_blend_share_for_data(rebuild, config), c(.6, .36, 0))
 })
 
 test_that("rolling preseason blend aligns folds and uses each test game's week", {
@@ -328,7 +389,9 @@ test_that("returning-only fallback never manufactures current talent", {
 
   expect_equal(preseason_feature_profile(config, "returning_only"),
                config$preseason$fallback_features)
-  expect_false(any(c("talent_percentile", "replacement_capacity") %in%
+  expect_false(any(c("talent_percentile", "replacement_capacity",
+                     "portal_replacement_capacity",
+                     "portal_offense_replacement") %in%
                      names(priors)))
   expect_equal(priors$returning_ppa_pct[priors$team == "Alpha"], .7)
   expect_false(priors$returning_data_available[priors$team == "New FBS"])
@@ -442,7 +505,9 @@ test_that("preseason challenger features fade and stay out of production", {
     returning_ppa_pct = c(0.8, 0.4), returning_passing_ppa_pct = c(0.9, 0.2),
     returning_usage_pct = c(0.7, 0.5), talent_percentile = c(1, 0.5),
     preseason_poll_vote_share = c(1, 0), retained_quality = c(0.8, 0.2),
-    replacement_capacity = c(0.2, 0.3), hype_gap = c(0.1, -0.1),
+    replacement_capacity = c(0.2, 0.3),
+    portal_replacement_capacity = c(0.3, 0.2),
+    portal_offense_replacement = c(0.4, -0.1), hype_gap = c(0.1, -0.1),
     stringsAsFactors = FALSE
   )
   training <- data.frame(
@@ -490,7 +555,9 @@ test_that("preseason challengers recover a planted week-one signal", {
       returning_ppa_pct = 0.5 + strength[[as.character(s)]] / 40,
       returning_passing_ppa_pct = 0.5, returning_usage_pct = 0.5,
       talent_percentile = 0.5, preseason_poll_vote_share = 0,
-      retained_quality = 0.25, replacement_capacity = 0.25, hype_gap = 0,
+      retained_quality = 0.25, replacement_capacity = 0.25,
+      portal_replacement_capacity = 0.25,
+      portal_offense_replacement = 0, hype_gap = 0,
       stringsAsFactors = FALSE
     )
   }))
@@ -644,7 +711,7 @@ test_that("fcs-to-fbs bridge calibrates, flags, and guards confidence", {
   expect_equal(guarded$margin_sd[1], sqrt(81 + bridge$margin_sd^2))
   expect_equal(guarded$margin_sd[2], 9)
   expect_equal(guarded$confidence_tier, c("low", "high"))
-  expect_equal(guarded$pick_status, c("transition_review", "official_pick"))
+  expect_equal(guarded$pick_status, c("pass", "official_pick"))
   late_schedule <- schedule[1, , drop = FALSE]
   late_schedule$week <- 10
   late <- apply_fbs_bridge_predictions(predictions[1, , drop = FALSE], late_schedule,
@@ -1004,15 +1071,31 @@ test_that("raw histories exclude FCS and non-CFP bowls", {
   expect_equal(raw_history_eligible(games), c(TRUE, FALSE, FALSE, TRUE, FALSE))
 })
 
-test_that("forced model picks select the higher-probability side without hiding the pass", {
+test_that("article picks select the model side without claiming validation", {
   prediction <- data.frame(expected_margin = 3, fair_margin = 3, margin_sd = 12)
   schedule <- data.frame(home = "Notre Dame", away = "Miami")
   normal <- make_game_picks(prediction, schedule, -2.5, FALSE, config = config)
   forced <- make_game_picks(prediction, schedule, -2.5, TRUE, config = config)
   expect_equal(normal$pick_status, "pass")
   expect_true(is.na(normal$ats_pick))
-  expect_equal(forced$pick_status, "forced_model_pick")
+  expect_equal(forced$pick_status, "article_pick")
   expect_equal(forced$ats_pick, "Notre Dame")
+  expect_equal(forced$home_cover_probability, .5)
+  expect_equal(forced$confidence_tier, "low")
+  expect_equal(forced$fair_spread, -forced$expected_margin)
+})
+
+test_that("ATS thresholds must clear break-even before picks become official", {
+  validation <- data.frame(
+    edge = rep(6, 200), cover_probability = rep(.60, 200),
+    covered = c(rep(TRUE, 103), rep(FALSE, 97))
+  )
+  rejected <- select_ats_threshold(validation, config)
+  expect_false(rejected$validated)
+
+  validation$covered <- c(rep(TRUE, 110), rep(FALSE, 90))
+  accepted <- select_ats_threshold(validation, config)
+  expect_true(accepted$validated)
 })
 
 test_that("large spreads keep the model side but require review", {
@@ -1255,7 +1338,9 @@ test_that("one-command article workflow writes immutable CSV, Parquet, and DuckD
     returning_ppa_pct = c(.7, .5), returning_passing_ppa_pct = c(.8, .4),
     returning_usage_pct = c(.65, .55), talent_percentile = c(.9, .8),
     preseason_poll_vote_share = c(.8, .6), retained_quality = c(.63, .4),
-    replacement_capacity = c(.27, .4), hype_gap = c(.1, -.05),
+    replacement_capacity = c(.27, .4),
+    portal_replacement_capacity = c(.2, .3),
+    portal_offense_replacement = c(.35, .1), hype_gap = c(.1, -.05),
     source = "test", captured_at = "2026-07-01 12:00:00"
   )
   utils::write.csv(priors, file.path(cfg$data_dir, "preseason_team_priors.csv"),

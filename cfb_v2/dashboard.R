@@ -125,14 +125,14 @@ prepare_dashboard_predictions <- function(data) {
   data$status_group <- ifelse(
     status == "official_pick", "official",
     ifelse(
-      status == "forced_model_pick", "forced",
+      status %in% c("article_pick", "forced_model_pick"), "article",
       ifelse(grepl("review", status), "review", "pass")
     )
   )
   data$status_label <- ifelse(
-    status == "official_pick", "Official",
+    status == "official_pick", "Validated best bet",
     ifelse(
-      status == "forced_model_pick", "Forced side",
+      status %in% c("article_pick", "forced_model_pick"), "Article pick",
       ifelse(
         status == "large_spread_review", "Large spread",
         ifelse(

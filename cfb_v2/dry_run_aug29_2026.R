@@ -400,33 +400,37 @@ blend_metrics <- week01_metrics(rolling, validation$data)
 full_metrics <- week01_metrics(preseason_rolling, validation$data)
 returning_metrics <- week01_metrics(returning_rolling, validation$data)
 foundation_metrics <- week01_metrics(foundation_rolling, validation$data)
-selected_profile <- "foundation_80_preseason_20_blend"
+selected_profile <- "foundation_preseason_roster_aware_blend"
 
 ats_rows <- rolling$predictions$row_id
 ats_eligible <- ats_training_eligible(validation$data[ats_rows, , drop = FALSE])
 ats_validation <- data.frame(
+  season = validation$data$season[ats_rows][ats_eligible],
   actual_margin = rolling$predictions$actual[ats_eligible],
   expected_margin = rolling$predictions$expected_margin[ats_eligible],
   closing_home_spread = validation$data$closing_home_spread[ats_rows][ats_eligible],
   margin_sd = rolling$predictions$margin_sd[ats_eligible]
 )
 ats_model <- fit_ats_residual_model(ats_validation)
-cover_probability <- predict_ats_home_cover(
-  ats_model, ats_validation$expected_margin, ats_validation$closing_home_spread,
-  ats_validation$margin_sd
-)
-threshold_validation <- data.frame(
-  edge = ats_validation$expected_margin + ats_validation$closing_home_spread,
-  cover_probability = cover_probability,
-  covered = ifelse(
-    cover_probability >= 0.5,
-    ats_validation$actual_margin + ats_validation$closing_home_spread > 0,
-    ats_validation$actual_margin + ats_validation$closing_home_spread < 0
+ats_threshold <- NULL
+if (!is.null(ats_model)) {
+  cover_probability <- predict_ats_home_cover(
+    ats_model, ats_validation$expected_margin, ats_validation$closing_home_spread,
+    ats_validation$margin_sd
   )
-)
-finite <- is.finite(threshold_validation$edge) &
-  is.finite(threshold_validation$cover_probability)
-ats_threshold <- select_ats_threshold(threshold_validation[finite, ], config)
+  threshold_validation <- data.frame(
+    edge = ats_validation$expected_margin + ats_validation$closing_home_spread,
+    cover_probability = cover_probability,
+    covered = ifelse(
+      cover_probability >= 0.5,
+      ats_validation$actual_margin + ats_validation$closing_home_spread > 0,
+      ats_validation$actual_margin + ats_validation$closing_home_spread < 0
+    )
+  )
+  finite <- is.finite(threshold_validation$edge) &
+    is.finite(threshold_validation$cover_probability)
+  ats_threshold <- select_ats_threshold(threshold_validation[finite, ], config)
+}
 
 predictions <- predict_week(
   model, schedule, matchup, market$market_home_spread,
@@ -511,10 +515,13 @@ predictions$data_flag <- ifelse(
          ifelse(!predictions$home_returning_data | !predictions$away_returning_data,
                 "missing_returning_production",
                 ifelse(!predictions$home_coach_history | !predictions$away_coach_history,
-                       "new_coach_no_model_history", "standard")))
+                       "new_coach_no_model_history",
+                       ifelse(predictions$preseason_challenger_share >
+                                config$preseason$challenger_share + 1e-8,
+                              "roster_rebuild_review", "standard"))))
 )
 predictions$preseason_profile <- selected_profile
-predictions$preseason_challenger_profile <- "full_247_talent_profile"
+predictions$preseason_challenger_profile <- "objective_roster_rebuild_profile"
 predictions$talent_available <-
   predictions$home_talent_data & predictions$away_talent_data
 predictions$reported_confidence <- ifelse(
@@ -556,7 +563,9 @@ feature_label_map <- c(
   ps_returning_usage_pct_diff = "Returning usage",
   ps_retained_quality_diff = "Retained production quality",
   ps_talent_percentile_diff = "247 team talent percentile",
-  ps_replacement_capacity_diff = "Talent replacement capacity"
+  ps_replacement_capacity_diff = "Talent replacement capacity",
+  ps_portal_replacement_capacity_diff = "Portal replacement capacity",
+  ps_portal_offense_replacement_diff = "Incoming transfer production"
 )
 feature_labels <- unname(feature_label_map[colnames(feature_contributions)])
 feature_labels[is.na(feature_labels)] <- colnames(feature_contributions)[is.na(feature_labels)]
@@ -626,8 +635,10 @@ stopifnot(
              ignore.case = TRUE)),
   all(predictions$talent_available),
   all(predictions$preseason_profile == selected_profile),
-  all(predictions$preseason_challenger_share ==
+  all(predictions$preseason_challenger_share >=
         config$preseason$challenger_share),
+  all(predictions$preseason_challenger_share <=
+        config$preseason$rebuild_challenger_share_ceiling),
   all(target_snapshots$games_played == 0),
   max(abs(ridge_intercept_contribution(model, matchup) +
             rowSums(feature_contributions) -
@@ -711,9 +722,10 @@ stopifnot(file.exists(chart_path), file.info(chart_path)$size > 0)
 table_rows <- vapply(seq_len(nrow(predictions)), function(i) {
   x <- predictions[i, ]
   sprintf(
-    "| %s at %s | %s | %s | %s | %s | %s | %+.1f | %s | %s | %.1f | %.1f%% | %.1f | %s |",
+    "| %s at %s | %s | %s | %s | %s | %s | %.0f%% | %+.1f | %s | %s | %.1f | %.1f%% | %.1f | %s |",
     x$away, x$home, x$market_line, x$foundation_model_line,
     x$returning_model_line, x$full_preseason_model_line, x$model_line,
+    100 * x$preseason_challenger_share,
     x$total_preseason_adjustment,
     x$straight_up_pick,
     x$ats_pick_line, x$pick_edge, 100 * x$pick_cover_probability,
@@ -765,13 +777,14 @@ report <- c(
          format(captured_at, "%Y-%m-%d %H:%M:%S UTC", tz = "UTC"),
          " (`", market_snapshot_source, "`)."),
   paste0("Selected profile: `", selected_profile,
-         "`. The production margin is 80% foundation and 20% full preseason ",
-         "challenger; the component estimates remain visible for diagnostics."),
+         "`. The production margin starts at 80% foundation and 20% full preseason ",
+         "challenger. Objective incoming-transfer production can raise the challenger ",
+         "share to a 60% cap for major rebuilds; component estimates remain visible."),
   paste0("A side was requested for all ", nrow(predictions),
-         " games; `forced_model_pick` identifies a game the normal card would have passed."),
+         " games; `article_pick` identifies a requested model selection that does not qualify as a validated best bet."),
   "",
-  "| Game | Market | Foundation | Returning only | Full preseason challenger | Production blend | Blend delta | SU pick | ATS pick | Edge | Pick cover | Margin SD | Data flag |",
-  "|---|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---|",
+  "| Game | Market | Foundation | Returning only | Full preseason challenger | Production blend | PS share | Blend delta | SU pick | ATS pick | Edge | Pick cover | Margin SD | Data flag |",
+  "|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---|",
   table_rows,
   "",
   "## Run settings",
@@ -779,10 +792,11 @@ report <- c(
   paste0("- Foundation ridge lambda `", foundation_rolling$best_lambda,
          "`; full-preseason ridge lambda `", preseason_rolling$best_lambda,
          "`; coach split `", coach_split, "`; training seasons 2020-2025."),
-  "- The challenger adds CFBD returning PPA, returning passing PPA, returning usage, retained production quality, 247 talent percentile, and talent replacement capacity. Its 20% Week 0/1 share fades to 12%/6%/2% in Weeks 2/3/4 and reaches zero in Week 5.",
+  "- The challenger adds CFBD returning PPA, returning passing PPA, returning usage, retained production quality, 247 talent percentile, portal depth, and source-quality-adjusted prior-year production from incoming transfers. Its Week 0/1 share is normally 20% and capped at 60% for major rebuilds; all shares phase-fade to zero in Week 5.",
   "- Raw talent rank does not enter the model. Talent is season-normalized, and its incremental effect is shown against the returning-only challenger.",
-  "- No PFF, preseason QB tier, portal grade, polls, FPI, injuries, weather, or market spread enters the margin model. The market is used only by the ATS comparison layer.",
-  "- Market spreads above 21 points retain the model side and margin but are labeled `large_spread_review`; the cached forced-side ATS rate in that bucket is only 46.4%.",
+  "- No PFF, preseason QB tier, polls, FPI, injuries, weather, or market spread enters the margin model. Transfer ratings and prior-year transfer production are preseason challenger inputs only; the market is used by the separate ATS comparison layer.",
+  "- Every requested game receives an article ATS side. Historical ATS calibration does not clear the -110 break-even rate, so none is promoted to a validated best bet; unvalidated selections retain 50% calibrated cover probability instead of unsupported confidence.",
+  "- Market spreads above 21 points retain the model side and margin but are labeled `large_spread_review`; the cached requested-side ATS rate in that bucket is only 46.4%.",
   season_data_note,
   venue_note,
   paste0("- Current head-coach mappings were resolved from `", coach_mapping_source,

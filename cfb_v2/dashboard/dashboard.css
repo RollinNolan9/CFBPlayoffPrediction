@@ -419,9 +419,9 @@ body {
   color: #854b09;
 }
 
-.status-forced {
-  background: var(--neutral-soft);
-  color: #4d5760;
+.status-article {
+  background: #e8f1f7;
+  color: #245675;
 }
 
 .status-pass {

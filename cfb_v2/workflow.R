@@ -469,9 +469,11 @@ write_v2_backtest_report <- function(summary, predictions, coach_comparison, pat
     paste0("Generated: ", format(Sys.time(), tz = "UTC", usetz = TRUE)),
     paste0("Training file MD5: `", unname(tools::md5sum(training_path)), "`"),
     "",
-    "Rolling folds train only on earlier seasons. The production ridge core blends 80%",
-    "foundation with 20% full preseason challenger in Weeks 0/1, then fades the challenger",
-    "to zero by Week 5. Team-specific HFA and the residual forest remain challengers.",
+    "Rolling folds train only on earlier seasons. The production ridge core starts at 80%",
+    "foundation and 20% full preseason challenger in Weeks 0/1. Objective incoming-transfer",
+    "production can raise the challenger share to a 60% cap for major roster rebuilds, and",
+    "all preseason influence fades to zero by Week 5. Team-specific HFA and the residual",
+    "forest remain challengers.",
     "Margin MAE is the lead metric.",
     "ATS accuracy forces a side from the model edge and does not represent a published-pick threshold.",
     paste0("Cached historical line source: ",
@@ -526,10 +528,11 @@ write_preseason_challenger_report <- function(predictions, output_dir,
     "",
     paste0("Generated: ", format(Sys.time(), tz = "UTC", usetz = TRUE)),
     "",
-    paste0("The ridge core is the production model: 80% foundation and 20% full ",
-           "preseason challenger in Weeks 0/1. The challenger includes returning ",
-           "production, retained quality, 247 talent percentile, and replacement ",
-           "capacity; its model-level share fades to zero from Week 5. ",
+    paste0("The ridge core is the production model: normally 80% foundation and 20% full ",
+           "preseason challenger in Weeks 0/1. Objective prior-year production from incoming ",
+           "transfers can raise the challenger share to a 60% cap for major rebuilds. The ",
+           "challenger also includes returning production, retained quality, 247 talent ",
+           "percentile, and replacement capacity; its share fades to zero from Week 5. ",
            "ATS accuracy forces a side from the model edge. `uncertainty_coverage` ",
            "is the share of games landing inside one modeled standard deviation."),
     "",
@@ -593,7 +596,8 @@ write_preseason_challenger_report <- function(predictions, output_dir,
       "",
       paste0("Descriptive full-sample ridge coefficients at each variant's selected ",
              "lambda. Direction and size only; the out-of-sample verdict is the ",
-             "table above."),
+             "table above. `ridge_core` shows the 20% base-share effect; rebuild ",
+             "games can scale toward the configured 60% cap."),
       "",
       markdown_table(coefficients)
     )
@@ -834,26 +838,29 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     ats_rows <- rolling$predictions$row_id
     ats_eligible <- ats_training_eligible(validation$data[ats_rows, , drop = FALSE])
     ats_validation <- data.frame(
+      season = validation$data$season[ats_rows][ats_eligible],
       actual_margin = rolling$predictions$actual[ats_eligible],
       expected_margin = rolling$predictions$expected_margin[ats_eligible],
       closing_home_spread = validation$data$closing_home_spread[ats_rows][ats_eligible],
       margin_sd = rolling$predictions$margin_sd[ats_eligible]
     )
     ats_model <- fit_ats_residual_model(ats_validation)
-    cover_probability <- predict_ats_home_cover(
-      ats_model, ats_validation$expected_margin, ats_validation$closing_home_spread,
-      ats_validation$margin_sd
-    )
-    home_covered <- ats_validation$actual_margin + ats_validation$closing_home_spread > 0
-    threshold_validation <- data.frame(
-      edge = ats_validation$expected_margin + ats_validation$closing_home_spread,
-      cover_probability = cover_probability,
-      covered = ifelse(cover_probability >= .5, home_covered, !home_covered)
-    )
-    finite <- is.finite(threshold_validation$edge) &
-      is.finite(threshold_validation$cover_probability)
-    if (sum(finite) >= 20) {
-      ats_threshold <- select_ats_threshold(threshold_validation[finite, ], config)
+    if (!is.null(ats_model)) {
+      cover_probability <- predict_ats_home_cover(
+        ats_model, ats_validation$expected_margin, ats_validation$closing_home_spread,
+        ats_validation$margin_sd
+      )
+      home_covered <- ats_validation$actual_margin + ats_validation$closing_home_spread > 0
+      threshold_validation <- data.frame(
+        edge = ats_validation$expected_margin + ats_validation$closing_home_spread,
+        cover_probability = cover_probability,
+        covered = ifelse(cover_probability >= .5, home_covered, !home_covered)
+      )
+      finite <- is.finite(threshold_validation$edge) &
+        is.finite(threshold_validation$cover_probability)
+      if (sum(finite) >= config$ats$minimum_validation_picks) {
+        ats_threshold <- select_ats_threshold(threshold_validation[finite, ], config)
+      }
     }
   }
   membership_flags <- combine_membership(

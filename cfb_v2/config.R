@@ -42,9 +42,13 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
       polls = c("AP Top 25", "Coaches Poll"),
       prior_seasons = 2021:2025,
       challenger_share = 0.20,
+      rebuild_score_threshold = 0.50,
+      rebuild_score_ceiling = 2.70,
+      rebuild_challenger_share_ceiling = 0.60,
       production_features = c(
         "returning_ppa_pct", "returning_passing_ppa_pct", "returning_usage_pct",
-        "retained_quality", "talent_percentile", "replacement_capacity"
+        "retained_quality", "talent_percentile", "replacement_capacity",
+        "portal_replacement_capacity", "portal_offense_replacement"
       ),
       fallback_features = c(
         "returning_ppa_pct", "returning_passing_ppa_pct", "returning_usage_pct",
@@ -59,6 +63,8 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
     ),
     ats = list(
       large_spread_review = 21,
+      break_even_accuracy = 110 / 210,
+      minimum_validation_picks = 100L,
       threshold_grid = data.frame(
         min_edge = c(2, 3, 4),
         min_cover_probability = c(0.54, 0.55, 0.56)

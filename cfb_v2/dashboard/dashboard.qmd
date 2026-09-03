@@ -46,12 +46,15 @@ profile_label <- if (length(profile_values)) profile_values[1] else "Production 
 
 official <- picks[picks$status_group == "official", , drop = FALSE]
 reviews <- picks[picks$status_group == "review", , drop = FALSE]
-forced <- picks[picks$status_group == "forced", , drop = FALSE]
+article <- picks[picks$status_group == "article", , drop = FALSE]
+article_card <- picks[
+  !is.na(picks$ats_pick) & nzchar(trimws(picks$ats_pick)), , drop = FALSE
+]
 provisional <- picks[picks$provisional_flag, , drop = FALSE]
 injury_rows <- picks[picks$injury_flag, , drop = FALSE]
 
 status_colors <- c(
-  official = "#17745a", review = "#b86b12", forced = "#66717d", pass = "#8a929b"
+  official = "#17745a", article = "#376f92", review = "#b86b12", pass = "#8a929b"
 )
 
 metric_item <- function(value, label, tone = "neutral") {
@@ -247,9 +250,9 @@ htmltools::div(
   htmltools::div(
     class = "metric-strip",
     metric_item(nrow(picks), "Games"),
-    metric_item(nrow(official), "Official", "positive"),
-    metric_item(nrow(reviews), "Review", "warning"),
-    metric_item(nrow(forced), "Forced", "muted"),
+    metric_item(nrow(article_card), "ATS sides", "positive"),
+    metric_item(nrow(official), "Validated bets", "neutral"),
+    metric_item(nrow(reviews), "Review flags", "warning"),
     metric_item(nrow(injury_rows), "Injury flags", if (nrow(injury_rows)) "danger" else "neutral")
   )
 )
@@ -257,22 +260,22 @@ htmltools::div(
 
 ## Row {height=420}
 
-### Normal Card
+### Article Card
 
 ```{r}
-pick_board(official, 8L, "No official selections")
+pick_board(article_card, 12L, "No article selections")
+```
+
+### Validated Best Bets
+
+```{r}
+pick_board(official, 8L, "No selection has cleared the historical profitability gate")
 ```
 
 ### Review Board
 
 ```{r}
 pick_board(reviews, 8L, "No review selections")
-```
-
-### Forced Sides
-
-```{r}
-pick_board(forced, 8L, "No forced selections")
 ```
 
 ## Row {height=780}
@@ -285,9 +288,9 @@ htmltools::div(
   htmltools::div(
     class = "filter-group", role = "group", `aria-label` = "Filter picks",
     htmltools::tags$button(type = "button", class = "filter-button active", `data-filter` = "all", `aria-pressed` = "true", "All"),
-    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "official", `aria-pressed` = "false", "Official"),
+    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "official", `aria-pressed` = "false", "Validated"),
+    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "article", `aria-pressed` = "false", "Article picks"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "review", `aria-pressed` = "false", "Review"),
-    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "forced", `aria-pressed` = "false", "Forced"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "provisional", `aria-pressed` = "false", "Provisional"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "injury", `aria-pressed` = "false", "Injuries")
   ),
@@ -319,7 +322,7 @@ picks_table(picks)
 plot_data <- picks[is.finite(picks$market_home_spread) & is.finite(picks$expected_margin), ]
 plot_data$market_home_margin <- -plot_data$market_home_spread
 plot_data$plot_status <- factor(
-  plot_data$status_group, levels = c("official", "review", "forced", "pass")
+  plot_data$status_group, levels = c("official", "article", "review", "pass")
 )
 label_rows <- utils::head(
   plot_data[order(abs(plot_data$pick_edge), decreasing = TRUE), ], 7L
@@ -407,7 +410,7 @@ htmltools::div(
   ),
   htmltools::p(
     class = "snapshot-note",
-    "Confidence describes straight-up outcome confidence. ATS conviction is represented by edge, cover probability, and pick status."
+    "Every requested game receives an ATS side. Confidence remains conservative until historical ATS validation supports a best-bet label; edge measures model disagreement with the market."
   )
 )
 ```

@@ -11,9 +11,10 @@ history, design decisions, verification commands, and current limitations.
 - The football model predicts score margin without team names, conference labels,
   polls, betting lines, FPI, PFF, or public power ratings.
 - The ATS layer is separate. It calibrates the pure model's out-of-sample margin edge
-  against a market spread and cannot feed the CFP bracket model.
+  against a market spread and cannot feed the CFP bracket model. It cannot label a play
+  official unless at least 100 validation picks clear the 52.38% -110 break-even rate.
 - Market spreads above 21 points retain a model side but are marked
-  `large_spread_review` and reported with low confidence; their cached forced-side
+  `large_spread_review` and reported with low confidence; their cached requested-side
   ATS accuracy is below 50%.
 - Full production training begins in 2021. The 2020 season receives half weight.
   Earlier seasons and non-CFP bowls receive zero weight.
@@ -22,10 +23,11 @@ history, design decisions, verification commands, and current limitations.
   challenger only.
 - Preseason roster, quarterback, portal, and returning-production inputs are multiplied
   by `100/60/30/10/0%` in Weeks `0-1/2/3/4/5+`.
-- Frozen preseason returning-production and 247 talent features feed a separate full
-  preseason challenger under the `ps_` prefix. Production blends 80% foundation with
-  20% challenger in Weeks 0/1; the challenger share falls to 12%/6%/2% in Weeks
-  2/3/4 and is exactly zero from Week 5, including every postseason game.
+- Frozen preseason returning production, 247 talent, portal depth, and prior-year
+  incoming-transfer PPA feed a separate full preseason challenger under the `ps_`
+  prefix. Production normally blends 80% foundation with 20% challenger in Weeks 0/1.
+  An objective roster-rebuild score can raise the challenger share to a 60% cap, and
+  every share is phase-faded to exactly zero from Week 5, including the postseason.
   Week 1 AP/Coaches poll features remain diagnostic-only challengers.
   Production runs require `cfb_v2/data/preseason_team_priors.csv`, including
   coverage of the predicted season through Week 4.
@@ -112,12 +114,13 @@ coach split beneath `cfb_v2/output/backtest`.
 
 ## Preseason challenger command
 
-Freeze the 2021-2025 preseason sources (CFBD returning production, 247 team talent,
-Week 1 AP/Coaches poll points) into one timestamped row per team-season:
+Freeze the 2021-2026 preseason sources (CFBD returning production, 247 team talent,
+transfer portal, prior-year player PPA, and Week 1 AP/Coaches poll points) into one
+timestamped row per team-season:
 
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v2.R `
-  --mode=build-preseason --seasons=2021:2025 --overwrite=true
+  --mode=build-preseason --seasons=2021:2026 --overwrite=true
 ```
 
 Raw pulls are cached beneath `cfb_v2/cache/preseason`; add `--refresh-preseason=true`
@@ -129,12 +132,13 @@ season — 2020 COVID opt-outs (Connecticut, Old Dominion in 2021) and first-yea
 FBS members (Jacksonville State, Sam Houston in 2023) pass with visibly empty
 returning fields instead.
 
-The six talent-variant features improved Week 0/1 margin MAE, but the uncapped full
-model reduced straight-up accuracy and produced an unsupported 75.5-point 2026 USC
-projection. Production therefore uses the rolling-tested 80/20 blend. On 384 held-out
-Week 0/1 games it improved foundation MAE from 15.30 to 14.97 while retaining the
-foundation's 84.4% winner accuracy. `--mode=backtest` reports `ridge_core` as that
-blend, `preseason_ablation_challenger` as the foundation control, and
+The uncapped full model remains too aggressive to lead every game. Production uses a
+rolling-tested 20% base share and raises it only when objective incoming-transfer
+production identifies a major roster rebuild, with a hard 60% cap. On 384 held-out
+Week 0/1 games it improved foundation MAE from 15.30 to 14.90 while retaining 84.4%
+winner accuracy. Forced ATS remained only 48.2%, so those sides are diagnostics, not
+official plays. `--mode=backtest` reports `ridge_core` as the roster-aware blend,
+`preseason_ablation_challenger` as the foundation control, and
 `preseason_full_challenger` as the uncapped profile. It also retains the
 `preseason_hype_challenger` with diagnostic Week 1 poll features. A fold uses preseason
 features only when at least two frozen seasons predate its test season; earlier
@@ -169,7 +173,7 @@ Friday, September 4 at 1 p.m. Eastern publication cutoff, with:
 ```
 
 The command reads the frozen 2021-2026 priors, fits the foundation, returning-only,
-and full-preseason controls, and leads with the 80/20 production blend. It snapshots
+and full-preseason controls, and leads with the roster-aware capped production blend. It snapshots
 the selected DraftKings/FanDuel market, writes all four component margins, and builds
 an exact blended feature-contribution chart. Use `--refresh=true` only to refresh the
 market source; frozen team priors are changed through `--mode=build-preseason`.
@@ -229,8 +233,9 @@ To require a side in a game that would normally pass:
   --force=401752001
 ```
 
-The model chooses the side with the higher cover probability and stores
-`forced_model_pick`; it does not pretend that the normal betting threshold passed.
+The model chooses the side favored by its margin edge and stores
+`article_pick`; it supplies the requested side without pretending that the validated
+best-bet threshold passed.
 
 Use `--mode=live` for a later refresh. Live results are separate records and do not
 alter the article card.

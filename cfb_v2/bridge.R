@@ -272,7 +272,7 @@ apply_fbs_bridge_predictions <- function(predictions, schedule, transitions, bri
     added_sd^2 >= config$bridge$dominance_share * predictions$margin_sd^2
   predictions$confidence_tier[dominated] <- "low"
   review <- dominated &
-    predictions$pick_status %in% c("official_pick", "forced_model_pick")
+    predictions$pick_status %in% c("official_pick", "article_pick")
   predictions$pick_status[review] <- "transition_review"
   predictions
 }
