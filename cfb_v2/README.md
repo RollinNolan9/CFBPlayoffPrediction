@@ -1,5 +1,7 @@
 # CFB Model v2
 
+Current production version: `2.1.0`.
+
 This is the parallel production pipeline. It does not modify or source the original
 `model_final.Rmd` or `cfb_model_rebuild.R`.
 
@@ -25,9 +27,10 @@ history, design decisions, verification commands, and current limitations.
   by `100/60/30/10/0%` in Weeks `0-1/2/3/4/5+`.
 - Frozen preseason returning production, 247 talent, portal depth, and prior-year
   incoming-transfer PPA feed a separate full preseason challenger under the `ps_`
-  prefix. Production normally blends 80% foundation with 20% challenger in Weeks 0/1.
-  An objective roster-rebuild score can raise the challenger share to a 60% cap, and
-  every share is phase-faded to exactly zero from Week 5, including the postseason.
+  prefix. Production uses that roster-aware model directly through Week 4; the inputs
+  themselves fade once by `100/60/30/10%`. Week 5 and the postseason switch exactly
+  to the foundation model. The roster-rebuild score remains a diagnostic review flag
+  and does not apply a second prediction-level weight.
   Week 1 AP/Coaches poll features remain diagnostic-only challengers.
   Production runs require `cfb_v2/data/preseason_team_priors.csv`, including
   coverage of the predicted season through Week 4.
@@ -112,6 +115,18 @@ The command compares the ridge core with team-home-field and residual-forest
 challengers, then writes the report, fold predictions, summary metrics, and selected
 coach split beneath `cfb_v2/output/backtest`.
 
+The rejected accelerated-history challenger can be reproduced independently with:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' `
+  .\cfb_v2\backtest_accelerated_history.R
+```
+
+It caps prior-team history at 10% beginning in Week 5, reconstructs the affected
+features from cached games, and writes a paired report beneath
+`cfb_v2/output/experiments/accelerated_history_cap_week5`. It does not alter production
+configuration or output.
+
 ## Preseason challenger command
 
 Freeze the 2021-2026 preseason sources (CFBD returning production, 247 team talent,
@@ -132,12 +147,13 @@ season — 2020 COVID opt-outs (Connecticut, Old Dominion in 2021) and first-yea
 FBS members (Jacksonville State, Sam Houston in 2023) pass with visibly empty
 returning fields instead.
 
-The uncapped full model remains too aggressive to lead every game. Production uses a
-rolling-tested 20% base share and raises it only when objective incoming-transfer
-production identifies a major roster rebuild, with a hard 60% cap. On 384 held-out
-Week 0/1 games it improved foundation MAE from 15.30 to 14.90 while retaining 84.4%
-winner accuracy. Forced ATS remained only 48.2%, so those sides are diagnostics, not
-official plays. `--mode=backtest` reports `ridge_core` as the roster-aware blend,
+Production uses the full roster-aware model while its inputs are active. This avoids
+shrinking evidence twice after the features have already received their weekly fade.
+On 384 held-out Week 0/1 games it improved foundation MAE from 15.30 to 14.77 with
+83.9% winner accuracy. On 328 held-out Week 2 games it improved MAE from 15.03 to
+14.61 and forced ATS from 48.0% to 50.2%. Forced ATS remains below the 52.38% -110
+break-even rate, so those sides are diagnostics, not official plays. `--mode=backtest`
+reports `ridge_core` as the phase-faded production model,
 `preseason_ablation_challenger` as the foundation control, and
 `preseason_full_challenger` as the uncapped profile. It also retains the
 `preseason_hype_challenger` with diagnostic Week 1 poll features. A fold uses preseason
@@ -173,7 +189,7 @@ Friday, September 4 at 1 p.m. Eastern publication cutoff, with:
 ```
 
 The command reads the frozen 2021-2026 priors, fits the foundation, returning-only,
-and full-preseason controls, and leads with the roster-aware capped production blend. It snapshots
+and full-preseason controls, and leads with the phase-faded preseason production model. It snapshots
 the selected DraftKings/FanDuel market, writes all four component margins, and builds
 an exact blended feature-contribution chart. Use `--refresh=true` only to refresh the
 market source; frozen team priors are changed through `--mode=build-preseason`.

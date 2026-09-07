@@ -334,10 +334,14 @@ test_that("preseason source failures are not cached and player names are portabl
   )
 })
 
-test_that("preseason model share is phase faded and rebuild capped", {
+test_that("preseason evidence fades once at the feature layer", {
   expect_equal(
     preseason_blend_share(0:6, config),
-    c(.20, .20, .12, .06, .02, 0, 0)
+    c(1, 1, 1, 1, 1, 0, 0)
+  )
+  expect_equal(
+    preseason_blend_share(0:6, config, base_share = .2),
+    c(.2, .2, .2, .2, .2, 0, 0)
   )
   postseason <- data.frame(
     week = 1L, phase_week = 99L, game_phase = "postseason",
@@ -348,7 +352,7 @@ test_that("preseason model share is phase faded and rebuild capped", {
     week = c(1L, 2L, 5L), game_phase = game_phase(c(1L, 2L, 5L)),
     postseason_type = "regular", preseason_roster_rebuild_score = 2.7
   )
-  expect_equal(preseason_blend_share_for_data(rebuild, config), c(.6, .36, 0))
+  expect_equal(preseason_blend_share_for_data(rebuild, config), c(1, 1, 0))
 })
 
 test_that("rolling preseason blend aligns folds and uses each test game's week", {
@@ -368,9 +372,9 @@ test_that("rolling preseason blend aligns folds and uses each test game's week",
   preseason <- rolling(rep(10, 5))
   blended <- blend_rolling_predictions(data, foundation, preseason, config)
 
-  expect_equal(blended$predictions$expected_margin, c(2, 1.2, .6, .2, 0))
+  expect_equal(blended$predictions$expected_margin, c(10, 10, 10, 10, 0))
   expect_equal(blended$predictions$preseason_challenger_share,
-               c(.20, .12, .06, .02, 0))
+               c(1, 1, 1, 1, 0))
 })
 
 test_that("returning-only fallback never manufactures current talent", {
@@ -1012,7 +1016,7 @@ test_that("preseason blend predictions and feature drivers reconstruct exactly",
   )
   training_foundation <- predict(foundation, training)$expected_margin
   training_preseason <- predict(preseason, training)$expected_margin
-  training_expected <- .8 * training_foundation + .2 * training_preseason
+  training_expected <- training_preseason
   calibration <- fit_error_calibration(
     training_expected, training$margin, training$game_phase, config
   )
@@ -1029,10 +1033,9 @@ test_that("preseason blend predictions and feature drivers reconstruct exactly",
 
   expect_equal(
     prediction$expected_margin,
-    c(.8 * foundation_prediction[1] + .2 * preseason_prediction[1],
-      foundation_prediction[2])
+    c(preseason_prediction[1], foundation_prediction[2])
   )
-  expect_equal(prediction$preseason_challenger_share, c(.2, 0))
+  expect_equal(prediction$preseason_challenger_share, c(1, 0))
   contributions <- ridge_feature_contributions(model, new_data)
   expect_equal(
     ridge_intercept_contribution(model, new_data) + rowSums(contributions),

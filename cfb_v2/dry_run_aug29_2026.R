@@ -50,7 +50,7 @@ if (slate == "aug29") {
     conference_championship = FALSE, is_cfp = FALSE,
     stringsAsFactors = FALSE
   )
-  slate_title <- "2026 Week 0/1 Production Preseason Blend"
+  slate_title <- "2026 Week 0/1 Preseason Production Model"
   slate_description <- "the eight August 29 games"
   output_bucket <- "week_0_1_blend"
   chart_title <- "Feature importance for the August 29 decisions"
@@ -75,7 +75,7 @@ if (slate == "aug29") {
   schedule$venue <- raw_venue[match(schedule$game_id, raw_game_id)]
   schedule <- schedule[order(schedule$kickoff, schedule$game_id), , drop = FALSE]
   if (!nrow(schedule)) stop("CFBD returned no upcoming Week 1 FBS games.", call. = FALSE)
-  slate_title <- "2026 Week 1 Preliminary Preseason Blend"
+  slate_title <- "2026 Week 1 Preliminary Production Model"
   slate_description <- "the post-Friday-publication FBS-vs-FBS slate"
   output_bucket <- "week_1_preliminary"
   chart_title <- "Feature importance for the preliminary Week 1 decisions"
@@ -400,7 +400,7 @@ blend_metrics <- week01_metrics(rolling, validation$data)
 full_metrics <- week01_metrics(preseason_rolling, validation$data)
 returning_metrics <- week01_metrics(returning_rolling, validation$data)
 foundation_metrics <- week01_metrics(foundation_rolling, validation$data)
-selected_profile <- "foundation_preseason_roster_aware_blend"
+selected_profile <- "phase_faded_full_preseason"
 
 ats_rows <- rolling$predictions$row_id
 ats_eligible <- ats_training_eligible(validation$data[ats_rows, , drop = FALSE])
@@ -507,6 +507,8 @@ predictions$home_prior_fbs_games <- home_coverage$prior_fbs_games
 predictions$away_prior_fbs_games <- away_coverage$prior_fbs_games
 predictions$home_trailing_fbs_games <- home_coverage$trailing_fbs_games
 predictions$away_trailing_fbs_games <- away_coverage$trailing_fbs_games
+predictions$preseason_roster_rebuild_score <-
+  matchup$preseason_roster_rebuild_score
 predictions$transition_game <- nzchar(predictions$fbs_transition)
 predictions$data_flag <- ifelse(
   predictions$transition_game, "fcs_to_fbs_transition",
@@ -516,12 +518,13 @@ predictions$data_flag <- ifelse(
                 "missing_returning_production",
                 ifelse(!predictions$home_coach_history | !predictions$away_coach_history,
                        "new_coach_no_model_history",
-                       ifelse(predictions$preseason_challenger_share >
-                                config$preseason$challenger_share + 1e-8,
+                       ifelse(predictions$preseason_roster_rebuild_score >
+                                config$preseason$rebuild_score_threshold,
                               "roster_rebuild_review", "standard"))))
 )
 predictions$preseason_profile <- selected_profile
-predictions$preseason_challenger_profile <- "objective_roster_rebuild_profile"
+predictions$preseason_challenger_profile <- "roster_rebuild_diagnostic"
+predictions$model_version <- config$version
 predictions$talent_available <-
   predictions$home_talent_data & predictions$away_talent_data
 predictions$reported_confidence <- ifelse(
@@ -635,10 +638,8 @@ stopifnot(
              ignore.case = TRUE)),
   all(predictions$talent_available),
   all(predictions$preseason_profile == selected_profile),
-  all(predictions$preseason_challenger_share >=
-        config$preseason$challenger_share),
-  all(predictions$preseason_challenger_share <=
-        config$preseason$rebuild_challenger_share_ceiling),
+  all(abs(predictions$preseason_challenger_share -
+            config$preseason$challenger_share) < 1e-8),
   all(target_snapshots$games_played == 0),
   max(abs(ridge_intercept_contribution(model, matchup) +
             rowSums(feature_contributions) -
@@ -648,7 +649,7 @@ stopifnot(
 run_slug <- format(run_started_at, "%Y%m%dT%H%M%SZ", tz = "UTC")
 output_dir <- file.path(config$output_dir, "2026", output_bucket, run_slug)
 if (dir.exists(output_dir) && length(list.files(output_dir))) {
-  stop("Preseason blend snapshot already exists: ", output_dir,
+  stop("Preseason production snapshot already exists: ", output_dir,
        ". Use --refresh=true for a new source snapshot.", call. = FALSE)
 }
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -777,13 +778,14 @@ report <- c(
          format(captured_at, "%Y-%m-%d %H:%M:%S UTC", tz = "UTC"),
          " (`", market_snapshot_source, "`)."),
   paste0("Selected profile: `", selected_profile,
-         "`. The production margin starts at 80% foundation and 20% full preseason ",
-         "challenger. Objective incoming-transfer production can raise the challenger ",
-         "share to a 60% cap for major rebuilds; component estimates remain visible."),
+         "` (model `", config$version,
+         "`). The full preseason challenger leads through Week 4 while its roster ",
+         "features fade once by phase; Week 5 switches exactly to foundation. ",
+         "Component estimates remain visible."),
   paste0("A side was requested for all ", nrow(predictions),
          " games; `article_pick` identifies a requested model selection that does not qualify as a validated best bet."),
   "",
-  "| Game | Market | Foundation | Returning only | Full preseason challenger | Production blend | PS share | Blend delta | SU pick | ATS pick | Edge | Pick cover | Margin SD | Data flag |",
+  "| Game | Market | Foundation | Returning only | Full preseason challenger | Production model | PS share | PS delta | SU pick | ATS pick | Edge | Pick cover | Margin SD | Data flag |",
   "|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---|",
   table_rows,
   "",
@@ -792,7 +794,7 @@ report <- c(
   paste0("- Foundation ridge lambda `", foundation_rolling$best_lambda,
          "`; full-preseason ridge lambda `", preseason_rolling$best_lambda,
          "`; coach split `", coach_split, "`; training seasons 2020-2025."),
-  "- The challenger adds CFBD returning PPA, returning passing PPA, returning usage, retained production quality, 247 talent percentile, portal depth, and source-quality-adjusted prior-year production from incoming transfers. Its Week 0/1 share is normally 20% and capped at 60% for major rebuilds; all shares phase-fade to zero in Week 5.",
+  "- The challenger adds CFBD returning PPA, returning passing PPA, returning usage, retained production quality, 247 talent percentile, portal depth, and source-quality-adjusted prior-year production from incoming transfers. Those inputs receive 100/60/30/10% feature weight in Weeks 0-1/2/3/4, then production switches exactly to foundation in Week 5.",
   "- Raw talent rank does not enter the model. Talent is season-normalized, and its incremental effect is shown against the returning-only challenger.",
   "- No PFF, preseason QB tier, polls, FPI, injuries, weather, or market spread enters the margin model. Transfer ratings and prior-year transfer production are preseason challenger inputs only; the market is used by the separate ATS comparison layer.",
   "- Every requested game receives an article ATS side. Historical ATS calibration does not clear the -110 break-even rate, so none is promoted to a validated best bet; unvalidated selections retain 50% calibrated cover probability instead of unsupported confidence.",
@@ -804,13 +806,13 @@ report <- c(
   "",
   "## Historical check",
   "",
-  paste0("- Production-blend Week 0/1 rolling MAE: `",
+  paste0("- Production-model Week 0/1 rolling MAE: `",
          sprintf("%.2f", blend_metrics[["mae"]]), "` across `",
          blend_metrics[["games"]], "` held-out games; full challenger: `",
          sprintf("%.2f", full_metrics[["mae"]]), "`; returning-only: `",
          sprintf("%.2f", returning_metrics[["mae"]]),
          "`; foundation-only: `", sprintf("%.2f", foundation_metrics[["mae"]]), "`."),
-  paste0("- Production-blend straight-up accuracy: `",
+  paste0("- Production-model straight-up accuracy: `",
          sprintf("%.1f%%", 100 * blend_metrics[["winner_accuracy"]]),
          "`; full challenger: `",
          sprintf("%.1f%%", 100 * full_metrics[["winner_accuracy"]]),

@@ -38,17 +38,20 @@ backtest plus August 29 dry run are regenerated.
 802 team-seasons, including all 138 teams in the 2026 247 composite and 136 returning-
 production rows (North Dakota State and Sacramento State are expected first-year-FBS
 misses). The freeze now also measures portal depth and source-quality-adjusted prior-year
-production from incoming skill-position transfers. Production starts at 80% foundation
-and 20% full preseason in Weeks 0/1, but an objective roster-rebuild score can raise the
-challenger share to a 60% cap when last year's team is unusually stale. The share remains
-phase-faded to zero from Week 5 and throughout the postseason. On 384 held-out games,
-the roster-aware blend improved foundation MAE from 15.30 to 14.90 while preserving
-84.4% winner accuracy. Forced ATS improved from 47.1% to 48.2%, so the ATS layer does
-not issue official plays unless future validation clears the 52.38% -110 break-even rate.
-Poll features remain diagnostic-only.
+production from incoming skill-position transfers. Production uses the full roster-aware
+model through Week 4 while those inputs fade once by 100/60/30/10%, then switches exactly
+to foundation in Week 5 and throughout the postseason. A September 7 review removed the
+old prediction-level cap because it was shrinking already-faded evidence a second time.
+This correction is model version `2.1.0`.
+On 384 held-out Week 0/1 games, the corrected model improved foundation MAE from 15.30
+to 14.77 with 83.9% winner accuracy. On 328 held-out Week 2 games, it improved MAE from
+15.03 to 14.61 and forced ATS from 48.0% to 50.2%. The replayed 2026 Week 1 snapshot was
+25-12-1 ATS, 34-4 straight up, and 12.47 MAE through 38 completed games. Historical ATS
+still does not clear the 52.38% -110 break-even rate, so the ATS layer does not promote
+official plays without validation. Poll features remain diagnostic-only.
 
-**Remaining:** None for the 2026 Week 1 model. Continue monitoring the uncapped full
-profile, returning-only profile, and poll-hype profile as challengers.
+**Remaining:** Feed completed Week 0/1 games into the Week 2 snapshot, then monitor the
+foundation, returning-only, and poll-hype profiles as diagnostics.
 
 **What:** Pull and freeze 2021-2025 CFBD returning production, Week 1 AP/Coaches poll
 points, and 247 team-talent composites. Build four rolling challengers: core,
@@ -72,6 +75,35 @@ accuracy, ATS accuracy, calibration, and conference diagnostic slices.
 **Effort:** L
 **Priority:** P0
 **Depends on:** Correct Turnover Rate
+
+### Accelerated History Challenger
+
+**Status:** Rejected on September 7, 2026. Production remains model `2.1.0`.
+
+The challenger moved the existing 10% prior-team-history cap from Week 8 to Week 5.
+It rebuilt opponent-adjusted power plus explicit prior-season and trailing-three-year
+features from the cached games before running the same rolling folds. Production
+reconstruction matched the cached features within `6.93e-14`.
+
+Across 654 held-out regular-season games in Weeks 5-7, MAE worsened from 12.292 to
+12.334, with a paired-bootstrap 95% delta interval of `[-0.146, +0.231]`. Overall MAE
+worsened from 13.158 to 13.166, recent-season MAE worsened from 12.945 to 12.956, and
+only two of four season folds improved. The challenger improved every selected 2024
+Florida State and 2025 Penn State collapse diagnostic, but that anecdotal benefit did
+not generalize. Forced Weeks 5-7 ATS rose from 52.0% to 53.1%; because margin is the
+lead metric and the fold results were unstable, that is insufficient for promotion.
+The ATS change was seven net wins across 633 paired games (McNemar `p = 0.529`), also
+providing no evidence of a repeatable betting improvement.
+
+Reproduce with:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' `
+  .\cfb_v2\backtest_accelerated_history.R
+```
+
+The detailed report is generated at
+`cfb_v2/output/experiments/accelerated_history_cap_week5/report.md`.
 
 ### Build FCS-to-FBS Bridge
 
@@ -184,9 +216,8 @@ and exact replay
   article/live runs.
 - August 29, 2026 dry run, local feature-contribution diagnostics, San Jose State alias
   fix, and monotonic ATS guard.
-- Phase-faded roster-aware foundation/preseason production blend with a 20% base and
-  60% major-rebuild cap, exact postseason exclusion, persisted component margins, and
-  rolling tests.
+- Full roster-aware production model through Week 4 with one feature-level phase fade,
+  exact Week 5/postseason foundation switch, persisted component margins, and rolling tests.
 - All-team transfer-production audit plus an ATS profitability gate: unvalidated cards
   pass by default, while explicitly requested games receive visible article sides at low confidence.
 - Self-contained static Quarto dashboard with article, market-diagnostic,

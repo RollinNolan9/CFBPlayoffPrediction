@@ -2,7 +2,7 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
   root <- normalizePath(project_dir, winslash = "/", mustWork = FALSE)
 
   list(
-    version = "2.0.0",
+    version = "2.1.0",
     project_dir = root,
     data_dir = file.path(root, "cfb_v2", "data"),
     inbox_dir = file.path(root, "cfb_v2", "inbox"),
@@ -41,10 +41,8 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
     preseason = list(
       polls = c("AP Top 25", "Coaches Poll"),
       prior_seasons = 2021:2025,
-      challenger_share = 0.20,
+      challenger_share = 1.00,
       rebuild_score_threshold = 0.50,
-      rebuild_score_ceiling = 2.70,
-      rebuild_challenger_share_ceiling = 0.60,
       production_features = c(
         "returning_ppa_pct", "returning_passing_ppa_pct", "returning_usage_pct",
         "retained_quality", "talent_percentile", "replacement_capacity",

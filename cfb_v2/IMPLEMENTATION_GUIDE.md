@@ -111,12 +111,13 @@ Prior-season influence falls as current games accumulate and is capped at 10% fr
 Week 8 onward. Preseason-only columns use the configured Week 0-4 fade of
 `100/60/30/10/0%`.
 
-The production prediction adds a second guard around those columns: it normally blends
-80% foundation with 20% full-preseason challenger in Weeks 0/1. An all-team rebuild
-score based on source-quality-adjusted prior-year production from incoming transfers can
-raise the challenger share to a 60% cap when last season is unusually stale. Every
-share keeps the configured phase fade and reaches zero from Week 5. Postseason rows use
-an explicit phase week of 99, so a source week reset cannot reactivate preseason data.
+The production prediction uses the full roster-aware model while those columns are
+active. Their `100/60/30/10%` feature fade is the only phase shrink; applying another
+prediction-level blend would suppress the same evidence twice. Week 5 switches exactly
+to the foundation model. The all-team rebuild score based on source-quality-adjusted
+prior-year production from incoming transfers remains a diagnostic flag. Postseason
+rows use an explicit phase week of 99, so a source week reset cannot reactivate
+preseason data.
 
 ## 6. Rebuild Coach Identity and Ratings
 
@@ -150,10 +151,10 @@ Key files:
 
 ## 7. Select a Production Margin Model
 
-The production core is a capped blend of two weighted ridge regressions during the
-preseason phase: the current-team foundation and the full-preseason challenger. The
-challenger starts at 20% and can reach 60% only for objective major-rebuild cases.
-Numeric inputs are median-imputed, centered, and scaled using training-only values.
+The production core uses the full-preseason weighted ridge regression through Week 4,
+with roster inputs faded once at the feature layer, then switches exactly to the
+foundation ridge from Week 5. Numeric inputs are median-imputed, centered, and scaled
+using training-only values.
 Each ridge lambda is selected through rolling season validation, and the blend is
 calibrated only from matched out-of-fold predictions.
 
@@ -236,9 +237,11 @@ CFBD provides and the pipeline has frozen historical 2021-2025:
 - Week 1 AP and Coaches poll points
 - 247Sports team-talent composites
 
-The full talent variant passed the margin-MAE screen but was too aggressive to lead
-every matchup. The selected roster-aware capped blend improved held-out Week 0/1 MAE
-from 15.30 to 14.90 while retaining 84.4% winner accuracy. It includes portal depth
+The full talent variant passed the margin-MAE screen and now leads while preseason
+inputs are active. A September 7, 2026 review found that the earlier capped blend had
+shrunk already-faded inputs a second time. Removing that duplicate shrink improved
+held-out Week 0/1 MAE from 15.30 to 14.77 with 83.9% winner accuracy, and improved
+held-out Week 2 MAE from 15.03 to 14.61. It includes portal depth
 and source-quality-adjusted prior-year PPA from incoming offensive transfers for every team,
 without conference or school identity. Raw preseason rank does not enter either model,
 and poll hype remains diagnostic.
@@ -249,7 +252,7 @@ and poll hype remains diagnostic.
 production card for the eight August 29 games. It reads frozen CFBD returning
 production, 247 talent, portal, and prior-player PPA priors; snapshots available
 DraftKings/FanDuel lines; fits the foundation and preseason controls; and leads with
-the rolling-tested roster-aware capped blend.
+the rolling-tested, phase-faded roster-aware production model.
 
 The dry run established these corrections and diagnostics:
 
@@ -395,8 +398,9 @@ items are:
    backtest, and August 29 production dry run were regenerated from the corrected
    turnover-only rate.
 2. Backfill and rolling-test 2021-2026 preseason challengers — complete. Production
-   is the phase-faded roster-aware blend with a 20% base and 60% rebuild cap; the
-   uncapped profile and Week 1 polls remain challengers. Priors are frozen through 2026.
+   uses the full roster-aware model through Week 4 with a single feature-level fade,
+   then switches exactly to foundation. Week 1 polls remain diagnostic-only. Priors
+   are frozen through 2026.
 3. Build an FCS-to-FBS bridge and transition-specific uncertainty — done.
    `cfb_v2/bridge.R` calibrates against the historical movers and crossover games,
    flags transition games, inflates uncertainty, and blocks high-confidence picks

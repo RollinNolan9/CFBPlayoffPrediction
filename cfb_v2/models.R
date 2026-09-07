@@ -182,7 +182,8 @@ preseason_blend_share <- function(week, config,
     stop("Preseason challenger share must be between zero and one.",
          call. = FALSE)
   }
-  pmax(0, pmin(1, base_share * preseason_feature_weight(week, config)))
+  active <- preseason_feature_weight(week, config) > 0
+  pmax(0, pmin(1, base_share * as.numeric(active)))
 }
 
 preseason_blend_share_for_data <- function(data, config,
@@ -198,21 +199,7 @@ preseason_blend_share_for_data <- function(data, config,
                                   data$game_phase == "postseason")
   }
   week[postseason] <- 99L
-  share <- rep(base_share, length.out = nrow(data))
-  if ("preseason_roster_rebuild_score" %in% names(data)) {
-    score <- as.numeric(data$preseason_roster_rebuild_score)
-    score[!is.finite(score)] <- 0
-    threshold <- config$preseason$rebuild_score_threshold
-    ceiling <- config$preseason$rebuild_score_ceiling
-    if (!is.finite(threshold) || !is.finite(ceiling) || ceiling <= threshold) {
-      stop("Preseason rebuild score ceiling must exceed its threshold.",
-           call. = FALSE)
-    }
-    fraction <- pmax(0, pmin(1, (score - threshold) / (ceiling - threshold)))
-    share <- share +
-      (config$preseason$rebuild_challenger_share_ceiling - share) * fraction
-  }
-  preseason_blend_share(week, config, share)
+  preseason_blend_share(week, config, base_share)
 }
 
 blend_rolling_predictions <- function(data, foundation, preseason, config,
