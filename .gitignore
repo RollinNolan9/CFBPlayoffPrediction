@@ -7,3 +7,5 @@
 cfb_v2/data/*.duckdb*
 cfb_v2/output/
 cfb_v2/cache/
+cfb_v3/data/*.duckdb*
+cfb_v3/output/

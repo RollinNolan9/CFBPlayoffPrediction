@@ -15,6 +15,7 @@
     if (activeFilter === "all") return true;
     if (activeFilter === "provisional") return row.dataset.provisional === "true";
     if (activeFilter === "injury") return row.dataset.injury === "true";
+    if (activeFilter === "primetime") return row.dataset.primetime === "true";
     return row.dataset.status === activeFilter;
   };
 
@@ -50,6 +51,11 @@
   });
   search.addEventListener("input", applyState);
   sort.addEventListener("change", applyState);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      document.querySelectorAll(".row-details[open]").forEach((details) => details.open = false);
+    }
+  });
 
   document.addEventListener("toggle", (event) => {
     if (!(event.target instanceof HTMLDetailsElement) || !event.target.open) return;

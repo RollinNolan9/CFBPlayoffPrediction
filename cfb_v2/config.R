@@ -2,16 +2,17 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
   root <- normalizePath(project_dir, winslash = "/", mustWork = FALSE)
 
   list(
-    version = "2.0.0",
+    version = "3.0.0",
     project_dir = root,
-    data_dir = file.path(root, "cfb_v2", "data"),
-    inbox_dir = file.path(root, "cfb_v2", "inbox"),
-    output_dir = file.path(root, "cfb_v2", "output"),
-    database = file.path(root, "cfb_v2", "data", "cfb_v2.duckdb"),
+    data_dir = file.path(root, "cfb_v3", "data"),
+    inbox_dir = file.path(root, "cfb_v3", "inbox"),
+    output_dir = file.path(root, "cfb_v3", "output"),
+    database = file.path(root, "cfb_v3", "data", "cfb_v3.duckdb"),
     season = as.integer(season),
     article_timezone = "America/New_York",
     article_freeze_weekday = "Friday",
     article_freeze_hour = 13L,
+    omit_thursday = TRUE,
     seed = 20260712L,
     training = list(
       first_full_season = 2021L,
@@ -41,10 +42,8 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
     preseason = list(
       polls = c("AP Top 25", "Coaches Poll"),
       prior_seasons = 2021:2025,
-      challenger_share = 0.20,
+      challenger_share = 1.00,
       rebuild_score_threshold = 0.50,
-      rebuild_score_ceiling = 2.70,
-      rebuild_challenger_share_ceiling = 0.60,
       production_features = c(
         "returning_ppa_pct", "returning_passing_ppa_pct", "returning_usage_pct",
         "retained_quality", "talent_percentile", "replacement_capacity",
@@ -84,6 +83,7 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
       )
     ),
     model = list(
+      ridge_lambda_default = 8,
       ridge_lambda_grid = c(0.5, 2, 8, 32),
       residual_trees = 500L,
       minimum_training_rows = 150L,

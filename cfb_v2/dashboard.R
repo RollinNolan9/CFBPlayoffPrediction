@@ -57,7 +57,10 @@ prepare_dashboard_predictions <- function(data) {
     preseason_expected_margin = NA_real_, home_coach = "", away_coach = "",
     home_coach_history = TRUE, away_coach_history = TRUE,
     preseason_profile = "", snapshot_type = "", model_version = "",
-    fbs_transition = "", transition_game = FALSE
+    fbs_transition = "", transition_game = FALSE, neutral_site = FALSE,
+    kickoff_display = "", broadcast = "", primetime = FALSE,
+    evidence_note = "", availability_note = "", availability_source = "",
+    publication_note = "", market_change_note = "", ats_calibrated = TRUE
   )
   for (name in names(defaults)) data <- dashboard_add_column(data, name, defaults[[name]])
 
@@ -97,7 +100,8 @@ prepare_dashboard_predictions <- function(data) {
     data$home[missing_su], data$away[missing_su]
   )
 
-  data$game_label <- paste(data$away, "at", data$home)
+  data$site_label <- ifelse(!is.na(data$neutral_site) & data$neutral_site, "vs", "at")
+  data$game_label <- paste(data$away, data$site_label, data$home)
   data$market_line <- dashboard_line_text(
     data$home, data$away, data$market_home_spread
   )
@@ -146,9 +150,11 @@ prepare_dashboard_predictions <- function(data) {
   scenario <- tolower(trimws(as.character(data$injury_scenario)))
   data$injury_flag <- grepl("injury", status) |
     (!is.na(scenario) & nzchar(scenario) &
-       !scenario %in% c("most_likely", "none", "no_injuries", "no injuries"))
+       !scenario %in% c("most_likely", "none", "no_injuries", "no injuries")) |
+    nzchar(data$availability_note)
   data$provisional_flag <- tolower(data$reported_confidence) == "provisional" |
-    (!is.na(data$data_flag) & nzchar(data$data_flag) & data$data_flag != "standard")
+    (!is.na(data$data_flag) & nzchar(data$data_flag) & data$data_flag != "standard") |
+    nzchar(data$evidence_note)
   data$market_provider_display <- ifelse(
     nzchar(trimws(data$market_provider)), data$market_provider,
     ifelse(nzchar(trimws(data$line_source)), data$line_source, "Market")
@@ -166,7 +172,9 @@ find_latest_prediction_csv <- function(output_root) {
   files <- list.files(
     output_root, pattern = "\\.csv$", recursive = TRUE, full.names = TRUE
   )
-  files <- files[grepl("predictions|article_|live_", basename(files), ignore.case = TRUE)]
+  files <- files[tolower(basename(files)) == "predictions.csv" |
+                   grepl("^(article|live)_.*\\.csv$", basename(files), ignore.case = TRUE)]
+  files <- files[!grepl("_features\\.csv$", basename(files), ignore.case = TRUE)]
   if (!length(files)) {
     stop("No prediction CSV was found beneath ", output_root, call. = FALSE)
   }

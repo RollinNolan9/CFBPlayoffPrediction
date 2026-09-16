@@ -182,7 +182,8 @@ preseason_blend_share <- function(week, config,
     stop("Preseason challenger share must be between zero and one.",
          call. = FALSE)
   }
-  pmax(0, pmin(1, base_share * preseason_feature_weight(week, config)))
+  active <- preseason_feature_weight(week, config) > 0
+  pmax(0, pmin(1, base_share * as.numeric(active)))
 }
 
 preseason_blend_share_for_data <- function(data, config,
@@ -198,21 +199,7 @@ preseason_blend_share_for_data <- function(data, config,
                                   data$game_phase == "postseason")
   }
   week[postseason] <- 99L
-  share <- rep(base_share, length.out = nrow(data))
-  if ("preseason_roster_rebuild_score" %in% names(data)) {
-    score <- as.numeric(data$preseason_roster_rebuild_score)
-    score[!is.finite(score)] <- 0
-    threshold <- config$preseason$rebuild_score_threshold
-    ceiling <- config$preseason$rebuild_score_ceiling
-    if (!is.finite(threshold) || !is.finite(ceiling) || ceiling <= threshold) {
-      stop("Preseason rebuild score ceiling must exceed its threshold.",
-           call. = FALSE)
-    }
-    fraction <- pmax(0, pmin(1, (score - threshold) / (ceiling - threshold)))
-    share <- share +
-      (config$preseason$rebuild_challenger_share_ceiling - share) * fraction
-  }
-  preseason_blend_share(week, config, share)
+  preseason_blend_share(week, config, base_share)
 }
 
 blend_rolling_predictions <- function(data, foundation, preseason, config,
@@ -263,6 +250,10 @@ blend_rolling_predictions <- function(data, foundation, preseason, config,
   prediction$preseason_challenger_share <- share
   prediction$preseason_adjustment <- expected -
     foundation_prediction$expected_margin
+  # Fit the production calibration on all past OOF errors, but score each
+  # historical season using only calibration information available before it.
+  prediction$margin_sd <- foundation_prediction$margin_sd
+  prediction <- calibrate_rolling_uncertainty(prediction, data, config)
 
   list(
     best_lambda = NA_real_,
@@ -439,6 +430,62 @@ fit_ats_residual_model <- function(validation, minimum_rows = 100L) {
   structure(list(model = fit, training_rows = nrow(data)), class = "cfb_ats_residual")
 }
 
+ats_threshold_rows <- function(data, probability) {
+  margin <- data$actual_margin + data$closing_home_spread
+  data.frame(
+    edge = data$expected_margin + data$closing_home_spread,
+    cover_probability = probability,
+    covered = ifelse(!is.finite(margin) | margin == 0, NA,
+                     ifelse(probability >= .5, margin > 0, margin < 0))
+  )
+}
+
+fit_validated_ats_layer <- function(validation, config) {
+  assert_columns(validation, c("season", "actual_margin", "expected_margin",
+                                "closing_home_spread", "margin_sd"), "ATS validation")
+  keep <- is.finite(validation$actual_margin) & is.finite(validation$expected_margin) &
+    is.finite(validation$closing_home_spread) & is.finite(validation$margin_sd) &
+    validation$actual_margin + validation$closing_home_spread != 0
+  validation <- validation[keep, , drop = FALSE]
+  model <- fit_ats_residual_model(validation)
+  seasons <- sort(unique(validation$season))
+  rows <- lapply(seasons, function(season) {
+    past <- validation[validation$season < season, , drop = FALSE]
+    target <- validation[validation$season == season, , drop = FALSE]
+    fit <- fit_ats_residual_model(past)
+    if (is.null(fit)) return(NULL)
+    probability <- predict_ats_home_cover(fit, target$expected_margin,
+                                           target$closing_home_spread, target$margin_sd)
+    out <- ats_threshold_rows(target, probability)
+    out$season <- season
+    out
+  })
+  rows <- Filter(Negate(is.null), rows)
+  oof <- if (length(rows)) do.call(rbind, rows) else data.frame()
+  if (length(seasons) < 3L || !nrow(oof)) {
+    return(list(model = model, threshold = NULL, predictions = oof))
+  }
+  holdout <- max(seasons)
+  tuning <- oof[oof$season < holdout, , drop = FALSE]
+  test <- oof[oof$season == holdout, , drop = FALSE]
+  if (!nrow(tuning) || !nrow(test)) {
+    return(list(model = model, threshold = NULL, predictions = oof))
+  }
+  threshold <- select_ats_threshold(tuning, config)
+  selected <- abs(test$edge) >= threshold$min_edge &
+    pmax(test$cover_probability, 1-test$cover_probability) >= threshold$min_cover_probability
+  selected[is.na(selected)] <- FALSE
+  threshold$tuning_accuracy <- threshold$accuracy
+  threshold$tuning_picks <- threshold$picks
+  threshold$picks <- sum(selected)
+  threshold$accuracy <- if (any(selected)) mean(test$covered[selected]) else NA_real_
+  threshold$validated <- !is.null(model) && threshold$picks >= config$ats$minimum_validation_picks &&
+    is.finite(threshold$accuracy) && threshold$accuracy >= config$ats$break_even_accuracy
+  threshold$validation_season <- holdout
+  threshold$score <- NULL
+  list(model = model, threshold = threshold, predictions = oof)
+}
+
 predict_ats_home_cover <- function(object, expected_margin, home_spread, margin_sd) {
   fallback <- stats::pnorm((expected_margin + home_spread) / margin_sd)
   if (is.null(object)) return(rep(0.5, length(fallback)))
@@ -612,16 +659,25 @@ rolling_validate_ensemble <- function(data, target = "margin", features = NULL,
   splits <- rolling_season_splits(data)
   if (!length(splits)) stop("Rolling validation requires at least three seasons.", call. = FALSE)
   results <- list()
+  coach_shares <- attr(data, "fold_coach_shares")
   k <- 1L
   for (lambda in config$model$ridge_lambda_grid) {
     for (split in splits) {
       split_features <- if (is.null(fold_features)) features else
         fold_features(split$test_season, features)
+      fold_data <- data
+      if (!is.null(coach_shares)) {
+        share <- coach_shares[[as.character(split$test_season)]]
+        column <- if (share == .70) "coach_rating_70_30_diff" else "coach_rating_65_35_diff"
+        fold_data$coach_rating_diff <- data[[column]]
+      }
+      fold_weights <- weights[split$train]
+      fold_weights <- fold_weights / max(fold_weights)
       model <- fit_cfb_ensemble(
-        data[split$train, , drop = FALSE], target, split_features,
-        weights[split$train], lambda, config, fit_nonlinear
+        fold_data[split$train, , drop = FALSE], target, split_features,
+        fold_weights, lambda, config, fit_nonlinear
       )
-      prediction <- predict(model, data[split$test, , drop = FALSE])
+      prediction <- predict(model, fold_data[split$test, , drop = FALSE])
       actual <- data[[target]][split$test]
       results[[k]] <- data.frame(
         row_id = split$test, test_season = split$test_season, lambda = lambda,
@@ -638,8 +694,38 @@ rolling_validate_ensemble <- function(data, target = "margin", features = NULL,
   predictions <- do.call(rbind, results)
   score <- aggregate(absolute_error ~ lambda, predictions, mean)
   best_lambda <- score$lambda[which.min(score$absolute_error)]
+  # Each outer season selects its penalty using only earlier validation seasons.
+  # The first outer fold uses the predeclared default, without tuning on its outcomes.
+  selected <- lapply(sort(unique(predictions$test_season)), function(season) {
+    earlier <- predictions[predictions$test_season < season, , drop = FALSE]
+    lambda <- config$model$ridge_lambda_default
+    if (!lambda %in% config$model$ridge_lambda_grid) lambda <- config$model$ridge_lambda_grid[1]
+    if (nrow(earlier)) {
+      inner <- aggregate(absolute_error ~ lambda, earlier, mean)
+      lambda <- inner$lambda[which.min(inner$absolute_error)]
+    }
+    predictions[predictions$test_season == season & predictions$lambda == lambda, ]
+  })
+  selected <- do.call(rbind, selected)
+  selected <- calibrate_rolling_uncertainty(selected, data, config)
   list(best_lambda = best_lambda, scores = score,
-       predictions = predictions[predictions$lambda == best_lambda, ])
+       predictions = selected)
+}
+
+calibrate_rolling_uncertainty <- function(predictions, data, config) {
+  phase <- if ("game_phase" %in% names(data)) data$game_phase[predictions$row_id] else
+    game_phase(data$week[predictions$row_id])
+  for (season in sort(unique(predictions$test_season))) {
+    past <- predictions$test_season < season
+    target <- predictions$test_season == season
+    if (!any(past)) next
+    calibration <- fit_error_calibration(predictions$expected_margin[past],
+                                          predictions$actual[past], phase[past], config)
+    calibrated <- apply_error_calibration(calibration,
+                                           predictions$expected_margin[target], phase[target])
+    predictions$margin_sd[target] <- calibrated$margin_sd
+  }
+  predictions
 }
 
 spread_bin_metrics <- function(actual_margin, predicted_margin, market_home_spread = NULL) {

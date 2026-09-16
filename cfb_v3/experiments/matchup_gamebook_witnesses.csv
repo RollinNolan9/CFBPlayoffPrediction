@@ -1,0 +1,4 @@
+game_id,season,source_game_play_number,period,source_clock,down,distance,source_turnover_indicator,source_turnover,source_epa,verified_event,official_source,limit
+401411144,2022,60,2,09:06,3,4,0,0,-1.94488908,Van Dyke sack-fumble recovered by Duke,https://goduke.com/sports/football/stats/2022/miami/boxscore/20473,Matched quarter clock down distance and player; cached text omits the fumble
+401411144,2022,128,4,12:30,3,5,0,0,-1.37478537,Garcia sack-fumble recovered by Duke,https://goduke.com/sports/football/stats/2022/miami/boxscore/20473,Matched quarter clock down distance and player; cached text omits the fumble
+401411144,2022,150,4,02:59,3,7,0,0,0.02000305,Garcia sack-fumble recovered and returned by Duke,https://goduke.com/sports/football/stats/2022/miami/boxscore/20473,Matched quarter drive order down distance and player; official play omits start clock; source EPA is not independently recalculated

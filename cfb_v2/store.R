@@ -157,13 +157,28 @@ v2_init_schema <- function(con) {
             coach_columns[[column]])
     )
   }
+  for (column in c("power_rating", "offense_epa", "defense_epa", "pass_epa", "rush_epa",
+                    "success_rate", "havoc_allowed", "havoc_generated", "turnover_rate_regressed")) {
+    DBI::dbExecute(con, paste("ALTER TABLE team_week_features ADD COLUMN IF NOT EXISTS",
+                              column, "DOUBLE"))
+  }
+  for (column in c("games_played", "model_week")) {
+    DBI::dbExecute(con, paste("ALTER TABLE team_week_features ADD COLUMN IF NOT EXISTS",
+                              column, "INTEGER"))
+  }
+  for (column in c("model_week", "coach_lookup_week")) {
+    DBI::dbExecute(con, paste("ALTER TABLE game_schedule ADD COLUMN IF NOT EXISTS",
+                              column, "INTEGER"))
+  }
+  DBI::dbExecute(con, "ALTER TABLE line_snapshots ADD COLUMN IF NOT EXISTS opening_home_spread DOUBLE")
+  DBI::dbExecute(con, "ALTER TABLE prediction_snapshots ADD COLUMN IF NOT EXISTS data_flag VARCHAR")
   invisible(con)
 }
 
 v2_foundation_run_id <- function(seasons, created_at = Sys.time()) {
   paste0(
     "foundation_", min(seasons), "_", max(seasons), "_",
-    format(as.POSIXct(created_at, tz = "UTC"), "%Y%m%dT%H%M%SZ")
+    format(as.POSIXct(created_at), "%Y%m%dT%H%M%SZ", tz = "UTC")
   )
 }
 
@@ -218,7 +233,7 @@ v2_persist_foundation <- function(result, config, created_at = Sys.time()) {
 }
 
 v2_run_id <- function(run_type, season, week, as_of = Sys.time()) {
-  clean_time <- format(as.POSIXct(as_of, tz = "UTC"), "%Y%m%dT%H%M%SZ")
+  clean_time <- format(as.POSIXct(as_of), "%Y%m%dT%H%M%SZ", tz = "UTC")
   paste(run_type, season, sprintf("w%02d", as.integer(week)), clean_time, sep = "_")
 }
 

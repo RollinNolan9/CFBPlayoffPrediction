@@ -14,7 +14,7 @@ read_csv_if_present <- function(path, required = FALSE) {
     return(NULL)
   }
   utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE,
-                  na.strings = c("", "NA", "N/A", "null"))
+                  na.strings = c("", "NA", "N/A", "null"), encoding = "UTF-8")
 }
 
 normalize_public_schedule <- function(raw) {
@@ -25,7 +25,7 @@ normalize_public_schedule <- function(raw) {
   week <- first_existing_column(raw, c("week"), label = "week")
   kickoff <- first_existing_column(raw, c("kickoff", "start_date", "startDate"), FALSE)
   neutral <- first_existing_column(raw, c("neutral_site", "neutralSite"), FALSE)
-  season_type <- first_existing_column(raw, c("season_type", "seasonType"), FALSE)
+  season_type <- first_existing_column(raw, c("postseason_type", "season_type", "seasonType"), FALSE)
   home_points <- first_existing_column(raw, c("home_points", "home_score", "homePoints"), FALSE)
   away_points <- first_existing_column(raw, c("away_points", "away_score", "awayPoints"), FALSE)
 
@@ -49,6 +49,9 @@ normalize_public_schedule <- function(raw) {
   out$postseason_type[
     out$postseason_type %in% c("postseason") & !out$is_cfp & !out$conference_championship
   ] <- "bowl"
+  for (column in intersect(c("model_week", "coach_lookup_week"), names(raw))) {
+    out[[column]] <- as.integer(raw[[column]])
+  }
   standardize_schedule(out)
 }
 

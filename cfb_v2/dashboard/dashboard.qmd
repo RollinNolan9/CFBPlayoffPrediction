@@ -65,12 +65,16 @@ metric_item <- function(value, label, tone = "neutral") {
   )
 }
 
-pick_board <- function(data, limit = 8L, empty = "No selections") {
-  data <- data[order(data$pick_edge, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
+pick_board <- function(data, limit = 8L, empty = "No selections", title = "Selections", sort_edge = TRUE) {
+  if (sort_edge) data <- data[order(data$pick_edge, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
   data <- utils::head(data, limit)
-  if (!nrow(data)) return(htmltools::div(class = "empty-state compact-empty", empty))
+  if (!nrow(data)) return(htmltools::div(class = "board-content",
+    htmltools::tags$h3(class = "section-title", title),
+    htmltools::div(class = "empty-state compact-empty", empty)))
   htmltools::div(
-    class = "pick-list",
+    class = "board-content",
+    htmltools::tags$h3(class = "section-title", title),
+    htmltools::div(class = "pick-list",
     lapply(seq_len(nrow(data)), function(i) {
       row <- data[i, ]
       htmltools::div(
@@ -89,7 +93,7 @@ pick_board <- function(data, limit = 8L, empty = "No selections") {
           )
         )
       )
-    })
+    }))
   )
 }
 
@@ -124,7 +128,14 @@ details_cell <- function(row) {
       ),
       htmltools::div(
         htmltools::strong("Availability"),
-        htmltools::p(scenario)
+        htmltools::p(if (nzchar(row$availability_note)) row$availability_note else
+          if (scenario == "most_likely") "No player-specific adjustment recorded; not a clean bill of health." else scenario),
+        if (nzchar(row$availability_source)) htmltools::tags$a(href = row$availability_source, "Reporting source")
+      ),
+      htmltools::div(
+        htmltools::strong("Evidence and line movement"),
+        htmltools::p(if (nzchar(row$evidence_note)) row$evidence_note else row$data_flag),
+        htmltools::p(row$market_change_note)
       ),
       htmltools::div(
         htmltools::strong("Components"),
@@ -172,14 +183,18 @@ picks_table <- function(data) {
         `data-status` = row$status_group,
         `data-provisional` = provisional_value,
         `data-injury` = injury_value,
+        `data-primetime` = ifelse(isTRUE(row$primetime), "true", "false"),
         `data-search` = tolower(paste(row$game_label, row$ats_pick_line, row$data_flag)),
         `data-edge` = ifelse(is.finite(row$pick_edge), sprintf("%.6f", row$pick_edge), "-999"),
         `data-order` = row$row_order,
         htmltools::tags$td(
           class = "game-cell",
           htmltools::span(class = "away-team", row$away),
-          htmltools::span(class = "at-label", "at"),
-          htmltools::span(class = "home-team", row$home)
+          htmltools::span(class = "at-label", row$site_label),
+          htmltools::span(class = "home-team", row$home),
+          htmltools::span(class = "game-time", paste(row$kickoff_display, row$broadcast)),
+          if (nzchar(row$evidence_note)) htmltools::span(class = "game-warning", "Limited current FBS sample"),
+          if (nzchar(row$availability_note)) htmltools::span(class = "game-warning", "Availability review")
         ),
         htmltools::tags$td(class = "line-cell", row$market_line),
         htmltools::tags$td(class = "line-cell model-cell", row$model_line),
@@ -187,8 +202,8 @@ picks_table <- function(data) {
         htmltools::tags$td(edge_meter(row$pick_edge)),
         htmltools::tags$td(
           class = "probability-cell",
-          ifelse(is.finite(row$pick_cover_probability),
-                 sprintf("%.1f%%", 100 * row$pick_cover_probability), "-")
+          ifelse(!isTRUE(row$ats_calibrated), "Unvalidated", ifelse(is.finite(row$pick_cover_probability),
+                 sprintf("%.1f%%", 100 * row$pick_cover_probability), "-"))
         ),
         htmltools::tags$td(row$straight_up_pick),
         htmltools::tags$td(
@@ -209,12 +224,14 @@ picks_table <- function(data) {
   )
 }
 
-issue_table <- function(data) {
+issue_table <- function(data, title = "Data Review") {
   if (!nrow(data)) {
     return(htmltools::div(class = "empty-state", "No flagged games in this snapshot."))
   }
   htmltools::div(
-    class = "issue-list",
+    class = "board-content",
+    htmltools::tags$h3(class = "section-title", title),
+    htmltools::div(class = "issue-list",
     lapply(seq_len(nrow(data)), function(i) {
       row <- data[i, ]
       htmltools::div(
@@ -226,17 +243,18 @@ issue_table <- function(data) {
         htmltools::div(
           class = "issue-detail",
           htmltools::span(row$data_flag),
-          htmltools::span(row$injury_scenario)
+          htmltools::span(row$evidence_note),
+          htmltools::span(if (nzchar(row$availability_note)) row$availability_note else row$injury_scenario)
         )
       )
-    })
+    }))
   )
 }
 ```
 
 # Slate
 
-## Row {height=118}
+## Row {height=180}
 
 ```{r}
 htmltools::div(
@@ -245,7 +263,8 @@ htmltools::div(
     class = "snapshot-title",
     htmltools::span(class = "snapshot-kicker", paste(season_label, "Week", week_label)),
     htmltools::strong("Model and market card"),
-    htmltools::span(class = "snapshot-meta", paste(provider_label, "snapshot", snapshot_label))
+    htmltools::span(class = "snapshot-meta", paste(provider_label, "snapshot", snapshot_label)),
+    if (nzchar(picks$publication_note[1])) htmltools::span(class = "publication-note", picks$publication_note[1])
   ),
   htmltools::div(
     class = "metric-strip",
@@ -253,29 +272,31 @@ htmltools::div(
     metric_item(nrow(article_card), "ATS sides", "positive"),
     metric_item(nrow(official), "Validated bets", "neutral"),
     metric_item(nrow(reviews), "Review flags", "warning"),
-    metric_item(nrow(injury_rows), "Injury flags", if (nrow(injury_rows)) "danger" else "neutral")
+    metric_item(nrow(provisional), "Data reviews", if (nrow(provisional)) "warning" else "neutral")
   )
 )
 ```
 
-## Row {height=420}
+## Row {height=540}
 
 ### Article Card
 
 ```{r}
-pick_board(article_card, 12L, "No article selections")
+pick_board(article_card, 8L, "No article selections", "Largest Point Gaps")
 ```
 
-### Validated Best Bets
+### Evening Card
 
 ```{r}
-pick_board(official, 8L, "No selection has cleared the historical profitability gate")
+if (any(picks$primetime, na.rm = TRUE)) {
+  pick_board(picks[picks$primetime, ], 8L, title = "Evening Kickoffs", sort_edge = FALSE)
+} else pick_board(official, 8L, "No validated best bets in this snapshot", "Validation Status")
 ```
 
 ### Review Board
 
 ```{r}
-pick_board(reviews, 8L, "No review selections")
+pick_board(reviews, 8L, "No review selections", "Large Spread and Review")
 ```
 
 ## Row {height=780}
@@ -283,11 +304,12 @@ pick_board(reviews, 8L, "No review selections")
 ### Full Card
 
 ```{r}
-htmltools::div(
+htmltools::tagList(htmltools::tags$h3(class = "section-title", "Full Card"), htmltools::div(
   class = "table-toolbar",
   htmltools::div(
     class = "filter-group", role = "group", `aria-label` = "Filter picks",
     htmltools::tags$button(type = "button", class = "filter-button active", `data-filter` = "all", `aria-pressed` = "true", "All"),
+    if (any(picks$primetime, na.rm = TRUE)) htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "primetime", `aria-pressed` = "false", "Primetime"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "official", `aria-pressed` = "false", "Validated"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "article", `aria-pressed` = "false", "Article picks"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "review", `aria-pressed` = "false", "Review"),
@@ -308,7 +330,7 @@ htmltools::div(
     ),
     htmltools::span(id = "visible-count", class = "visible-count", paste(nrow(picks), "games"))
   )
-)
+))
 picks_table(picks)
 ```
 
@@ -422,7 +444,7 @@ htmltools::div(
 ```{r}
 htmltools::div(
   class = "availability-strip",
-  metric_item(nrow(injury_rows), "Injury scenarios", if (nrow(injury_rows)) "danger" else "positive"),
+  metric_item(nrow(injury_rows), "Availability flags", if (nrow(injury_rows)) "danger" else "neutral"),
   metric_item(nrow(provisional), "Provisional games", if (nrow(provisional)) "warning" else "positive"),
   metric_item(sum(picks$data_flag != "standard", na.rm = TRUE), "Data flags", "muted")
 )
@@ -430,7 +452,7 @@ htmltools::div(
 
 ## Row {height=520}
 
-### Injury Scenarios
+### Availability Notes
 
 ```{r}
 if (!nrow(injury_rows)) {
@@ -439,13 +461,13 @@ if (!nrow(injury_rows)) {
     htmltools::strong("No injury adjustments in this snapshot"),
     htmltools::span("Questionable high-usage players will appear here with in/out margins.")
   )
-} else issue_table(injury_rows)
+} else issue_table(injury_rows, "Availability Notes")
 ```
 
 ### Provisional and Data Review
 
 ```{r}
-issue_table(provisional)
+issue_table(provisional, "Provisional and Data Review")
 ```
 
 ## Row {height=520}
@@ -458,7 +480,9 @@ if (!nrow(coach_rows)) {
   htmltools::div(class = "empty-state", "Coach assignments are not included in this snapshot.")
 } else {
   htmltools::div(
-    class = "coach-grid",
+    class = "board-content",
+    htmltools::tags$h3(class = "section-title", "Coach Alignment"),
+    htmltools::div(class = "coach-grid",
     lapply(seq_len(nrow(coach_rows)), function(i) {
       row <- coach_rows[i, ]
       history_flag <- !isTRUE(row$home_coach_history) || !isTRUE(row$away_coach_history)
@@ -468,7 +492,7 @@ if (!nrow(coach_rows)) {
         htmltools::span(paste(row$away_coach, "|", row$home_coach)),
         if (history_flag) htmltools::span(class = "coach-flag", "History review")
       )
-    })
+    }))
   )
 }
 ```
