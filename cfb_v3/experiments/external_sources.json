@@ -1,0 +1,7 @@
+{
+  "season": 2026,
+  "sp_url": "https://docs.google.com/spreadsheets/d/1vwoVl-Dxy0es87Z9I1RTvFzr72Lb1fAkREfbLxbK-eg/export?format=xlsx",
+  "sagarin_url": "https://sagarin.com/sports/cfsend.htm?lv=true",
+  "fpi_url": "https://api.collegefootballdata.com/ratings/fpi",
+  "rating_to_margin_home_advantage": 2.4
+}

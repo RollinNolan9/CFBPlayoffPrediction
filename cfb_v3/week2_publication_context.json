@@ -1,0 +1,39 @@
+{
+  "checked_on": "2026-09-11",
+  "sources": {
+    "espn": "https://espnpressroom.com/press-release/espns-week-2-slate-powered-by-no-1-ohio-state-at-no-4-texas-13-ranked-teams-and-88-games-across-espn-networks/",
+    "kansas": "https://kuathletics.com/game-center/20530",
+    "nebraska": "https://huskers.com/news/2026/09/7/huskers-welcome-bowling-green-for-week-two",
+    "ucla": "https://uclabruins.com/news/2026/09/10/gameday-info-ucla-vs-san-diego-state",
+    "oregon_state": "https://osubeavers.com/news/2026/9/7/football-beavers-make-their-2026-reser-debut-saturday-versus-texas-tech",
+    "iowa": "https://hawkeyesports.com/footballgameday",
+    "air_force": "https://goairforcefalcons.com/news/2026/9/7/football-game-2-air-force-vs-north-dakota-state",
+    "fresno": "https://gobulldogs.com/news/2026/9/7/football-bulldogs-host-sacramento-state-for-2026-home-opener",
+    "usc": "https://usctrojans.com/news/2026/5/27/kickoff-times-and-tv-networks-set-for-first-four-usc-football-games-of-2026-season",
+    "hawaii": "https://hawaiiathletics.com/coverage"
+  },
+  "games": [
+    {"game_id":"401858214","broadcast":"ESPN2","source":"espn","summary":"The saved power and talent contributions both favor Rutgers, producing an outright upset projection. The quarterback change makes that unadjusted margin especially fragile.","availability_note":"AJ Surace will start for Rutgers after Dylan Lonergan's injury (Sept 8 reporting). No player-specific adjustment is included in this frozen margin.","availability_source":"https://fieldlevelmedia.com/ncaaf/rutgers-to-start-qb-aj-surace-in-place-of-injured-dylan-lonergan/"},
+    {"game_id":"401856678","broadcast":"FOX","source":"kansas","summary":"Power and talent are the strongest contributors toward Missouri. The injury situation on both sides is a material counterargument, not a reason to invent a precise point adjustment.","availability_note":"Missouri: Ahmad Hardy reported out; Malae Fonoti out for the season. Kansas: Bam Crouch doubtful and Cam Pickett a game-time decision. These reports are not quantified in the frozen projection.","availability_source":"https://www.aol.com/articles/missouri-footballs-ahmad-hardy-cayden-170533000.html","additional_source":"https://sports.yahoo.com/articles/kansas-football-injury-latest-bam-130007462.html"},
+    {"game_id":"401856681","broadcast":"ESPN","source":"espn","summary":"Power and talent favor Tennessee, while the portal-offense contribution pulls toward Georgia Tech. The model sees a Volunteers win, but a much closer game than the market does."},
+    {"game_id":"401858441","broadcast":"FS1","source":"nebraska","summary":"Nebraska's talent, power and portal-offense contributions all point toward a comfortable win. The moved line leaves very little cushion; a big projected win is not automatically a good big-spread pick."},
+    {"game_id":"401862707","broadcast":"ESPN+","source":"espn","summary":"The main contributions favor Tulsa outright, but the combined margin is well short of the market handicap. Sam Houston is a keep-it-close selection, not the projected winner."},
+    {"game_id":"401864575","broadcast":"ESPN+","source":"espn","summary":"Power and talent favor Tulane; coaching and replacement-burden contributions offset part of that advantage. The remaining spread disagreement is small enough that ordinary projection error can overwhelm it."},
+    {"game_id":"401869955","broadcast":"ESPN+","source":"espn","summary":"Power and coaching favor Kennesaw State, while the talent contribution favors Georgia State. This is a useful reminder that the pick is not simply taking the more talented roster."},
+    {"game_id":"401871045","broadcast":"ESPN+","source":"espn","summary":"Power and portal offense pull toward Marshall, with success-rate evidence pushing back. The model has the home favorite clearing the line, subject to the early-season sample warning."},
+    {"game_id":"401858443","broadcast":"BTN","source":"ucla","summary":"UCLA's talent advantage is partly offset by power and replacement-burden contributions. The model still picks UCLA outright, but San Diego State gets enough points to be the ATS side."},
+    {"game_id":"401856682","broadcast":"ABC","source":"espn","summary":"Power and success-rate contributions favor Ohio State; the preseason-prior contribution pushes toward Texas. The result is an Ohio State upset projection, not just an underdog cover."},
+    {"game_id":"401856783","broadcast":"CBS","source":"oregon_state","summary":"Power and talent strongly favor Texas Tech. Oregon State is strictly a spread selection: the model still expects a decisive Tech win, and the large-spread review remains important."},
+    {"game_id":"401856788","broadcast":"NBC","source":"iowa","summary":"Power, talent and coaching favor Iowa, while portal offense partially offsets them. Iowa is the model's SU and ATS side; that does not eliminate rivalry-game or small-sample uncertainty."},
+    {"game_id":"401858219","broadcast":"ACCN","source":"espn","summary":"Talent and power favor Clemson, but success-rate and preseason-prior contributions reduce the gap. Georgia Southern is the ATS side, with only a slim cushion after the line move."},
+    {"game_id":"401862703","broadcast":"ESPNU","source":"espn","summary":"The power contribution strongly favors Navy, while talent and portal offense push toward Florida Atlantic. That disagreement produces a narrow FAU upset projection and makes it a particularly fragile read."},
+    {"game_id":"401867796","broadcast":"SEC Network+","source":"espn","summary":"LSU's talent and portal-offense contributions drive a large projected win; replacement burden pushes back. Louisiana Tech is the spread side, not an upset call. Large-spread uncertainty remains."},
+    {"game_id":"401856671","broadcast":"SEC Network","source":"espn","summary":"Talent, power and portal offense favor Auburn, with replacement burden tempering the margin. Southern Miss gets a sizable cushion versus that projection, but a large discrepancy is not validated ATS skill."},
+    {"game_id":"401856676","broadcast":"ESPN2","source":"espn","summary":"Power and talent drive an enormous Ole Miss margin. Charlotte is still the ATS side because the market asks for even more; late scoring and substitutions can decide a spread this large."},
+    {"game_id":"401864502","broadcast":"FS1","source":"air_force","summary":"Power and coaching contributions favor North Dakota State. Its FBS-transition flag makes the comparison less reliable than an established FBS matchup, despite the model taking NDSU outright and ATS."},
+    {"game_id":"401856670","broadcast":"ESPN","source":"espn","summary":"Power favors Utah while talent pushes toward Arkansas. The final margin is almost exactly the market number: this is a requested model selection with effectively no meaningful point cushion."},
+    {"game_id":"401860883","broadcast":"CBS Sports Network","source":"fresno","summary":"The projection favors Fresno State outright but is far tighter than the market. Sacramento State carries an FBS-transition flag; the unusually large gap should invite scrutiny, not extra confidence."},
+    {"game_id":"401858445","broadcast":"BTN","source":"usc","summary":"Power, talent and success-rate contributions all favor USC. The model lays the points, but the handicap remains large enough for substitution patterns and late scores to matter."},
+    {"game_id":"401864578","broadcast":"K5 / MW+","source":"hawaii","kickoff_override":"2026-09-13T04:00:00Z","summary":"Power and talent favor Hawaii, with portal offense pulling the other way. The model projects a two-score win. This is Saturday evening in Hawaii, but midnight Sunday in Eastern time."}
+  ]
+}

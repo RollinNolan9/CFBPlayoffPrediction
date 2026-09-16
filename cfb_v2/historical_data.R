@@ -39,7 +39,6 @@ compact_cfb_pbp <- function(raw) {
 }
 
 load_compact_pbp_season <- function(season, config, refresh = FALSE) {
-  require_v2_package("cfbfastR")
   cache_dir <- file.path(config$project_dir, "cfb_v2", "cache", "pbp")
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
   path <- file.path(cache_dir, paste0("pbp_", season, "_compact.rds"))
@@ -56,6 +55,7 @@ load_cfbd_schedule_season <- function(season, config, refresh = FALSE,
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
   path <- file.path(cache_dir, paste0("cfbd_schedule_", season, ".rds"))
   if (!refresh && file.exists(path)) return(readRDS(path))
+  require_v2_package("cfbfastR")
   require_v2_package("cfbfastR")
   if (!cfbfastR::has_cfbd_key()) {
     message(
@@ -93,11 +93,16 @@ load_cfbd_schedule_season <- function(season, config, refresh = FALSE,
 }
 
 load_cfbd_fbs_teams_season <- function(season, config, refresh = FALSE) {
-  require_v2_package("cfbfastR")
   cache_dir <- file.path(config$project_dir, "cfb_v2", "cache", "teams")
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
   path <- file.path(cache_dir, paste0("cfbd_fbs_teams_", season, ".rds"))
-  if (!refresh && file.exists(path)) return(readRDS(path))
+  if (!refresh && file.exists(path)) {
+    cached <- readRDS(path)
+    cached$team <- canonical_team(cached$team)
+    assert_unique_keys(cached, c("team", "season"), "cached CFBD FBS membership")
+    return(cached)
+  }
+  require_v2_package("cfbfastR")
   if (!cfbfastR::has_cfbd_key()) return(NULL)
   raw <- as.data.frame(
     cfbfastR::cfbd_team_info(only_fbs = TRUE, year = as.integer(season)),
@@ -123,7 +128,6 @@ load_cfbd_fbs_teams_season <- function(season, config, refresh = FALSE) {
 
 load_cfbd_coach_seasons <- function(min_year, max_year, config,
                                     aliases_path = NULL, refresh = FALSE) {
-  require_v2_package("cfbfastR")
   cache_dir <- file.path(config$project_dir, "cfb_v2", "cache", "coaches")
   dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
   path <- file.path(
@@ -137,6 +141,7 @@ load_cfbd_coach_seasons <- function(min_year, max_year, config,
     cached <- readRDS(path)
     if (all(required_cache_columns %in% names(cached))) return(cached)
   }
+  require_v2_package("cfbfastR")
   if (!cfbfastR::has_cfbd_key()) return(NULL)
   raw <- as.data.frame(
     cfbfastR::cfbd_coaches(min_year = as.integer(min_year),
@@ -708,7 +713,24 @@ aggregate_mean_metric <- function(data, group_columns, value, output_name) {
   out
 }
 
-build_team_game_efficiencies_v2 <- function(pbp, games) {
+turnover_prior_as_of <- function(team_games, games, season, default = 0.02) {
+  required <- c("game_id", "season", "turnover_lost_rate", "scrimmage_plays")
+  if (is.null(team_games) || !nrow(team_games)) return(default)
+  assert_columns(team_games, required, "turnover history")
+  index <- match(team_games$game_id, games$game_id)
+  if (anyNA(index)) stop("Missing game metadata for turnover history.", call. = FALSE)
+  keep <- team_games$season < season & raw_history_eligible(games[index, , drop = FALSE]) &
+    is.finite(team_games$turnover_lost_rate) & is.finite(team_games$scrimmage_plays)
+  if (!any(keep)) return(default)
+  weighted_mean_safe(team_games$turnover_lost_rate[keep], team_games$scrimmage_plays[keep])
+}
+
+build_team_game_efficiencies_v2 <- function(pbp, games, turnover_prior = 0.02) {
+  if (length(turnover_prior) != 1L || !is.finite(turnover_prior) ||
+      turnover_prior < 0 || turnover_prior > 1) {
+    stop("Turnover prior must be a fixed pre-season rate between zero and one.",
+         call. = FALSE)
+  }
   plays <- historical_competitive_plays(pbp)
   plays$epa <- as.numeric(plays$EPA)
   plays$is_scrimmage <- as.logical(plays$rush == 1 | plays$pass == 1 | plays$sack == 1 |
@@ -767,8 +789,6 @@ build_team_game_efficiencies_v2 <- function(pbp, games) {
                                havoc_allowed, havoc_generated, turnovers_lost,
                                play_count)))
   output$defense_epa <- -output$epa_allowed
-  turnover_prior <- mean(output$turnover_lost_rate, na.rm = TRUE)
-  if (!is.finite(turnover_prior)) turnover_prior <- 0
   output$turnover_rate_regressed <- regress_unstable_rate(
     output$turnover_lost_rate, output$scrimmage_plays,
     turnover_prior, prior_opportunities = 80
@@ -823,10 +843,61 @@ build_team_game_efficiencies_v2 <- function(pbp, games) {
   output[order(output$team, output$season, output$kickoff, output$game_id), ]
 }
 
+power_history_weights <- function(past, season, phase_week, config) {
+  current <- past$season == season
+  games_played <- if (any(current)) {
+    stats::median(table(c(past$home[current], past$away[current])))
+  } else 0
+  history_weight <- prior_season_feature_weight(phase_week, games_played, config)
+  age <- season - past$season
+  weights <- ifelse(current, 1, history_weight * 0.35^(age - 1L))
+  bowl <- past$postseason_type %in% c("bowl", "non_cfp_bowl") & !past$is_cfp
+  weights[bowl] <- 0
+  fcs <- is.na(past$home_level) | is.na(past$away_level) |
+    past$home_level != "fbs" | past$away_level != "fbs"
+  weights[fcs] <- weights[fcs] * config$training$fcs_rating_weight
+  if (phase_week >= config$phase$prior_season_cap_after_week) {
+    cap <- config$phase$prior_season_max_weight
+    if (!is.finite(cap) || cap < 0 || cap >= 1) stop("History cap must be in [0, 1).")
+    historical_mass <- sum(weights[!current])
+    allowed_mass <- sum(weights[current]) * cap / (1 - cap)
+    if (historical_mass > allowed_mass) {
+      weights[!current] <- weights[!current] * allowed_mass / historical_mass
+    }
+  }
+  weights
+}
+
+power_rating_for_week <- function(games, season, model_week, phase_week, config) {
+  keep <- is.finite(games$margin) & !is.na(games$completed) & games$completed &
+      is.finite(games$model_week) &
+      games$season >= season - 3L & games$season <= season &
+      (games$season < season | games$model_week < model_week)
+  keep[is.na(keep)] <- FALSE
+  past <- games[keep, , drop = FALSE]
+  if (!nrow(past)) return(data.frame())
+  weights <- power_history_weights(past, season, phase_week, config)
+  ratings <- opponent_adjusted_rating(past, "margin", ridge = 10,
+                                       home_field = 2.4, weights = weights)
+  names(ratings)[names(ratings) == "rating"] <- "power_rating"
+  ratings$season <- season
+  ratings$model_week <- model_week
+  current <- past[past$season == season, , drop = FALSE]
+  ratings$games_available <- vapply(ratings$team, function(team) {
+    sum(current$home == team | current$away == team)
+  }, integer(1))
+  ratings$historical_weight_share <- if (sum(weights) > 0) {
+    sum(weights[past$season < season]) / sum(weights)
+  } else 0
+  ratings
+}
+
 power_rating_snapshots <- function(games, config) {
   games <- games[is.finite(games$margin) & as.logical(games$completed), , drop = FALSE]
   assert_columns(games, c("season", "week", "model_week"), "historical games")
   combinations <- unique(games[c("season", "model_week")])
+  combinations <- combinations[is.finite(combinations$season) &
+                                 is.finite(combinations$model_week), , drop = FALSE]
   combinations <- combinations[
     order(combinations$season, combinations$model_week), , drop = FALSE
   ]
@@ -835,43 +906,17 @@ power_rating_snapshots <- function(games, config) {
   for (i in seq_len(nrow(combinations))) {
     season <- combinations$season[i]
     model_week <- combinations$model_week[i]
-    past <- games[
-      games$season <= season & games$season >= season - 3L &
-        (games$season < season | games$model_week < model_week), , drop = FALSE
-    ]
-    if (!nrow(past)) next
-    current_games <- past[past$season == season, , drop = FALSE]
-    games_played <- if (nrow(current_games)) {
-      stats::median(table(c(current_games$home, current_games$away)))
-    } else 0
     target_games <- games[
-      games$season == season & games$model_week == model_week, , drop = FALSE
+      games$season == season & !is.na(games$model_week) &
+        games$model_week == model_week, , drop = FALSE
     ]
     phase_week <- if (any(target_games$postseason_type != "regular", na.rm = TRUE)) {
       99L
     } else if (any(is.finite(target_games$week))) {
       max(target_games$week, na.rm = TRUE)
     } else 99L
-    history_weight <- prior_season_feature_weight(phase_week, games_played, config)
-    age <- season - past$season
-    weights <- ifelse(age == 0, 1,
-                      ifelse(age == 1, history_weight,
-                             history_weight * 0.35^(age - 1L)))
-    non_cfp_bowl <- past$postseason_type == "bowl" & !past$is_cfp
-    weights[non_cfp_bowl] <- 0
-    fcs <- is.na(past$home_level) | is.na(past$away_level) |
-      past$home_level != "fbs" | past$away_level != "fbs"
-    weights[fcs] <- weights[fcs] * config$training$fcs_rating_weight
-    ratings <- opponent_adjusted_rating(
-      past, value_col = "margin", ridge = 10,
-      home_field = 2.4, weights = weights
-    )
+    ratings <- power_rating_for_week(games, season, model_week, phase_week, config)
     if (!nrow(ratings)) next
-    ratings$season <- season
-    ratings$model_week <- model_week
-    ratings$games_available <- vapply(ratings$team, function(team) {
-      sum(current_games$home == team | current_games$away == team)
-    }, integer(1))
     rows[[k]] <- ratings
     k <- k + 1L
   }
@@ -893,7 +938,7 @@ tail_mean_or_na <- function(x, n) {
 
 blend_current_with_history <- function(current, history, week, config) {
   preseason_weight <- preseason_feature_weight(week, config)
-  if (!is.finite(history)) history <- 0
+  if (!is.finite(history)) return(if (is.finite(current)) current else NA_real_)
   if (!is.finite(current)) current <- history
   (1 - preseason_weight) * current + preseason_weight * history
 }
@@ -914,7 +959,8 @@ team_home_field_as_of <- function(team, season, week, kickoff, games,
   default_hfa + shrink * (raw - default_hfa)
 }
 
-build_team_pregame_snapshots <- function(team_games, games, power_ratings, config) {
+build_team_pregame_snapshots <- function(team_games, games, power_ratings, config,
+                                         transition_priors = NULL) {
   assert_columns(team_games,
                  c("game_id", "team", "season", "week", "model_week", "kickoff",
                    "offense_epa", "defense_epa", "net_efficiency"), "team_games")
@@ -948,6 +994,7 @@ build_team_pregame_snapshots <- function(team_games, games, power_ratings, confi
     x <- x[order(x$season, x$model_week, x$kickoff, x$game_id), , drop = FALSE]
     for (i in seq_len(nrow(x))) {
       current_games <- x$season == x$season[i] & x$model_week < x$model_week[i]
+      current_games[is.na(current_games)] <- FALSE
       current <- current_games & x$feature_eligible
       prior <- x$season == x$season[i] - 1L & x$feature_eligible
       trailing <- x$season < x$season[i] & x$season >= x$season[i] - 3L &
@@ -955,6 +1002,14 @@ build_team_pregame_snapshots <- function(team_games, games, power_ratings, confi
       current_values <- x$net_efficiency[current]
       prior_value <- mean_or_na(x$net_efficiency[prior])
       trailing_value <- mean_or_na(x$net_efficiency[trailing])
+      bridge_row <- if (!is.null(transition_priors) && nrow(transition_priors)) {
+        transition_priors[transition_priors$team == team &
+                            transition_priors$season == x$season[i], , drop = FALSE]
+      } else data.frame()
+      if (nrow(bridge_row)) {
+        if (!is.finite(prior_value)) prior_value <- bridge_row$net_efficiency[1]
+        if (!is.finite(trailing_value)) trailing_value <- bridge_row$net_efficiency[1]
+      }
       preseason_prior <- if (is.finite(prior_value) && is.finite(trailing_value)) {
         0.65 * prior_value + 0.35 * trailing_value
       } else if (is.finite(prior_value)) prior_value else trailing_value
@@ -976,6 +1031,9 @@ build_team_pregame_snapshots <- function(team_games, games, power_ratings, confi
       for (metric in metric_names) {
         current_metric <- mean_or_na(x[[metric]][current])
         prior_metric <- mean_or_na(x[[metric]][prior])
+        if (!is.finite(prior_metric) && nrow(bridge_row) && metric %in% names(bridge_row)) {
+          prior_metric <- bridge_row[[metric]][1]
+        }
         row[[metric]] <- blend_current_with_history(
           current_metric, prior_metric, phase_week, config
         )
@@ -1024,42 +1082,7 @@ build_historical_matchup_table <- function(games, snapshots, config) {
   table <- merge(table, away, by = "game_id", all.x = TRUE, sort = FALSE)
   table <- table[match(games$game_id, table$game_id), , drop = FALSE]
 
-  base_metrics <- c(
-    "power_rating", "offense_epa", "defense_epa", "special_teams_rating",
-    "pass_epa", "rush_epa", "success_rate", "havoc_allowed", "havoc_generated",
-    "turnover_rate_regressed", "recent_3", "recent_6", "season_to_date",
-    "prior_season", "trailing_3yr", "preseason_prior", "qb_continuity",
-    "roster_continuity", "staff_continuity", "games_played", "source_games"
-  )
-  for (metric in base_metrics) {
-    home_name <- paste0("home_", metric)
-    away_name <- paste0("away_", metric)
-    if (all(c(home_name, away_name) %in% names(table))) {
-      table[[paste0(metric, "_diff")]] <- table[[home_name]] - table[[away_name]]
-    }
-  }
-  table$phase_week <- ifelse(table$postseason_type == "regular", table$week, 99L)
-  table$game_phase <- ifelse(
-    table$postseason_type == "regular", game_phase(table$week), "postseason"
-  )
-  table$preseason_weight <- preseason_feature_weight(table$phase_week, config)
-  table$prior_history_weight <- rowMeans(cbind(
-    prior_season_feature_weight(table$phase_week, table$home_games_played, config),
-    prior_season_feature_weight(table$phase_week, table$away_games_played, config)
-  ))
-  for (feature in intersect(
-    c("preseason_prior_diff", "qb_continuity_diff", "roster_continuity_diff",
-      "staff_continuity_diff"), names(table)
-  )) table[[feature]] <- table[[feature]] * table$preseason_weight
-  for (feature in intersect(c("prior_season_diff", "trailing_3yr_diff"), names(table))) {
-    table[[feature]] <- table[[feature]] * table$prior_history_weight
-  }
-  table$challenger_team_home_field_points <- ifelse(
-    as.logical(table$neutral_site), 0,
-    ifelse(is.finite(table$home_home_field_rating), table$home_home_field_rating, 2.4)
-  )
-  table$home_field_points <- resolve_home_field(table$neutral_site)
-  table$pregame_expected_margin <- table$power_rating_diff + table$home_field_points
+  table <- add_matchup_differentials(table, config)
   table$line_source <- "cfbfastR_pbp_embedded"
   table
 }
@@ -1148,7 +1171,10 @@ build_historical_foundation <- function(config, seasons = 2020:2025,
       pbp, events, schedule = schedule, fbs_membership = membership
     )
     games <- filter_completed_historical_games(games)
-    team_games <- build_team_game_efficiencies_v2(pbp, games)
+    turnover_prior <- turnover_prior_as_of(
+      do.call(rbind, team_games_by_season), do.call(rbind, games_by_season), season
+    )
+    team_games <- build_team_game_efficiencies_v2(pbp, games, turnover_prior)
     pbp_rows_total <- pbp_rows_total + nrow(pbp)
     games_by_season[[as.character(season)]] <- games
     team_games_by_season[[as.character(season)]] <- team_games
@@ -1169,7 +1195,12 @@ build_historical_foundation <- function(config, seasons = 2020:2025,
 
   message("Building opponent-adjusted pregame power snapshots")
   power <- power_rating_snapshots(games, config)
-  snapshot_result <- build_team_pregame_snapshots(team_games, games, power, config)
+  transition_priors <- fbs_bridge_prior_rows(
+    team_games, membership_fbs_flags(membership), config
+  )
+  snapshot_result <- build_team_pregame_snapshots(
+    team_games, games, power, config, transition_priors
+  )
   games <- snapshot_result$games
   training <- build_historical_matchup_table(games, snapshot_result$snapshots, config)
 
@@ -1230,6 +1261,7 @@ build_historical_foundation <- function(config, seasons = 2020:2025,
   training$feature_cutoff_rule <- "strictly_prior_week"
   training$model_era_eligible <- training$season >= config$training$covid_season
   training$ats_eligible <- ats_training_eligible(training)
+  training$feature_version <- config$version
 
   qa <- foundation_qa(
     pbp_rows_total, games, team_games, training, coach_result, coach_features
@@ -1255,8 +1287,10 @@ build_historical_foundation <- function(config, seasons = 2020:2025,
 }
 
 write_foundation_csv <- function(data, path) {
+  require_v2_package("readr")
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
-  utils::write.csv(data, path, row.names = FALSE, na = "")
+  # Base write.csv can escape UTF-8 names as literal <U+...> in a Windows C locale.
+  readr::write_csv(data, path, na = "")
   invisible(path)
 }
 
@@ -1267,6 +1301,7 @@ write_historical_foundation <- function(result, config, overwrite = FALSE) {
     coach_history = file.path(config$inbox_dir, "coach_history.csv"),
     historical_games = file.path(config$data_dir, "historical_games.csv"),
     historical_team_games = file.path(config$data_dir, "historical_team_games.csv"),
+    historical_team_snapshots = file.path(config$data_dir, "historical_team_snapshots.csv"),
     historical_fbs_membership = file.path(config$data_dir,
                                           "historical_fbs_membership.csv"),
     historical_coach_seasons = file.path(config$data_dir,
@@ -1294,6 +1329,7 @@ write_historical_foundation <- function(result, config, overwrite = FALSE) {
   write_foundation_csv(result$coach_history, targets$coach_history)
   write_foundation_csv(result$games, targets$historical_games)
   write_foundation_csv(result$team_games, targets$historical_team_games)
+  write_foundation_csv(result$team_snapshots, targets$historical_team_snapshots)
   write_foundation_csv(result$fbs_membership, targets$historical_fbs_membership)
   write_foundation_csv(result$coach_seasons, targets$historical_coach_seasons)
   write_foundation_csv(result$coach_ratings, targets$historical_coach_ratings)

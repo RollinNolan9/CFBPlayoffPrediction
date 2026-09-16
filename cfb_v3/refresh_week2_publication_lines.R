@@ -1,0 +1,15 @@
+# Run from the repository root. This fetches quotes only, never model inputs.
+source("cfb_v2/config.R")
+source("cfb_v2/adapters.R")
+captured <- Sys.time()
+raw <- cfbfastR::cfbd_betting_lines(year = 2026, week = 2)
+lines <- normalize_betting_lines(raw, captured)
+stopifnot(nrow(lines) > 0L)
+out <- file.path("cfb_v3/output/2026/week_2_publication",
+                 format(captured, "%Y%m%dT%H%M%SZ", tz = "UTC"))
+dir.create(out, recursive = TRUE, showWarnings = FALSE)
+saveRDS(raw, file.path(out, "cfbd_lines_raw.rds"))
+lines$captured_at <- format(lines$captured_at, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+write.csv(lines, file.path(out, "market_snapshot.csv"), row.names = FALSE, na = "")
+cat("Snapshot:", normalizePath(out, winslash = "/"), "\n")
+print(table(lines$provider))

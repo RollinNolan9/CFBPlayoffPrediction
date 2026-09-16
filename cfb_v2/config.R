@@ -2,16 +2,17 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
   root <- normalizePath(project_dir, winslash = "/", mustWork = FALSE)
 
   list(
-    version = "2.1.0",
+    version = "3.0.0",
     project_dir = root,
-    data_dir = file.path(root, "cfb_v2", "data"),
-    inbox_dir = file.path(root, "cfb_v2", "inbox"),
-    output_dir = file.path(root, "cfb_v2", "output"),
-    database = file.path(root, "cfb_v2", "data", "cfb_v2.duckdb"),
+    data_dir = file.path(root, "cfb_v3", "data"),
+    inbox_dir = file.path(root, "cfb_v3", "inbox"),
+    output_dir = file.path(root, "cfb_v3", "output"),
+    database = file.path(root, "cfb_v3", "data", "cfb_v3.duckdb"),
     season = as.integer(season),
     article_timezone = "America/New_York",
     article_freeze_weekday = "Friday",
     article_freeze_hour = 13L,
+    omit_thursday = TRUE,
     seed = 20260712L,
     training = list(
       first_full_season = 2021L,
@@ -82,6 +83,7 @@ cfb_v2_config <- function(project_dir = getwd(), season = as.integer(format(Sys.
       )
     ),
     model = list(
+      ridge_lambda_default = 8,
       ridge_lambda_grid = c(0.5, 2, 8, 32),
       residual_trees = 500L,
       minimum_training_rows = 150L,

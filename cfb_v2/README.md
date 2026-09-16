@@ -1,6 +1,9 @@
 # CFB Model v2
 
-Current production version: `2.1.0`.
+Current engine version: `3.0.0`. See [the v3 guide](../cfb_v3/README.md) for current
+commands, isolated artifacts, and corrected validation. The sections below document
+the v2 implementation and its historical results; their old performance numbers do
+not describe v3. The existing module paths and `run_cfb_v2.R` now execute the v3 engine.
 
 This is the parallel production pipeline. It does not modify or source the original
 `model_final.Rmd` or `cfb_model_rebuild.R`.
@@ -187,6 +190,20 @@ Friday, September 4 at 1 p.m. Eastern publication cutoff, with:
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' `
   .\cfb_v2\dry_run_aug29_2026.R --slate=week1 --refresh=true
 ```
+
+After Week 1 is final, generate the preliminary Week 2 slate with:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' `
+  .\cfb_v2\dry_run_aug29_2026.R --slate=week2 --refresh=true
+```
+
+The Week 2 path requires compact 2026 cfbfastR play-by-play and complete CFBD schedule,
+membership, and market coverage. It uses only completed games from an earlier
+chronological feature week. EPA component features blend current-season performance at
+40% with prior performance at 60%, preseason challenger inputs receive 60% weight,
+and the model's separately learned recent-form features remain active. The 2020-2025
+model coefficients stay frozen. A cached replay uses `--refresh=false`.
 
 The command reads the frozen 2021-2026 priors, fits the foundation, returning-only,
 and full-preseason controls, and leads with the phase-faded preseason production model. It snapshots

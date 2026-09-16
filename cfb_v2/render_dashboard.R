@@ -7,6 +7,7 @@ project_dir <- if (length(script_path)) {
 } else normalizePath(getwd(), winslash = "/", mustWork = TRUE)
 
 source(file.path(project_dir, "cfb_v2", "dashboard.R"))
+source(file.path(project_dir, "cfb_v2", "config.R"))
 
 predictions <- NULL
 output <- NULL
@@ -16,7 +17,7 @@ for (arg in args) {
   else stop("Unknown argument: ", arg, call. = FALSE)
 }
 if (is.null(predictions)) {
-  predictions <- find_latest_prediction_csv(file.path(project_dir, "cfb_v2", "output"))
+  predictions <- find_latest_prediction_csv(cfb_v2_config(project_dir)$output_dir)
 }
 if (is.null(output)) {
   output <- if (basename(predictions) == "predictions.csv") {

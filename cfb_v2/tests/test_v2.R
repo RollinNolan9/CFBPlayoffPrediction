@@ -214,7 +214,7 @@ test_that("turnover rate counts only giveaways, not havoc or downs", {
   expect_equal(alpha$havoc_allowed, 3 / 5)
   expect_equal(beta$havoc_allowed, 2 / 4)
 
-  league_rate <- mean(c(1 / 5, 1 / 4))
+  league_rate <- 0.02
   expect_equal(
     alpha$turnover_rate_regressed,
     regress_unstable_rate(1 / 5, 5, league_rate, prior_opportunities = 80)

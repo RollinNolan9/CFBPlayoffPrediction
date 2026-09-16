@@ -50,6 +50,10 @@ v2_input_templates <- function() {
     ),
     team_week_features = data.frame(
       team = character(), season = integer(), week = integer(), offense_rating = numeric(),
+      model_week = integer(), power_rating = numeric(), offense_epa = numeric(),
+      defense_epa = numeric(), pass_epa = numeric(), rush_epa = numeric(),
+      success_rate = numeric(), havoc_allowed = numeric(), havoc_generated = numeric(),
+      turnover_rate_regressed = numeric(),
       defense_rating = numeric(), special_teams_rating = numeric(), recent_3 = numeric(),
       recent_6 = numeric(), season_to_date = numeric(), prior_season = numeric(),
       trailing_3yr = numeric(), preseason_prior = numeric(), qb_continuity = numeric(),
@@ -95,6 +99,12 @@ initialize_v2_project <- function(config) {
   templates <- v2_input_templates()
   for (name in names(templates)) {
     path <- file.path(config$inbox_dir, paste0(name, ".csv"))
+    legacy <- file.path(config$project_dir, "cfb_v2", "inbox", paste0(name, ".csv"))
+    generated <- name %in% c("training_games", "coach_assignments", "coach_history",
+                             "team_week_features")
+    if (!file.exists(path) && !generated && file.exists(legacy)) {
+      file.copy(legacy, path, overwrite = FALSE)
+    }
     if (!file.exists(path)) utils::write.csv(templates[[name]], path, row.names = FALSE, na = "")
   }
   con <- v2_connect(config)
@@ -135,12 +145,31 @@ attach_coach_ratings <- function(schedule, team_features, assignments, history,
          paste(missing_games, collapse = ", "), call. = FALSE)
   }
   assert_unique_keys(team_features, c("team", "season", "week"), "team_week_features")
+  rating_week <- if ("model_week" %in% names(schedule)) schedule$model_week else schedule$week
+  feature_key <- paste(team_features$team, team_features$season, team_features$week)
+  team_power <- if ("power_rating" %in% names(team_features)) {
+    team_features$power_rating
+  } else rep(NA_real_, nrow(team_features))
   rating_rows <- list()
   combinations <- unique(schedule[c("season", "week")])
   for (i in seq_len(nrow(combinations))) {
-    rating_rows[[i]] <- build_coach_ratings(
-      history, combinations$season[i], combinations$week[i], recent_share, config
+    keep <- schedule$season == combinations$season[i] & schedule$week == combinations$week[i]
+    cutoff <- unique(rating_week[keep])
+    if (length(cutoff) != 1L || !is.finite(cutoff)) {
+      stop("Coach ratings require one chronological cutoff per schedule week.")
+    }
+    target_context <- coach_target_context(
+      c(mapped$home_coach_id[keep], mapped$away_coach_id[keep]),
+      team_power[match(c(
+        paste(mapped$home[keep], mapped$season[keep], mapped$week[keep]),
+        paste(mapped$away[keep], mapped$season[keep], mapped$week[keep])
+      ), feature_key)], config
     )
+    rating_rows[[i]] <- build_coach_ratings(
+      history, combinations$season[i], cutoff, recent_share, config,
+      target_context = target_context
+    )
+    rating_rows[[i]]$schedule_week <- combinations$week[i]
   }
   ratings <- do.call(rbind, rating_rows)
   if (!nrow(ratings)) stop("No leakage-safe coach ratings were available.", call. = FALSE)
@@ -154,28 +183,39 @@ attach_coach_ratings <- function(schedule, team_features, assignments, history,
     coach_id = mapped$away_coach_id, stringsAsFactors = FALSE
   )
   key <- unique(rbind(home_key, away_key))
-  key <- merge(key, ratings[c("coach_id", "season", "as_of_week", "rating")],
+  key <- merge(key, ratings[c("coach_id", "season", "schedule_week", "rating")],
                by.x = c("coach_id", "season", "week"),
-               by.y = c("coach_id", "season", "as_of_week"), all.x = TRUE)
+               by.y = c("coach_id", "season", "schedule_week"), all.x = TRUE)
   key <- key[c("team", "season", "week", "rating")]
   names(key)[4] <- "computed_coach_rating"
   out <- merge(team_features, key, by = c("team", "season", "week"), all.x = TRUE,
                sort = FALSE)
-  if (any(!is.finite(out$computed_coach_rating))) {
-    missing <- unique(out$team[!is.finite(out$computed_coach_rating)])
-    stop("No leakage-safe coach history was available for: ",
-         paste(missing, collapse = ", "), call. = FALSE)
-  }
+  out$coach_history_missing <- !is.finite(out$computed_coach_rating)
+  out$computed_coach_rating[out$coach_history_missing] <- 0
   out$coach_rating <- out$computed_coach_rating
   out$computed_coach_rating <- NULL
   out
 }
 
-build_coach_snapshot <- function(schedule, history, config) {
+build_coach_snapshot <- function(schedule, history, config, team_features = NULL,
+                                 assignments = NULL) {
   combinations <- unique(schedule[c("season", "week")])
   rows <- lapply(seq_len(nrow(combinations)), function(i) {
+    keep <- schedule$season == combinations$season[i] & schedule$week == combinations$week[i]
+    cutoff <- if ("model_week" %in% names(schedule)) unique(schedule$model_week[keep]) else
+      combinations$week[i]
+    context <- NULL
+    if (!is.null(team_features) && !is.null(assignments) &&
+        "power_rating" %in% names(team_features)) {
+      mapped <- map_coaches_as_of(schedule[keep, ], assignments)
+      key <- paste(team_features$team, team_features$season, team_features$week)
+      lookup <- c(paste(mapped$home, mapped$season, mapped$week),
+                  paste(mapped$away, mapped$season, mapped$week))
+      context <- coach_target_context(c(mapped$home_coach_id, mapped$away_coach_id),
+                                       team_features$power_rating[match(lookup, key)], config)
+    }
     comparison <- compare_coach_weight_splits(
-      history, combinations$season[i], combinations$week[i], config
+      history, combinations$season[i], cutoff, config, target_context = context
     )
     if (!nrow(comparison)) return(NULL)
     data.frame(
@@ -208,7 +248,6 @@ prepare_matchup_features <- function(schedule, team_features, assignments, histo
   if (!"games_played" %in% names(team_features)) {
     team_features$games_played <- pmax(0, team_features$source_games)
   }
-  team_features$blended_team_form <- blend_team_form(team_features, config)
   make_matchup_features(schedule, team_features, team_features, recent_share, config)
 }
 
@@ -228,6 +267,9 @@ prepare_training_data <- function(training_games, config) {
                    postseason_type = "regular", conference_championship = FALSE, is_cfp = FALSE)
   for (column in missing) training_games[[column]] <- defaults[[column]]
   weights <- training_game_weights(training_games, max(training_games$season) + 1L, config)
+  if ("model_week" %in% names(training_games)) {
+    weights[!is.finite(training_games$model_week)] <- 0
+  }
   list(data = training_games[weights > 0, , drop = FALSE], weights = weights[weights > 0])
 }
 
@@ -258,7 +300,7 @@ select_coach_split_validation <- function(data, weights, config,
       fit_nonlinear = fit_nonlinear, fold_features = fold_features
     )
     list(share = as.numeric(share), data = variant, rolling = rolling,
-         mae = min(rolling$scores$absolute_error))
+         mae = mean(rolling$predictions$absolute_error))
   })
   maes <- vapply(candidates, `[[`, numeric(1), "mae")
   best_index <- which.min(maes)
@@ -267,6 +309,27 @@ select_coach_split_validation <- function(data, weights, config,
     best_index <- default_index
   }
   best <- candidates[[best_index]]
+  seasons <- sort(unique(best$rolling$predictions$test_season))
+  fold_shares <- setNames(rep(.65, length(seasons)), as.character(seasons))
+  selected_predictions <- lapply(seasons, function(season) {
+    earlier_mae <- vapply(candidates, function(candidate) {
+      p <- candidate$rolling$predictions
+      past <- p$test_season < season
+      if (any(past)) mean(p$absolute_error[past]) else Inf
+    }, numeric(1))
+    choice <- which.min(earlier_mae)
+    if (length(default_index) &&
+        earlier_mae[default_index] <= earlier_mae[choice] + .01) choice <- default_index
+    fold_shares[[as.character(season)]] <<- candidates[[choice]]$share
+    p <- candidates[[choice]]$rolling$predictions
+    p <- p[p$test_season == season, ]
+    p$coach_recent_share <- candidates[[choice]]$share
+    p
+  })
+  best$rolling$predictions <- calibrate_rolling_uncertainty(
+    do.call(rbind, selected_predictions), best$data, config
+  )
+  attr(best$data, "fold_coach_shares") <- fold_shares
   list(
     data = best$data, recent_share = best$share, rolling = best$rolling,
     features = c(base_features, "coach_rating_diff"),
@@ -464,7 +527,7 @@ write_v2_backtest_report <- function(summary, predictions, coach_comparison, pat
   names(ranges)[2] <- "projected_margin_range"
   lines <- unique(predictions$line_source[nzchar(predictions$line_source)])
   report <- c(
-    "# CFB v2 Cached Foundation Backtest",
+    "# CFB Cached Foundation Backtest",
     "",
     paste0("Generated: ", format(Sys.time(), tz = "UTC", usetz = TRUE)),
     paste0("Training file MD5: `", unname(tools::md5sum(training_path)), "`"),
@@ -605,7 +668,7 @@ write_preseason_challenger_report <- function(predictions, output_dir,
   list(report = report_path, summary = summary_path)
 }
 
-run_v2_backtest <- function(config) {
+run_v2_backtest <- function(config, include_challengers = TRUE) {
   training_path <- file.path(config$inbox_dir, "training_games.csv")
   if (!file.exists(training_path)) stop("Missing cached training_games.csv.", call. = FALSE)
   training <- utils::read.csv(training_path, check.names = FALSE,
@@ -660,15 +723,16 @@ run_v2_backtest <- function(config) {
       coach$data, foundation, preseason_full, config
     )
   }
-  forest <- rolling_validate_ensemble(
-    coach$data, features = coach$features, weights = validation$weights,
-    config = config, fit_nonlinear = TRUE, fold_features = gate_for(production_ps)
-  )
-  prediction_sets <- list(
-    build_v2_backtest_predictions(coach$data, ridge, "ridge_core"),
-    build_v2_backtest_predictions(coach$data, forest, "residual_forest_challenger")
-  )
-  if ("challenger_team_home_field_points" %in% names(coach$data)) {
+  prediction_sets <- list(build_v2_backtest_predictions(coach$data, ridge, "ridge_core"))
+  if (include_challengers) {
+    forest <- rolling_validate_ensemble(
+      coach$data, features = coach$features, weights = validation$weights,
+      config = config, fit_nonlinear = TRUE, fold_features = gate_for(production_ps)
+    )
+    prediction_sets <- append(prediction_sets,
+      list(build_v2_backtest_predictions(coach$data, forest, "residual_forest_challenger")))
+  }
+  if (include_challengers && "challenger_team_home_field_points" %in% names(coach$data)) {
     hfa_data <- coach$data
     hfa_data$home_field_points <- hfa_data$challenger_team_home_field_points
     hfa <- rolling_validate_ensemble(
@@ -734,6 +798,14 @@ run_v2_backtest <- function(config) {
   utils::write.csv(predictions, predictions_path, row.names = FALSE, na = "")
   utils::write.csv(summary, summary_path, row.names = FALSE, na = "")
   utils::write.csv(coach_comparison, coach_path, row.names = FALSE, na = "")
+  core <- predictions[predictions$model == "ridge_core" &
+                        predictions$home_level == "fbs" & predictions$away_level == "fbs", ]
+  ats <- fit_validated_ats_layer(core, config)
+  if (!is.null(ats$threshold)) {
+    utils::write.csv(ats$threshold, file.path(output_dir, "ats_holdout_validation.csv"),
+                     row.names = FALSE)
+  }
+  saveRDS(ats, file.path(output_dir, "ats_validation.rds"))
   write_v2_backtest_report(summary, predictions, coach_comparison, report_path,
                            training_path)
   preseason <- write_preseason_challenger_report(predictions, output_dir,
@@ -758,12 +830,13 @@ write_prediction_outputs <- function(predictions, config, run_id, snapshot_type)
   directory <- file.path(config$output_dir, paste0(config$season), paste0("week_", predictions$week[1]))
   dir.create(directory, recursive = TRUE, showWarnings = FALSE)
   csv_path <- file.path(directory, paste0(snapshot_type, "_", run_id, ".csv"))
-  utils::write.csv(predictions, csv_path, row.names = FALSE, na = "")
+  write_foundation_csv(predictions, csv_path)
   csv_path
 }
 
 run_v2_week <- function(config, season, week, mode = c("article", "live"),
-                        as_of = Sys.time(), force_game_ids = character(), strict = TRUE) {
+                        as_of = Sys.time(), force_game_ids = character(), strict = TRUE,
+                        refresh = FALSE, all_picks = FALSE) {
   mode <- match.arg(mode)
   config$season <- as.integer(season)
   if (mode == "article") validate_article_as_of(as_of, config)
@@ -775,18 +848,38 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     v2_disconnect(slot_con)
     slot_con <- NULL
   }
-  inputs <- read_v2_inputs(config, strict)
+  inputs <- read_v2_inputs(config, strict = FALSE)
+  supplied <- inputs$team_week_features
+  has_features <- !is.null(supplied) && nrow(supplied) &&
+    any(supplied$season == season & supplied$week == week)
+  if (!has_features) {
+    inputs <- prepare_live_inputs(inputs, config, season, week, as_of, refresh)
+  }
+  required <- c("schedule", "training_games", "coach_assignments", "coach_history",
+                "team_week_features", "membership")
+  empty <- required[vapply(inputs[required], function(x) is.null(x) || !nrow(x), logical(1))]
+  if (length(empty)) stop("Required weekly inputs are empty: ", paste(empty, collapse = ", "))
+  inputs$team_week_features <- inputs$team_week_features[
+    inputs$team_week_features$season == season & inputs$team_week_features$week == week, ]
   schedule <- normalize_public_schedule(inputs$schedule)
   schedule <- schedule[schedule$season == season & schedule$week == week, , drop = FALSE]
   if (!nrow(schedule)) stop("No scheduled games match the requested season/week.", call. = FALSE)
 
-  eligible <- weekly_game_eligibility(
+  eligible <- if (isTRUE(inputs$automated_slate)) rep(TRUE, nrow(schedule)) else weekly_game_eligibility(
     schedule, inputs$membership, inputs$rankings, inputs$cfp_probabilities, config
   )
   schedule <- schedule[eligible, , drop = FALSE]
+  if (all_picks) force_game_ids <- union(force_game_ids, schedule$game_id)
   if (!nrow(schedule)) stop("No games passed the weekly card eligibility rules.", call. = FALSE)
 
   validation <- prepare_training_data(inputs$training_games, config)
+  historical_team_path <- file.path(config$data_dir, "historical_team_games.csv")
+  historical_member_path <- file.path(config$data_dir, "historical_fbs_membership.csv")
+  if (file.exists(historical_team_path) && file.exists(historical_member_path)) {
+    validation$data <- apply_fbs_bridge_backtest_features(
+      validation$data, read_csv_if_present(historical_team_path, TRUE),
+      combine_membership(read_csv_if_present(historical_member_path, TRUE)), config)
+  }
   priors <- read_csv_if_present(
     file.path(config$data_dir, "preseason_team_priors.csv"), required = TRUE
   )
@@ -843,24 +936,9 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
       closing_home_spread = validation$data$closing_home_spread[ats_rows][ats_eligible],
       margin_sd = rolling$predictions$margin_sd[ats_eligible]
     )
-    ats_model <- fit_ats_residual_model(ats_validation)
-    if (!is.null(ats_model)) {
-      cover_probability <- predict_ats_home_cover(
-        ats_model, ats_validation$expected_margin, ats_validation$closing_home_spread,
-        ats_validation$margin_sd
-      )
-      home_covered <- ats_validation$actual_margin + ats_validation$closing_home_spread > 0
-      threshold_validation <- data.frame(
-        edge = ats_validation$expected_margin + ats_validation$closing_home_spread,
-        cover_probability = cover_probability,
-        covered = ifelse(cover_probability >= .5, home_covered, !home_covered)
-      )
-      finite <- is.finite(threshold_validation$edge) &
-        is.finite(threshold_validation$cover_probability)
-      if (sum(finite) >= config$ats$minimum_validation_picks) {
-        ats_threshold <- select_ats_threshold(threshold_validation[finite, ], config)
-      }
-    }
+    ats <- fit_validated_ats_layer(ats_validation, config)
+    ats_model <- ats$model
+    ats_threshold <- ats$threshold
   }
   membership_flags <- combine_membership(
     inputs$membership,
@@ -892,6 +970,11 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
   selected_lines <- selected_lines[match(schedule$game_id, selected_lines$game_id), ]
 
   injuries <- inputs$injuries
+  if (!is.null(injuries) && nrow(injuries)) {
+    assert_columns(injuries, "source_timestamp", "injuries")
+    timestamp <- parse_utc_datetime(injuries$source_timestamp)
+    injuries <- injuries[!is.na(timestamp) & timestamp <= as_of, , drop = FALSE]
+  }
   predictions <- predict_week(
     model, schedule, matchup, selected_lines$market_home_spread,
     force_game_ids = force_game_ids, injuries = injuries,
@@ -906,6 +989,12 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     predictions$fbs_transition <- ""
   }
   predictions$expected_total <- NA_real_
+  missing_coach <- rep(FALSE, nrow(matchup))
+  for (column in intersect(c("home_coach_history_missing", "away_coach_history_missing"), names(matchup))) {
+    missing_coach <- missing_coach | as.logical(matchup[[column]])
+  }
+  predictions$data_flag <- ifelse(missing_coach, "new_coach_no_model_history", "standard")
+  predictions$confidence_tier[missing_coach] <- "low"
   predictions$total_sd <- NA_real_
   for (column in setdiff(names(selected_lines), "game_id")) {
     predictions[[column]] <- selected_lines[[column]]
@@ -933,7 +1022,8 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     ]
     v2_append_snapshot(con, "coach_assignments", assignment_store, run_id,
                        c("team", "season", "start_week"))
-    coach_store <- build_coach_snapshot(schedule, inputs$coach_history, config)
+    coach_store <- build_coach_snapshot(schedule, inputs$coach_history, config,
+                                        team_week_features, inputs$coach_assignments)
     if (nrow(coach_store)) {
       v2_append_snapshot(con, "coach_ratings", coach_store, run_id,
                          c("coach_id", "season", "as_of_week"))
@@ -945,7 +1035,6 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     ]
     if (nrow(feature_store)) {
       feature_store$as_of <- as.POSIXct(as_of, tz = "UTC")
-      feature_store$games_played <- NULL
       v2_append_snapshot(con, "team_week_features", feature_store, run_id,
                          c("team", "season", "week"))
     }
@@ -992,6 +1081,9 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     prediction_store$best_away_spread <- NULL
     v2_append_snapshot(con, "prediction_snapshots", prediction_store, run_id, "game_id")
     output <- write_prediction_outputs(predictions, config, run_id, mode)
+    saveRDS(list(model = model, ats_model = ats_model, ats_threshold = ats_threshold,
+                  config = config, as_of = as_of), sub("\\.csv$", "_model.rds", output))
+    write_foundation_csv(matchup, sub("\\.csv$", "_features.csv", output))
     parquet <- sub("\\.csv$", ".parquet", output)
     v2_export_snapshot(con, "prediction_snapshots", run_id, parquet)
     v2_finish_run(con, run_id, "complete", output)

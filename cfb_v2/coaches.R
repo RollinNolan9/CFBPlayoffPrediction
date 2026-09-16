@@ -97,6 +97,12 @@ coach_context_portability <- function(from_strength, to_strength, config) {
   pmin(config$coach$portability_cap, pmax(0.20, context_factor))
 }
 
+coach_target_context <- function(coach_ids, power, config) {
+  strength <- stats::pnorm(as.numeric(power) / config$coach$context_power_scale)
+  keep <- !is.na(coach_ids) & nzchar(coach_ids) & is.finite(strength)
+  if (any(keep)) tapply(strength[keep], coach_ids[keep], mean) else NULL
+}
+
 build_coach_ratings <- function(history, target_season, as_of_week,
                                 recent_share = 0.65, config,
                                 target_context = NULL) {

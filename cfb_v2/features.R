@@ -245,11 +245,63 @@ resolve_home_field <- function(neutral_site, default_hfa = 2.4) {
   ifelse(as.logical(neutral_site), 0, default_hfa)
 }
 
+matchup_metric_names <- function() {
+  c("power_rating", "offense_epa", "defense_epa", "offense_rating", "defense_rating",
+    "special_teams_rating", "pass_epa", "rush_epa", "success_rate", "havoc_allowed",
+    "havoc_generated", "turnover_rate_regressed", "recent_3", "recent_6",
+    "season_to_date", "prior_season", "trailing_3yr", "preseason_prior",
+    "qb_continuity", "roster_continuity", "staff_continuity", "coach_rating",
+    "source_games", "games_played")
+}
+
+add_matchup_differentials <- function(joined, config) {
+  for (feature in matchup_metric_names()) {
+    h <- paste0("home_", feature)
+    a <- paste0("away_", feature)
+    if (all(c(h, a) %in% names(joined))) {
+      joined[[paste0(feature, "_diff")]] <- joined[[h]] - joined[[a]]
+    }
+  }
+  postseason <- !is.na(joined$postseason_type) & joined$postseason_type != "regular"
+  joined$phase_week <- ifelse(postseason, 99L, joined$week)
+  joined$game_phase <- ifelse(postseason, "postseason", game_phase(joined$week))
+  joined$preseason_weight <- preseason_feature_weight(joined$phase_week, config)
+  home_games <- if ("home_games_played" %in% names(joined)) joined$home_games_played else 0
+  away_games <- if ("away_games_played" %in% names(joined)) joined$away_games_played else 0
+  joined$prior_history_weight <- rowMeans(cbind(
+    prior_season_feature_weight(joined$phase_week, home_games, config),
+    prior_season_feature_weight(joined$phase_week, away_games, config)
+  ))
+  for (feature in intersect(
+    c("preseason_prior_diff", "qb_continuity_diff", "roster_continuity_diff",
+      "staff_continuity_diff"), names(joined)
+  )) joined[[feature]] <- joined[[feature]] * joined$preseason_weight
+  for (feature in intersect(c("prior_season_diff", "trailing_3yr_diff"), names(joined))) {
+    joined[[feature]] <- joined[[feature]] * joined$prior_history_weight
+  }
+  team_hfa <- if ("home_home_field_rating" %in% names(joined)) {
+    joined$home_home_field_rating
+  } else rep(2.4, nrow(joined))
+  team_hfa[!is.finite(team_hfa)] <- 2.4
+  joined$challenger_team_home_field_points <- ifelse(joined$neutral_site, 0, team_hfa)
+  joined$home_field_points <- resolve_home_field(joined$neutral_site)
+  if ("power_rating_diff" %in% names(joined)) {
+    joined$pregame_expected_margin <- joined$power_rating_diff + joined$home_field_points
+  }
+  joined
+}
+
 make_matchup_features <- function(schedule, home_features, away_features,
                                   coach_recent_share = 0.65, config) {
   schedule <- standardize_schedule(schedule)
   home_features$team <- canonical_team(home_features$team)
   away_features$team <- canonical_team(away_features$team)
+  columns <- c("team", "season", "week", matchup_metric_names(),
+               "home_field_rating", "coach_history_missing")
+  home_features <- home_features[intersect(columns, names(home_features))]
+  away_features <- away_features[intersect(columns, names(away_features))]
+  assert_unique_keys(home_features, c("team", "season", "week"), "home team features")
+  assert_unique_keys(away_features, c("team", "season", "week"), "away team features")
   home <- merge(schedule, home_features, by.x = c("home", "season", "week"),
                 by.y = c("team", "season", "week"), all.x = TRUE, sort = FALSE)
   names(home)[names(home) %in% setdiff(names(home_features), c("team", "season", "week"))] <-
@@ -261,44 +313,7 @@ make_matchup_features <- function(schedule, home_features, away_features,
   names(joined)[match(away_cols, names(joined))] <- paste0("away_", away_cols)
 
   joined <- joined[match(schedule$game_id, joined$game_id), , drop = FALSE]
-  numeric_base <- intersect(
-    c("offense_rating", "defense_rating", "special_teams_rating", "recent_3",
-      "recent_6", "season_to_date", "prior_season", "trailing_3yr",
-      "preseason_prior", "qb_continuity", "roster_continuity", "staff_continuity",
-      "coach_rating", "source_games", "games_played",
-      "blended_team_form"),
-    gsub("^(home_|away_)", "", names(joined))
-  )
-  for (feature in numeric_base) {
-    h <- paste0("home_", feature)
-    a <- paste0("away_", feature)
-    if (all(c(h, a) %in% names(joined))) joined[[paste0(feature, "_diff")]] <- joined[[h]] - joined[[a]]
-  }
-  joined$game_phase <- game_phase(joined$week)
-  joined$preseason_weight <- preseason_feature_weight(joined$week, config)
-  home_games <- if ("home_games_played" %in% names(joined)) joined$home_games_played else 0
-  away_games <- if ("away_games_played" %in% names(joined)) joined$away_games_played else 0
-  joined$prior_history_weight <- rowMeans(cbind(
-    prior_season_feature_weight(joined$week, home_games, config),
-    prior_season_feature_weight(joined$week, away_games, config)
-  ))
-  for (feature in intersect(
-    c("preseason_prior_diff", "qb_continuity_diff", "roster_continuity_diff",
-      "staff_continuity_diff"), names(joined)
-  )) {
-    joined[[feature]] <- joined[[feature]] * joined$preseason_weight
-  }
-  for (feature in intersect(c("prior_season_diff", "trailing_3yr_diff"), names(joined))) {
-    joined[[feature]] <- joined[[feature]] * joined$prior_history_weight
-  }
-  team_hfa <- if ("home_home_field_rating" %in% names(joined)) {
-    joined$home_home_field_rating
-  } else rep(2.4, nrow(joined))
-  team_hfa[!is.finite(team_hfa)] <- 2.4
-  joined$challenger_team_home_field_points <- ifelse(
-    as.logical(joined$neutral_site), 0, team_hfa
-  )
-  joined$home_field_points <- resolve_home_field(joined$neutral_site)
+  joined <- add_matchup_differentials(joined, config)
   joined$coach_recent_share <- coach_recent_share
   joined
 }

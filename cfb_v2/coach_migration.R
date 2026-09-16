@@ -489,6 +489,44 @@ coach_assignment_qa_summary <- function(assignments, qa, identities) {
   )
 }
 
+current_fbs_coach_assignments <- function(teams, current_coaches, season, overrides = NULL) {
+  mapped <- match_current_fbs_coaches(teams, current_coaches)
+  assignments <- data.frame(
+    team = mapped$team, season = as.integer(season), start_week = 0L, end_week = 99L,
+    coach_id = mapped$coach_id, coach_name = mapped$coach_name, interim = FALSE,
+    source = mapped$source_url, stringsAsFactors = FALSE
+  )
+  if (!is.null(overrides) && nrow(overrides)) {
+    overrides <- overrides[as.integer(overrides$season) == season, , drop = FALSE]
+    overrides$team <- canonical_team(overrides$team)
+    assignments <- assignments[!assignments$team %in% overrides$team, , drop = FALSE]
+    assignments <- bind_rows_fill(assignments, overrides)
+  }
+  validate_coach_assignments(assignments)
+}
+
+extend_current_coach_history <- function(history, completed_games, all_games,
+                                          assignments, season, config) {
+  current <- completed_games[completed_games$season == season, , drop = FALSE]
+  if (!nrow(current)) return(history)
+  current$home_power <- current$away_power <- 0
+  for (week in sort(unique(current$model_week))) {
+    rows <- current$model_week == week
+    phase_week <- if (any(current$postseason_type[rows] != "regular")) 99L else
+      max(current$week[rows])
+    power <- power_rating_for_week(all_games, season, week, phase_week, config)
+    current$home_power[rows] <- power$power_rating[match(current$home[rows], power$team)]
+    current$away_power[rows] <- power$power_rating[match(current$away[rows], power$team)]
+  }
+  current$home_power[!is.finite(current$home_power)] <- 0
+  current$away_power[!is.finite(current$away_power)] <- 0
+  current$pregame_expected_margin <- current$home_power - current$away_power +
+    resolve_home_field(current$neutral_site)
+  modern <- build_modern_coach_history(current, assignments)
+  if (nrow(modern$missing)) stop("Current coach history has unmapped games.", call. = FALSE)
+  bind_rows_fill(history[history$season != season, , drop = FALSE], modern$history)
+}
+
 build_modern_coach_history <- function(training_games, assignments) {
   required <- c(
     "game_id", "season", "week", "home", "away", "home_level", "away_level",
@@ -571,17 +609,9 @@ attach_coach_features_to_history <- function(training_games, assignments,
     row_index <- training_games$season == combinations$season[i] &
       rating_week == combinations$rating_week[i]
     target_coach <- c(mapped$home_coach_id[row_index], mapped$away_coach_id[row_index])
-    power_scale <- if (!is.null(config$coach$context_power_scale)) {
-      config$coach$context_power_scale
-    } else 10
-    target_strength <- stats::pnorm(c(
+    target_context <- coach_target_context(target_coach, c(
       training_games$home_power[row_index], training_games$away_power[row_index]
-    ) / power_scale)
-    valid_context <- !is.na(target_coach) & nzchar(target_coach) &
-      is.finite(target_strength)
-    target_context <- if (any(valid_context)) {
-      tapply(target_strength[valid_context], target_coach[valid_context], mean)
-    } else NULL
+    ), config)
     comparison <- compare_coach_weight_splits(
       coach_history, combinations$season[i], combinations$rating_week[i], config,
       target_context = target_context

@@ -519,6 +519,17 @@ merge_preseason_priors <- function(existing, replacement, overwrite = FALSE) {
   combined
 }
 
+eligible_team_strength <- function(team_games, games) {
+  assert_unique_keys(games, "game_id", "strength game metadata")
+  index <- match(team_games$game_id, games$game_id)
+  if (anyNA(index)) stop("Missing game metadata for preseason strength.", call. = FALSE)
+  usable <- raw_history_eligible(games[index, , drop = FALSE])
+  out <- stats::aggregate(net_efficiency ~ team + season,
+                          team_games[usable, , drop = FALSE], mean, na.rm = TRUE)
+  names(out)[names(out) == "net_efficiency"] <- "strength"
+  out
+}
+
 build_preseason_priors <- function(config, seasons, refresh = FALSE, overwrite = FALSE) {
   target <- file.path(config$data_dir, "preseason_team_priors.csv")
   existing <- read_csv_if_present(target, required = FALSE)
@@ -529,10 +540,9 @@ build_preseason_priors <- function(config, seasons, refresh = FALSE, overwrite =
     file.path(config$data_dir, "historical_team_games.csv"), required = TRUE
   )
   assert_columns(team_games, c("team", "season", "net_efficiency"), "historical team games")
-  prior_strength <- stats::aggregate(
-    net_efficiency ~ team + season, team_games, mean, na.rm = TRUE
-  )
-  names(prior_strength)[names(prior_strength) == "net_efficiency"] <- "strength"
+  games <- read_csv_if_present(file.path(config$data_dir, "historical_games.csv"),
+                               required = TRUE)
+  prior_strength <- eligible_team_strength(team_games, games)
 
   rows <- lapply(seasons, function(season) {
     returning <- pull_cfbd_returning_production(season, config, refresh)

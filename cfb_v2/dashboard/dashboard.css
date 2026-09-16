@@ -93,6 +93,26 @@ body {
   text-transform: uppercase;
 }
 
+.publication-note {
+  font-size: 11px;
+  color: #854b09;
+  line-height: 1.4;
+  margin-top: 5px;
+}
+
+.game-time, .game-warning {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  color: var(--muted);
+  padding-top: 3px;
+}
+
+.game-warning { color: #854b09; }
+.game-cell { height: auto !important; min-height: 60px; }
+.issue-detail { flex-direction: column; white-space: normal; overflow-wrap: anywhere; }
+.detail-panel { max-height: 75vh; overflow: auto; }
+.detail-panel a { font-size: 11px; }
+
 .metric-strip,
 .availability-strip {
   display: grid;
@@ -625,7 +645,7 @@ body {
 
 @media (max-width: 1100px) {
   #slate > .bslib-grid {
-    grid-template-rows: minmax(170px, auto) 420px 780px !important;
+    grid-template-rows: minmax(170px, auto) 540px 780px !important;
   }
 
   .snapshot-strip {
@@ -712,4 +732,64 @@ body {
     max-height: 70vh;
     overflow: auto;
   }
+}
+
+/* Quarto adds fill-container classes to nested HTML, including the toolbar. */
+.table-toolbar.html-fill-container {
+  flex: 0 0 auto;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 40px;
+  width: 100%;
+}
+.filter-group.html-fill-container,
+.table-controls.html-fill-container {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  width: auto;
+}
+.filter-button { flex: 0 0 auto; }
+.board-content.html-fill-container { display: block; overflow: auto; }
+.pick-list.html-fill-container { display: block; }
+.pick-row.html-fill-container { flex: 0 0 auto; }
+.section-title {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+.navbar .navbar-brand, .navbar .nav-link { color: #e7edf1; }
+.navbar .navbar-title { color: #e7edf1; }
+.navbar .navbar-toggler-icon { filter: brightness(0) invert(1); }
+.navbar .nav-link.active { color: #214f6f; }
+.issue-detail.html-fill-container {
+  flex-direction: column;
+  gap: 4px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.issue-detail span { white-space: normal; }
+.detail-panel { max-height: 75vh; overflow: auto; }
+.issue-list.html-fill-container, .coach-grid.html-fill-container { display: block; }
+.issue-row.html-fill-container, .coach-row.html-fill-container {
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 60px;
+  overflow: visible;
+}
+.issue-row > div.html-fill-container { display: block; }
+.issue-row .issue-detail span { display: block; margin-bottom: 4px; }
+@media (max-width: 1200px) {
+  .table-toolbar.html-fill-container { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 700px) {
+  #slate .bslib-grid { height: auto !important; min-height: 0 !important; grid-template-rows: auto !important; }
+  .table-controls.html-fill-container { width: 100%; align-items: stretch; }
+  .issue-row, .coach-row { grid-template-columns: minmax(0, 1fr); }
+  .board-content.html-fill-container { overflow: visible; }
+  .snapshot-details dl { grid-template-columns: 90px minmax(0, 1fr); }
 }

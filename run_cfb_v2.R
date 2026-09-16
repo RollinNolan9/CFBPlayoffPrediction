@@ -6,7 +6,8 @@ parse_args <- function(args) {
                  week = NA_integer_, as_of = Sys.time(), force = character(), strict = TRUE,
                  seasons = 2020:2025, refresh_pbp = FALSE,
                  refresh_schedule = FALSE, refresh_coaches = FALSE,
-                 refresh_espn = FALSE, refresh_preseason = FALSE, overwrite = FALSE)
+                 refresh_espn = FALSE, refresh_preseason = FALSE, overwrite = FALSE,
+                 challengers = FALSE, refresh = FALSE, all_picks = FALSE)
   for (arg in args) {
     pair <- strsplit(sub("^--", "", arg), "=", fixed = TRUE)[[1]]
     key <- gsub("-", "_", pair[1])
@@ -29,6 +30,9 @@ parse_args <- function(args) {
     else if (key == "refresh_espn") parsed$refresh_espn <- tolower(value) %in% c("true", "1", "yes")
     else if (key == "refresh_preseason") parsed$refresh_preseason <- tolower(value) %in% c("true", "1", "yes")
     else if (key == "overwrite") parsed$overwrite <- tolower(value) %in% c("true", "1", "yes")
+    else if (key == "challengers") parsed$challengers <- tolower(value) %in% c("true", "1", "yes")
+    else if (key == "refresh") parsed$refresh <- tolower(value) %in% c("true", "1", "yes")
+    else if (key == "all_picks") parsed$all_picks <- tolower(value) %in% c("true", "1", "yes")
     else stop("Unknown argument: --", key, call. = FALSE)
   }
   parsed
@@ -53,6 +57,8 @@ source(file.path(project_dir, "cfb_v2", "historical_data.R"))
 source(file.path(project_dir, "cfb_v2", "preseason.R"))
 source(file.path(project_dir, "cfb_v2", "bridge.R"))
 source(file.path(project_dir, "cfb_v2", "workflow.R"))
+source(file.path(project_dir, "cfb_v2", "live_data.R"))
+source(file.path(project_dir, "cfb_v2", "compare_versions.R"))
 source(file.path(project_dir, "cfb_v2", "dashboard.R"))
 
 options(warn = 1)
@@ -61,8 +67,8 @@ config <- cfb_v2_config(project_dir, cli$season)
 
 if (cli$mode == "init") {
   initialized <- initialize_v2_project(config)
-  cat("CFB v2 initialized. Inbox templates:", paste(initialized, collapse = ", "), "\n")
-} else if (cli$mode == "build-foundation") {
+  cat("CFB", config$version, "initialized. Inbox templates:", paste(initialized, collapse = ", "), "\n")
+} else if (cli$mode %in% c("build-foundation", "rebuild")) {
   initialize_v2_project(config)
   result <- build_historical_foundation(
     config, seasons = cli$seasons,
@@ -77,12 +83,24 @@ if (cli$mode == "init") {
   cat("Foundation run:", paths$foundation_run_id, "\n")
   cat("DuckDB:", paths$database, "\n")
   cat("QA report:", paths$foundation_qa, "\n")
+  if (cli$mode == "rebuild") {
+    preseason <- build_preseason_priors(config,
+      seasons = seq.int(min(cli$seasons) + 1L, cli$season), overwrite = cli$overwrite,
+      refresh = cli$refresh_preseason)
+    cat("Preseason priors:", preseason$path, "\n")
+    result <- run_v2_backtest(config, include_challengers = cli$challengers)
+    cat("Backtest report:", result$report, "\n")
+  }
 } else if (cli$mode == "backtest") {
-  result <- run_v2_backtest(config)
+  result <- run_v2_backtest(config, include_challengers = cli$challengers)
   cat("Backtest report:", result$report, "\n")
   cat("Predictions:", result$predictions, "\n")
   cat("Summary:", result$summary, "\n")
   cat("Preseason challenger report:", result$preseason_report, "\n")
+} else if (cli$mode == "compare") {
+  result <- compare_model_versions(config)
+  cat("Version comparison:", result$report, "\n")
+  print(result$summary)
 } else if (cli$mode == "build-preseason") {
   result <- build_preseason_priors(
     config, seasons = cli$seasons,
@@ -94,7 +112,8 @@ if (cli$mode == "init") {
   if (is.na(cli$week)) stop("--week is required for article/live runs.", call. = FALSE)
   result <- run_v2_week(
     config, cli$season, cli$week, cli$mode, cli$as_of,
-    force_game_ids = cli$force, strict = cli$strict
+    force_game_ids = cli$force, strict = cli$strict,
+    refresh = cli$refresh, all_picks = cli$all_picks
   )
   cat("Run:", result$run_id, "\n")
   cat("CSV:", result$csv, "\n")
@@ -108,6 +127,6 @@ if (cli$mode == "init") {
                              "straight_up_pick", "ats_pick", "pick_status",
                              "confidence_tier")])
 } else {
-  stop("--mode must be init, build-foundation, build-preseason, backtest, article, or live.",
+  stop("--mode must be init, rebuild, build-foundation, build-preseason, backtest, compare, article, or live.",
        call. = FALSE)
 }

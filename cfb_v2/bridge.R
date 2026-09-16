@@ -112,6 +112,21 @@ calibrate_fbs_bridge <- function(team_games, membership_flags, config) {
   )
 }
 
+fbs_bridge_prior_rows <- function(team_games, membership_flags, config, seasons = NULL) {
+  transitions <- fbs_transition_teams(membership_flags)
+  if (!is.null(seasons)) transitions <- transitions[transitions$season %in% seasons, ]
+  rows <- lapply(sort(unique(transitions$season)), function(season) {
+    bridge <- calibrate_fbs_bridge(
+      team_games[as.integer(team_games$season) < season, , drop = FALSE],
+      membership_flags[membership_flags$season < season, , drop = FALSE], config
+    )
+    out <- transitions[transitions$season == season, , drop = FALSE]
+    for (metric in names(bridge$feature_priors)) out[[metric]] <- bridge$feature_priors[[metric]]
+    out
+  })
+  if (length(rows)) do.call(rbind, rows) else data.frame()
+}
+
 apply_fbs_bridge_features <- function(team_features, transitions, bridge) {
   team_features$team <- canonical_team(team_features$team)
   hit <- paste(team_features$team, as.integer(team_features$season)) %in%

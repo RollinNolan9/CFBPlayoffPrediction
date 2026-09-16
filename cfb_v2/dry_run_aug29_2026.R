@@ -19,13 +19,14 @@ for (arg in cli_args) {
   else if (grepl("^--slate=", arg)) slate <- sub("^--slate=", "", arg)
   else stop("Unknown argument: ", arg, call. = FALSE)
 }
-if (!slate %in% c("aug29", "week1")) {
-  stop("--slate must be aug29 or week1.", call. = FALSE)
+if (!slate %in% c("aug29", "week1", "week2")) {
+  stop("--slate must be aug29, week1, or week2.", call. = FALSE)
 }
 
 config <- cfb_v2_config(project_dir, 2026L)
 run_started_at <- as.POSIXct(Sys.time(), tz = "UTC")
 captured_at <- run_started_at
+target_week <- if (slate == "week2") 2L else 1L
 
 if (slate == "aug29") {
   schedule <- data.frame(
@@ -61,24 +62,30 @@ if (slate == "aug29") {
   schedule <- standardize_cfbd_schedule(raw_schedule)
   kickoff_date <- as.Date(schedule$kickoff, tz = "UTC")
   article_cutoff <- as.POSIXct(
-    "2026-09-04 13:00:00", tz = config$article_timezone
+    if (slate == "week1") "2026-09-04 13:00:00" else "2026-09-11 13:00:00",
+    tz = config$article_timezone
   )
-  keep <- !is.na(kickoff_date) & kickoff_date >= as.Date("2026-09-03") &
-    kickoff_date <= as.Date("2026-09-07") &
+  target_dates <- if (slate == "week1") {
+    as.Date(c("2026-09-03", "2026-09-07"))
+  } else as.Date(c("2026-09-11", "2026-09-13"))
+  keep <- !is.na(kickoff_date) & kickoff_date >= target_dates[1] &
+    kickoff_date <= target_dates[2] & schedule$week == target_week &
     as.numeric(schedule$kickoff) > as.numeric(article_cutoff) &
-    !is.na(schedule$completed) &
-    !schedule$completed & schedule$home_level == "fbs" &
-    schedule$away_level == "fbs"
+    !is.na(schedule$completed) & !schedule$completed &
+    schedule$home_level == "fbs" & schedule$away_level == "fbs"
   schedule <- schedule[keep, , drop = FALSE]
   raw_game_id <- as.character(column_value(raw_schedule, c("game_id", "id")))
   raw_venue <- as.character(column_value(raw_schedule, "venue"))
   schedule$venue <- raw_venue[match(schedule$game_id, raw_game_id)]
   schedule <- schedule[order(schedule$kickoff, schedule$game_id), , drop = FALSE]
-  if (!nrow(schedule)) stop("CFBD returned no upcoming Week 1 FBS games.", call. = FALSE)
-  slate_title <- "2026 Week 1 Preliminary Production Model"
+  if (!nrow(schedule)) {
+    stop("CFBD returned no upcoming Week ", target_week, " FBS games.", call. = FALSE)
+  }
+  slate_title <- paste("2026 Week", target_week, "Preliminary Production Model")
   slate_description <- "the post-Friday-publication FBS-vs-FBS slate"
-  output_bucket <- "week_1_preliminary"
-  chart_title <- "Feature importance for the preliminary Week 1 decisions"
+  output_bucket <- paste0("week_", target_week, "_preliminary")
+  chart_title <- paste("Feature importance for the preliminary Week", target_week,
+                       "decisions")
 }
 schedule <- standardize_schedule(schedule)
 schedule$source_season_type <- "regular"
@@ -86,17 +93,17 @@ schedule$completed <- FALSE
 schedule$home_score <- NA_real_
 schedule$away_score <- NA_real_
 schedule$margin <- NA_real_
-schedule$model_week <- 1L
-schedule$coach_lookup_week <- 1L
+schedule$model_week <- if (slate == "week2") NA_integer_ else 1L
+schedule$coach_lookup_week <- target_week
 
 line_cache <- file.path(config$project_dir, "cfb_v2", "cache", "lines",
-                        "cfbd_week_1_2026.rds")
+                        paste0("cfbd_week_", target_week, "_2026.rds"))
 if (!refresh_sources && file.exists(line_cache)) {
   line_rows <- readRDS(line_cache)
   market_snapshot_source <- "cached_cfbd"
   captured_at <- max(as.POSIXct(line_rows$captured_at, tz = "UTC"), na.rm = TRUE)
 } else {
-  line_rows <- pull_cfbd_lines(2026L, 1L, captured_at)
+  line_rows <- pull_cfbd_lines(2026L, target_week, captured_at)
   dir.create(dirname(line_cache), recursive = TRUE, showWarnings = FALSE)
   saveRDS(line_rows, line_cache)
   market_snapshot_source <- "live_cfbd"
@@ -141,17 +148,21 @@ if (slate == "aug29") {
   current_coaches <- pull_current_fbs_coaches(
     2026L, coach_cache, refresh = refresh_sources, captured_at = captured_at
   )
-  team_coaches <- match_current_fbs_coaches(
-    unique(c(schedule$home, schedule$away)), current_coaches
+  current_assignments <- current_fbs_coach_assignments(
+    load_cfbd_fbs_teams_season(2026L, config, refresh_sources)$team,
+    current_coaches, 2026L,
+    read_csv_if_present(file.path(config$inbox_dir, "coach_assignment_overrides.csv"))
   )
-  home_coaches <- team_coaches[match(schedule$home, team_coaches$team), ]
-  away_coaches <- team_coaches[match(schedule$away, team_coaches$team), ]
+  mapped <- map_coaches_as_of(schedule, current_assignments)
+  if (anyNA(mapped$home_coach_id) || anyNA(mapped$away_coach_id)) {
+    stop("Missing current week-effective coach assignment.", call. = FALSE)
+  }
   coach_map <- data.frame(
     game_id = schedule$game_id,
-    home_coach_id = home_coaches$coach_id,
-    home_coach = home_coaches$coach_name,
-    away_coach_id = away_coaches$coach_id,
-    away_coach = away_coaches$coach_name,
+    home_coach_id = mapped$home_coach_id,
+    home_coach = mapped$home_coach_name,
+    away_coach_id = mapped$away_coach_id,
+    away_coach = mapped$away_coach_name,
     stringsAsFactors = FALSE
   )
   coach_mapping_source <- unique(current_coaches$source_url)[1]
@@ -175,26 +186,65 @@ for (column in intersect(c("team", "opponent", "home", "away"), names(team_games
   team_games[[column]] <- canonical_team(team_games[[column]])
 }
 
-preseason_power_ratings <- function(games, target_season, config) {
-  past <- games[
-    games$season >= target_season - 3L & games$season < target_season &
-      is.finite(games$margin) & as.logical(games$completed), , drop = FALSE
-  ]
-  age <- target_season - past$season
-  weights <- ifelse(age == 1L, 1, 0.35^(age - 1L))
-  non_cfp_bowl <- past$postseason_type == "bowl" & !as.logical(past$is_cfp)
-  weights[non_cfp_bowl] <- 0
-  fcs <- is.na(past$home_level) | is.na(past$away_level) |
-    past$home_level != "fbs" | past$away_level != "fbs"
-  weights[fcs] <- weights[fcs] * config$training$fcs_rating_weight
-  ratings <- opponent_adjusted_rating(
-    past, value_col = "margin", ridge = 10, home_field = 2.4, weights = weights
+current_pbp_rows <- 0L
+current_completed_games <- 0L
+current_fbs_games <- 0L
+if (slate == "week2") {
+  current_pbp <- load_compact_pbp_season(
+    2026L, config, refresh = refresh_sources
   )
-  names(ratings)[names(ratings) == "rating"] <- "power_rating"
-  ratings$season <- target_season
-  ratings$model_week <- 1L
-  ratings$games_available <- 0L
-  ratings
+  current_membership <- load_cfbd_fbs_teams_season(
+    2026L, config, refresh = refresh_sources
+  )
+  current_game_universe <- derive_games_from_pbp(
+    current_pbp, schedule = raw_schedule, fbs_membership = current_membership
+  )
+  target_model_week <- current_game_universe$model_week[
+    match(schedule$game_id, current_game_universe$game_id)
+  ]
+  if (any(!is.finite(target_model_week)) || length(unique(target_model_week)) != 1L) {
+    stop("Week 2 games do not resolve to one chronological feature week.",
+         call. = FALSE)
+  }
+  schedule$model_week <- as.integer(target_model_week)
+  completed_2026 <- filter_completed_historical_games(current_game_universe)
+  prior_fbs <- completed_2026$home_level == "fbs" &
+    completed_2026$away_level == "fbs" &
+    completed_2026$model_week < unique(schedule$model_week)
+  prior_fbs[is.na(prior_fbs)] <- FALSE
+  missing_pbp <- prior_fbs & !as.logical(completed_2026$pbp_available)
+  if (any(missing_pbp)) {
+    stop("Completed pre-Week 2 FBS games are missing play-by-play: ",
+         paste(completed_2026$game_id[missing_pbp], collapse = ", "),
+         call. = FALSE)
+  }
+  current_team_games <- build_team_game_efficiencies_v2(
+    current_pbp, completed_2026,
+    turnover_prior_as_of(team_games, foundation_games, 2026L)
+  )
+  foundation_games <- bind_compatible(foundation_games, completed_2026)
+  team_games <- bind_compatible(team_games, current_team_games)
+  current_pbp_rows <- nrow(current_pbp)
+  current_completed_games <- nrow(completed_2026)
+  current_fbs_games <- sum(prior_fbs)
+}
+
+pregame_power_ratings <- function(games, target_season, target_model_week,
+                                  target_week, config) {
+  power_rating_for_week(games, target_season, target_model_week, target_week, config)
+}
+
+historical_power_ratings <- function(games) {
+  required <- c("season", "model_week", "home", "away", "home_power", "away_power")
+  assert_columns(games, required, "cached historical games")
+  out <- rbind(
+    data.frame(team = games$home, season = games$season,
+               model_week = games$model_week, power_rating = games$home_power),
+    data.frame(team = games$away, season = games$season,
+               model_week = games$model_week, power_rating = games$away_power)
+  )
+  out <- out[is.finite(out$power_rating), , drop = FALSE]
+  out[!duplicated(paste(out$team, out$season, out$model_week, sep = "\r")), ]
 }
 
 target_teams <- unique(c(schedule$home, schedule$away))
@@ -235,7 +285,9 @@ membership_flags <- membership_flags[
   !duplicated(paste(membership_flags$team, membership_flags$season)), , drop = FALSE
 ]
 transitions <- fbs_transition_teams(membership_flags)
-bridge <- calibrate_fbs_bridge(team_games, membership_flags, config)
+bridge <- calibrate_fbs_bridge(team_games[team_games$season < 2026L, ],
+                               membership_flags[membership_flags$season < 2026L, ], config)
+transition_priors <- fbs_bridge_prior_rows(team_games, membership_flags, config, 2026L)
 
 history_rows <- team_games[
   team_games$team %in% target_teams & team_games$season >= 2023L, , drop = FALSE
@@ -254,7 +306,8 @@ target_rows <- do.call(rbind, lapply(seq_len(nrow(schedule)), function(i) {
     havoc_generated = NA_real_, scrimmage_plays = NA_real_, defense_epa = NA_real_,
     turnover_rate_regressed = NA_real_, special_teams_epa_raw = NA_real_,
     special_teams_plays = NA_real_, special_teams_rating = NA_real_,
-    season = 2026L, week = 1L, model_week = 1L, kickoff = game$kickoff,
+    season = 2026L, week = target_week, model_week = game$model_week,
+    kickoff = game$kickoff,
     home = game$home, away = game$away, home_score = NA_real_, away_score = NA_real_,
     neutral_site = game$neutral_site, source_season_type = "regular",
     postseason_type = "regular", opponent = c(game$away, game$home),
@@ -265,12 +318,23 @@ target_rows <- do.call(rbind, lapply(seq_len(nrow(schedule)), function(i) {
 
 snapshot_games <- bind_compatible(history_games, schedule)
 snapshot_team_games <- bind_compatible(history_rows, target_rows)
-power <- preseason_power_ratings(foundation_games, 2026L, config)
+target_model_week_value <- unique(schedule$model_week)
+power_history <- historical_power_ratings(foundation_games)
+target_power <- pregame_power_ratings(
+  foundation_games, 2026L, target_model_week_value, target_week, config
+)
+target_power_key <- paste(target_power$team, target_power$season,
+                          target_power$model_week, sep = "\r")
+power_history <- power_history[
+  !paste(power_history$team, power_history$season, power_history$model_week,
+         sep = "\r") %in% target_power_key, , drop = FALSE
+]
+power <- bind_compatible(power_history, target_power)
 snapshot_result <- build_team_pregame_snapshots(
-  snapshot_team_games, snapshot_games, power, config
+  snapshot_team_games, snapshot_games, power, config, transition_priors
 )
 target_snapshots <- snapshot_result$snapshots[
-  snapshot_result$snapshots$season == 2026L, , drop = FALSE
+  snapshot_result$snapshots$game_id %in% schedule$game_id, , drop = FALSE
 ]
 matchup <- build_historical_matchup_table(schedule, target_snapshots, config)
 
@@ -286,8 +350,19 @@ if (!is.null(coach_history_manual) && nrow(coach_history_manual)) {
     coach_history, coach_history_manual
   )
 }
-ratings_65 <- build_coach_ratings(coach_history, 2026L, 1L, 0.65, config)
-ratings_70 <- build_coach_ratings(coach_history, 2026L, 1L, 0.70, config)
+if (slate == "week2") {
+  coach_history <- extend_current_coach_history(
+    coach_history, completed_2026, foundation_games, current_assignments, 2026L, config
+  )
+}
+target_context <- coach_target_context(
+  c(coach_map$home_coach_id, coach_map$away_coach_id),
+  c(matchup$home_power_rating, matchup$away_power_rating), config
+)
+ratings_65 <- build_coach_ratings(coach_history, 2026L, target_model_week_value, 0.65,
+                                 config, target_context = target_context)
+ratings_70 <- build_coach_ratings(coach_history, 2026L, target_model_week_value, 0.70,
+                                 config, target_context = target_context)
 coach_value <- function(ids, ratings) {
   value <- ratings$rating[match(ids, ratings$coach_id)]
   value[!is.finite(value)] <- 0
@@ -411,26 +486,9 @@ ats_validation <- data.frame(
   closing_home_spread = validation$data$closing_home_spread[ats_rows][ats_eligible],
   margin_sd = rolling$predictions$margin_sd[ats_eligible]
 )
-ats_model <- fit_ats_residual_model(ats_validation)
-ats_threshold <- NULL
-if (!is.null(ats_model)) {
-  cover_probability <- predict_ats_home_cover(
-    ats_model, ats_validation$expected_margin, ats_validation$closing_home_spread,
-    ats_validation$margin_sd
-  )
-  threshold_validation <- data.frame(
-    edge = ats_validation$expected_margin + ats_validation$closing_home_spread,
-    cover_probability = cover_probability,
-    covered = ifelse(
-      cover_probability >= 0.5,
-      ats_validation$actual_margin + ats_validation$closing_home_spread > 0,
-      ats_validation$actual_margin + ats_validation$closing_home_spread < 0
-    )
-  )
-  finite <- is.finite(threshold_validation$edge) &
-    is.finite(threshold_validation$cover_probability)
-  ats_threshold <- select_ats_threshold(threshold_validation[finite, ], config)
-}
+ats <- fit_validated_ats_layer(ats_validation, config)
+ats_model <- ats$model
+ats_threshold <- ats$threshold
 
 predictions <- predict_week(
   model, schedule, matchup, market$market_home_spread,
@@ -463,6 +521,8 @@ coverage <- do.call(rbind, lapply(target_teams, function(team) {
     team = team,
     prior_fbs_games = sum(keep & team_games$season == 2025L),
     trailing_fbs_games = sum(keep & team_games$season >= 2023L & team_games$season <= 2025L),
+    current_fbs_games = sum(keep & team_games$season == 2026L &
+                              team_games$model_week < target_model_week_value),
     stringsAsFactors = FALSE
   )
 }))
@@ -507,6 +567,8 @@ predictions$home_prior_fbs_games <- home_coverage$prior_fbs_games
 predictions$away_prior_fbs_games <- away_coverage$prior_fbs_games
 predictions$home_trailing_fbs_games <- home_coverage$trailing_fbs_games
 predictions$away_trailing_fbs_games <- away_coverage$trailing_fbs_games
+predictions$home_current_fbs_games <- home_coverage$current_fbs_games
+predictions$away_current_fbs_games <- away_coverage$current_fbs_games
 predictions$preseason_roster_rebuild_score <-
   matchup$preseason_roster_rebuild_score
 predictions$transition_game <- nzchar(predictions$fbs_transition)
@@ -525,6 +587,7 @@ predictions$data_flag <- ifelse(
 predictions$preseason_profile <- selected_profile
 predictions$preseason_challenger_profile <- "roster_rebuild_diagnostic"
 predictions$model_version <- config$version
+predictions$preseason_feature_weight <- preseason_feature_weight(target_week, config)
 predictions$talent_available <-
   predictions$home_talent_data & predictions$away_talent_data
 predictions$reported_confidence <- ifelse(
@@ -640,7 +703,12 @@ stopifnot(
   all(predictions$preseason_profile == selected_profile),
   all(abs(predictions$preseason_challenger_share -
             config$preseason$challenger_share) < 1e-8),
-  all(target_snapshots$games_played == 0),
+  if (target_week <= 1L) {
+    all(target_snapshots$games_played == 0)
+  } else {
+    any(target_snapshots$games_played > 0) &
+      all(target_snapshots$source_games <= target_snapshots$games_played)
+  },
   max(abs(ridge_intercept_contribution(model, matchup) +
             rowSums(feature_contributions) -
             predictions$expected_margin)) < 1e-8
@@ -674,8 +742,8 @@ readr::write_csv(
 top <- head(order(importance$mean_abs_points_all_games, decreasing = TRUE), 12L)
 top <- top[order(importance$mean_abs_points_all_games[top])]
 transition_teams <- sort(unique(c(
-  predictions$home[predictions$transition_game],
-  predictions$away[predictions$transition_game]
+  predictions$home[predictions$fbs_transition %in% c("home", "both")],
+  predictions$away[predictions$fbs_transition %in% c("away", "both")]
 )))
 if (length(transition_teams)) {
   plot_values <- rbind(
@@ -726,7 +794,7 @@ table_rows <- vapply(seq_len(nrow(predictions)), function(i) {
     "| %s at %s | %s | %s | %s | %s | %s | %.0f%% | %+.1f | %s | %s | %.1f | %.1f%% | %.1f | %s |",
     x$away, x$home, x$market_line, x$foundation_model_line,
     x$returning_model_line, x$full_preseason_model_line, x$model_line,
-    100 * x$preseason_challenger_share,
+    100 * x$preseason_feature_weight,
     x$total_preseason_adjustment,
     x$straight_up_pick,
     x$ats_pick_line, x$pick_edge, 100 * x$pick_cover_probability,
@@ -749,11 +817,21 @@ coach_split <- paste0(round(100 * coach_selection$recent_share), "/",
 market_books <- paste(sort(unique(stats::na.omit(market$line_source))), collapse = "+")
 season_data_note <- if (slate == "aug29") {
   "- Week 0 contains no 2026 game statistics. Priors use 2025 and trailing 2023-2025 FBS history; non-CFP bowls are excluded."
-} else {
+} else if (slate == "week1") {
   paste0(
     "- This preliminary Week 1 run excludes the August 29 games from football features. ",
     "cfbfastR has not published standardized 2026 EPA yet; direct CFBD PPA is not mixed ",
     "onto the historical EPA scale. Priors use 2025 and trailing 2023-2025 FBS history."
+  )
+} else {
+  paste0(
+    "- Week 2 uses `", current_pbp_rows, "` 2026 cfbfastR play rows. The strict ",
+    "prior-feature-week cutoff supplies `", current_fbs_games,
+    "` completed FBS-vs-FBS games. EPA component features blend current performance ",
+    "at 40% with prior performance at 60%, preseason challenger inputs receive 60% ",
+    "weight, and separately modeled recent-form features remain visible. The Monday ",
+    "SMU-Florida State result shares Week 2's chronological feature bucket and is ",
+    "therefore not used."
   )
 }
 venue_note <- if (slate == "aug29") {
@@ -785,7 +863,7 @@ report <- c(
   paste0("A side was requested for all ", nrow(predictions),
          " games; `article_pick` identifies a requested model selection that does not qualify as a validated best bet."),
   "",
-  "| Game | Market | Foundation | Returning only | Full preseason challenger | Production model | PS share | PS delta | SU pick | ATS pick | Edge | Pick cover | Margin SD | Data flag |",
+  "| Game | Market | Foundation | Returning only | Full preseason challenger | Production model | PS feature weight | PS delta | SU pick | ATS pick | Edge | Pick cover | Margin SD | Data flag |",
   "|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---|",
   table_rows,
   "",

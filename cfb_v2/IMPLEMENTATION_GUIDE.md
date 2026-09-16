@@ -1,6 +1,13 @@
 # CFB Model V2 Implementation Guide
 
-Last updated: 2026-08-30
+Last updated: 2026-09-08
+
+## V3 Review Follow-Up
+
+The current engine is 3.0.0. [The v3 guide](../cfb_v3/README.md) records the seven
+review fixes, chronological validation, commands, and remaining limitations. New
+artifacts are isolated under `cfb_v3/`; v2 data and published snapshots remain available.
+The historical implementation narrative below is retained for context.
 
 This document records what changed during the model-rebuild session, why each change
 was made, where it lives, and how to reproduce it. It distinguishes completed work
@@ -293,9 +300,24 @@ Generate the preliminary Week 1 article slate with:
 That mode excludes games which begin before the Friday, September 4 at 1 p.m.
 Eastern publication cutoff and writes beneath `week_1_preliminary`.
 
+Once Week 1 is complete, generate Week 2 with:
+
+```powershell
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' `
+  .\cfb_v2\dry_run_aug29_2026.R --slate=week2 --refresh=true
+```
+
+This path appends completed 2026 compact play-by-play to feature history without
+refitting the frozen 2020-2025 model coefficients. Its chronological cutoff prevents
+same-feature-week results from entering a prediction. In the approved Week 2 phase,
+EPA component features use 40% current and 60% prior performance, preseason challenger
+inputs receive 60% weight, and separately learned recent-form features remain active.
+Output is written beneath `week_2_preliminary`.
+
 Generated reports, predictions, and charts are written beneath
-`cfb_v2/output/2026/week_0_1_blend/<UTC timestamp>` and are intentionally ignored
-by Git. The original July audit remains under `august_29_dry_run`.
+the corresponding timestamped `week_0_1_blend`, `week_1_preliminary`, or
+`week_2_preliminary` directory and is intentionally ignored by Git. The original July
+audit remains under `august_29_dry_run`.
 
 ## 12. Add Prediction Explanations
 
