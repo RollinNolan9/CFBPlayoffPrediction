@@ -166,6 +166,8 @@ v2_init_schema <- function(con) {
     DBI::dbExecute(con, paste("ALTER TABLE team_week_features ADD COLUMN IF NOT EXISTS",
                               column, "INTEGER"))
   }
+  # Additive only: existing rows keep their values; the new field is NULL until supplied.
+  DBI::dbExecute(con, "ALTER TABLE team_week_features ADD COLUMN IF NOT EXISTS information_available_at TIMESTAMP")
   for (column in c("model_week", "coach_lookup_week")) {
     DBI::dbExecute(con, paste("ALTER TABLE game_schedule ADD COLUMN IF NOT EXISTS",
                               column, "INTEGER"))

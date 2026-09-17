@@ -45,8 +45,12 @@ The model receives numeric matchup differentials such as:
 - coach rating
 - home-field points
 
-The prohibition is enforced in `football_feature_names()` and again when fitting the
-ensemble. This prevents Alabama, Clemson, or any other school name from acting as a
+The prohibition is enforced in `football_feature_names()` (production allowlist) and
+again when fitting the ensemble (prohibited-name deny list). Production entry points
+(`run_v2_week`, backtest, dry-run) select predictors only through
+`football_feature_names()` / `select_coach_split_validation()`. Explicit
+`fit_cfb_ensemble(features=)` remains a research/test hatch and is not a production
+bypass. This prevents Alabama, Clemson, or any other school name from acting as a
 historical brand coefficient.
 
 ## 3. Restrict the Training Era and Weight Recent Games
@@ -406,10 +410,13 @@ Run the test suite:
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' -e `
   "testthat::test_file('cfb_v2/tests/test_v2.R', reporter='stop')"
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' -e `
+  "testthat::test_file('cfb_v2/tests/test_predictor_safeguards.R', reporter='stop')"
 ```
 
 Then rebuild the local DuckDB foundation or run the backtest from the committed CSV
-foundation. Local caches and generated output will be recreated as needed.
+foundation. Local caches and generated output will be recreated as needed. The
+safeguard suite does not require `cfbfastR`; live CFBD pulls still do.
 
 ## 16. Known Work Remaining
 

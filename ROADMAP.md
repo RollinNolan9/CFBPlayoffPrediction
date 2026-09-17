@@ -156,6 +156,8 @@ From `cfb_v2/README.md`:
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' -e `
   "testthat::test_file('cfb_v2/tests/test_v2.R', reporter='stop')"
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' -e `
+  "testthat::test_file('cfb_v2/tests/test_predictor_safeguards.R', reporter='stop')"
 ```
 
 plus the foundation rebuild, `--mode=backtest`, and a regenerated dry run whenever

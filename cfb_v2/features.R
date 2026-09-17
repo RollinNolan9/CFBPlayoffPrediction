@@ -318,24 +318,91 @@ make_matchup_features <- function(schedule, home_features, away_features,
   joined
 }
 
-football_feature_names <- function(data) {
-  prohibited <- c(
-    "home", "away", "conference", "home_conference", "away_conference",
-    "market_home_spread", "opening_spread", "closing_spread", "total",
-    "ap_rank_diff", "cfp_rank_diff", "fpi", "pff", "public_rating",
-    "pregame_power_diff", "home_field_rating_diff"
+diagnostic_coach_variant_names <- function() {
+  c("coach_rating_65_35_diff", "coach_rating_70_30_diff")
+}
+
+intended_preseason_production_features <- function(config = NULL) {
+  if (!is.null(config)) config$preseason$production_features else c(
+    "returning_ppa_pct", "returning_passing_ppa_pct", "returning_usage_pct",
+    "retained_quality", "talent_percentile", "replacement_capacity",
+    "portal_replacement_capacity", "portal_offense_replacement"
   )
+}
+
+approved_production_predictors <- function(config = NULL) {
+  c(
+    paste0(matchup_metric_names(), "_diff"),
+    "home_field_points",
+    paste0("ps_", intended_preseason_production_features(config), "_diff")
+  )
+}
+
+# Production auto-selection is this allowlist. Research/tests may still pass
+# explicit names to fit_cfb_ensemble(features=); that path only applies the
+# prohibited-name deny list and is not a production entry point.
+football_feature_names <- function(data, config = NULL) {
+  allowed <- approved_production_predictors(config)
   candidates <- names(data)[vapply(data, is.numeric, logical(1))]
-  candidates <- setdiff(candidates, c(prohibited, "home_score", "away_score",
-                                      "margin", "total_points", "season", "week",
-                                      "model_week", "phase_week"))
-  candidates <- candidates[
-    grepl("_diff$", candidates) | candidates == "home_field_points"
-  ]
-  candidates[!grepl(
-    "spread|line|price|rank|fpi|pff|market|^challenger_|pregame_elo",
-    candidates, ignore.case = TRUE
+  candidates[candidates %in% allowed]
+}
+
+assert_production_predictors <- function(features) {
+  features <- unique(as.character(features))
+  future <- features[grepl("final|postgame|closing", features, ignore.case = TRUE)]
+  variants <- intersect(features, diagnostic_coach_variant_names())
+  identity <- features[tolower(features) %in% c(
+    "team", "team_id", "home", "away", "conference",
+    "home_conference", "away_conference"
   )]
+  market <- features[grepl(
+    "spread|line|price|rank|fpi|pff|market", features, ignore.case = TRUE
+  )]
+  prohibited <- unique(c(future, variants, identity, market))
+  if (length(prohibited)) {
+    stop("Pure football model contains prohibited features: ",
+         paste(prohibited, collapse = ", "), call. = FALSE)
+  }
+  invisible(features)
+}
+
+assert_prediction_cutoff <- function(schedule, as_of, features = NULL) {
+  as_of <- as.POSIXct(as_of, tz = "UTC")
+  if (length(as_of) != 1L || is.na(as_of)) {
+    stop("Prediction as_of must be a single finite timestamp.", call. = FALSE)
+  }
+  if (!"kickoff" %in% names(schedule)) {
+    stop("Schedule is missing kickoff; cannot enforce prediction_as_of < kickoff.",
+         call. = FALSE)
+  }
+  kickoff <- as.POSIXct(schedule$kickoff, tz = "UTC")
+  if (any(is.na(kickoff))) {
+    stop("Every scheduled game must have a finite kickoff before prediction. ",
+         "Require prediction_as_of < kickoff.", call. = FALSE)
+  }
+  started <- kickoff <= as_of
+  if (any(started)) {
+    ids <- schedule$game_id[started]
+    stop("Cannot predict games at or after kickoff: ",
+         paste(ids, collapse = ", "),
+         ". Require prediction_as_of < kickoff.", call. = FALSE)
+  }
+  # information_available_at is optional. Absence is not treated as verified
+  # provenance; timestamps are never manufactured. If the column is present,
+  # every supplied value must be a finite timestamp <= as_of (equality allowed).
+  if (!is.null(features) && "information_available_at" %in% names(features) &&
+      nrow(features)) {
+    available <- parse_utc_datetime(features$information_available_at)
+    if (any(is.na(available))) {
+      stop("information_available_at must be a finite timestamp when supplied.",
+           call. = FALSE)
+    }
+    if (any(available > as_of)) {
+      stop("Feature information_available_at must be <= prediction_as_of.",
+           call. = FALSE)
+    }
+  }
+  invisible(TRUE)
 }
 
 build_context_challengers <- function(schedule, team_context, venue_context) {
