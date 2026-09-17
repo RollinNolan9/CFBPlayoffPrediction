@@ -347,6 +347,8 @@ fallback can be changed without changing the model.
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' -e `
   "testthat::test_file('cfb_v2/tests/test_v2.R', reporter='stop')"
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' -e `
+  "testthat::test_file('cfb_v2/tests/test_predictor_safeguards.R', reporter='stop')"
 ```
 
 The suite covers phase fading, modern-era weights, bowl/FCS rules, canceled games,
@@ -354,3 +356,14 @@ garbage-time filtering, coach snapshot/count anomalies, dated transition interva
 stable coach identities, pure-model exclusions, large-spread extrapolation, neutral
 sites, forced picks, eligibility, injuries, line snapshots, CFP bye uncertainty,
 rolling splits, deterministic simulations, and DuckDB immutability.
+
+`test_predictor_safeguards.R` covers the production predictor allowlist, existing
+DuckDB compatibility for optional `information_available_at`, and live
+`prediction_as_of` cutoffs. Offline tests inject a dummy preseason puller and do
+not install a `cfbfastR` stub. Live CFBD wrappers (`pull_cfbd_*`, adapters, and
+historical pulls) still require a real `cfbfastR` package and `CFBD_API_KEY`; that
+sports-data integration is not exercised by the offline suite.
+
+`information_available_at` is optional. Missing provenance is left unknown and is
+not labeled verified. If the column is supplied, every value must be a finite
+timestamp at or before `prediction_as_of`. Timestamps are not manufactured.

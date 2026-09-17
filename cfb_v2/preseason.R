@@ -6,7 +6,6 @@ preseason_cache_path <- function(config, name, season) {
 pull_preseason_source <- function(config, name, season, refresh, puller) {
   path <- preseason_cache_path(config, name, season)
   if (!refresh && file.exists(path)) return(readRDS(path))
-  require_v2_package("cfbfastR")
   if (!nzchar(Sys.getenv("CFBD_API_KEY"))) {
     stop("CFBD_API_KEY is not set and no cached preseason ", name,
          " snapshot exists for ", season, ".", call. = FALSE)
@@ -23,24 +22,28 @@ pull_preseason_source <- function(config, name, season, refresh, puller) {
 
 pull_cfbd_returning_production <- function(season, config, refresh = FALSE) {
   pull_preseason_source(config, "returning", season, refresh, function(year) {
+    require_v2_package("cfbfastR")
     cfbfastR::cfbd_player_returning(year = year)
   })
 }
 
 pull_cfbd_team_talent <- function(season, config, refresh = FALSE) {
   pull_preseason_source(config, "talent", season, refresh, function(year) {
+    require_v2_package("cfbfastR")
     cfbfastR::cfbd_team_talent(year = year)
   })
 }
 
 pull_cfbd_transfer_portal <- function(season, config, refresh = FALSE) {
   pull_preseason_source(config, "portal", season, refresh, function(year) {
+    require_v2_package("cfbfastR")
     cfbfastR::cfbd_recruiting_transfer_portal(year = year)
   })
 }
 
 pull_cfbd_player_ppa <- function(season, config, refresh = FALSE) {
   pull_preseason_source(config, "player_ppa", season, refresh, function(year) {
+    require_v2_package("cfbfastR")
     cfbfastR::cfbd_metrics_ppa_players_season(
       year = year, excl_garbage_time = TRUE
     )
@@ -49,6 +52,7 @@ pull_cfbd_player_ppa <- function(season, config, refresh = FALSE) {
 
 pull_cfbd_preseason_polls <- function(season, config, refresh = FALSE) {
   pull_preseason_source(config, "polls", season, refresh, function(year) {
+    require_v2_package("cfbfastR")
     cfbfastR::cfbd_rankings(year = year, week = 1, season_type = "regular")
   })
 }

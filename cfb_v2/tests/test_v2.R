@@ -963,7 +963,7 @@ test_that("pure model excludes brand, market, poll, FPI, and PFF fields", {
     margin = 7
   )
   expect_equal(sort(football_feature_names(data)),
-               sort(c("efficiency_diff", "special_teams_rating_diff")))
+               "special_teams_rating_diff")
 })
 
 test_that("pure model admits differentials but rejects separate side strength columns", {

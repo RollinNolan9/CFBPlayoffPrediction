@@ -280,16 +280,19 @@ select_coach_split_validation <- function(data, weights, config,
                `0.70` = "coach_rating_70_30_diff")
   available <- columns[columns %in% names(data)]
   if (length(available) < 2L) {
-    rolling <- rolling_validate_ensemble(data, config = config, weights = weights,
+    features <- setdiff(football_feature_names(data, config),
+                        diagnostic_coach_variant_names())
+    rolling <- rolling_validate_ensemble(data, features = features, config = config,
+                                         weights = weights,
                                          fit_nonlinear = fit_nonlinear,
                                          fold_features = fold_features)
     return(list(data = data, recent_share = 0.65, rolling = rolling,
-                features = football_feature_names(data),
+                features = features,
                 comparison = data.frame(recent_share = .65,
                                         margin_mae = min(rolling$scores$absolute_error))))
   }
 
-  base_features <- setdiff(football_feature_names(data),
+  base_features <- setdiff(football_feature_names(data, config),
                            c(unname(columns), "coach_rating_diff"))
   candidates <- lapply(names(available), function(share) {
     variant <- data
@@ -871,6 +874,7 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
   schedule <- schedule[eligible, , drop = FALSE]
   if (all_picks) force_game_ids <- union(force_game_ids, schedule$game_id)
   if (!nrow(schedule)) stop("No games passed the weekly card eligibility rules.", call. = FALSE)
+  assert_prediction_cutoff(schedule, as_of, inputs$team_week_features)
 
   validation <- prepare_training_data(inputs$training_games, config)
   historical_team_path <- file.path(config$data_dir, "historical_team_games.csv")

@@ -133,17 +133,9 @@ apply_error_calibration <- function(calibration, predicted, phase) {
 
 fit_cfb_ensemble <- function(data, target = "margin", features = NULL, weights = NULL,
                              lambda = 8, config, fit_nonlinear = TRUE) {
-  if (is.null(features)) features <- football_feature_names(data)
+  if (is.null(features)) features <- football_feature_names(data, config)
   if (!length(features)) stop("No eligible pure-football features were found.", call. = FALSE)
-  prohibited <- features[
-    tolower(features) %in% c("team", "team_id", "home", "away", "conference",
-                             "home_conference", "away_conference") |
-      grepl("spread|line|market|fpi|pff|(^|_)rank($|_)", features, ignore.case = TRUE)
-  ]
-  if (length(prohibited)) {
-    stop("Pure football model contains prohibited features: ",
-         paste(prohibited, collapse = ", "), call. = FALSE)
-  }
+  assert_production_predictors(features)
   if (is.null(weights)) weights <- rep(1, nrow(data))
   ridge <- fit_weighted_ridge(data, target, features, weights, lambda)
   base <- predict(ridge, data)
@@ -654,7 +646,7 @@ rolling_season_splits <- function(data, minimum_train_seasons = 2L) {
 rolling_validate_ensemble <- function(data, target = "margin", features = NULL,
                                       weights = NULL, config, fit_nonlinear = TRUE,
                                       fold_features = NULL) {
-  if (is.null(features)) features <- football_feature_names(data)
+  if (is.null(features)) features <- football_feature_names(data, config)
   if (is.null(weights)) weights <- rep(1, nrow(data))
   splits <- rolling_season_splits(data)
   if (!length(splits)) stop("Rolling validation requires at least three seasons.", call. = FALSE)

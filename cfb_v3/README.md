@@ -157,6 +157,7 @@ established betting edge. Neither this comparison nor its seeds promote a model.
 ```powershell
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v2\tests\test_v2.R
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v2\tests\test_v3.R
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v2\tests\test_predictor_safeguards.R
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v2\tests\test_ats_experiments.R
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v2\tests\test_v1_comparison.R
 # After generating the v3 foundation and a Week 2 live card:
