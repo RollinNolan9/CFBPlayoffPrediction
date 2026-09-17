@@ -372,21 +372,16 @@ test_that("pre-patch DuckDB databases keep existing rows after optional column m
 
 # Production predictor contract --------------------------------------------------
 
-# Committed training_games.csv currently stores EPA/power/havoc diffs, not
-# offense_rating_diff/defense_rating_diff. The synthetic live fixture uses the
-# rating columns instead. Both are subsets of the same allowlist; preseason
-# ps_* columns are attached at runtime from config$preseason$production_features
-# (8 names) and are not stored in training_games.csv. The earlier "20 + 8"
-# count was the committed matchup diffs excluding games_played_diff,
-# source_games_diff, and home_field_points; this test records the exact lists.
+# Exact football_feature_names() result on committed training_games.csv.
+# Continuity diffs exist as all-NA logical columns, so they are not numeric and
+# are not selected. Rating diffs and ps_* columns are absent from this CSV.
 committed_foundation_predictors <- c(
   "power_rating_diff", "offense_epa_diff", "defense_epa_diff",
   "special_teams_rating_diff", "pass_epa_diff", "rush_epa_diff",
   "success_rate_diff", "havoc_allowed_diff", "havoc_generated_diff",
   "turnover_rate_regressed_diff", "recent_3_diff", "recent_6_diff",
   "season_to_date_diff", "prior_season_diff", "trailing_3yr_diff",
-  "preseason_prior_diff", "qb_continuity_diff", "roster_continuity_diff",
-  "staff_continuity_diff", "games_played_diff", "source_games_diff",
+  "preseason_prior_diff", "games_played_diff", "source_games_diff",
   "coach_rating_diff", "home_field_points"
 )
 
@@ -401,23 +396,29 @@ synthetic_foundation_predictors <- c(
 test_that("committed training table selects the production foundation subset, not the synthetic fixture", {
   training <- utils::read.csv(
     file.path(project_dir, "cfb_v2", "inbox", "training_games.csv"),
-    stringsAsFactors = FALSE, check.names = FALSE, nrows = 20
+    stringsAsFactors = FALSE, check.names = FALSE, na.strings = c("", "NA")
   )
   selected <- football_feature_names(training, config)
   expect_equal(sort(selected), sort(committed_foundation_predictors))
+  expect_equal(length(selected), 20L)
   expect_false("offense_rating_diff" %in% names(training))
   expect_false("defense_rating_diff" %in% names(training))
   expect_false(any(grepl("^ps_", names(training))))
   expect_false("efficiency_diff" %in% selected)
   expect_true(all(selected %in% approved_production_predictors(config)))
+  expect_true(all(c("qb_continuity_diff", "roster_continuity_diff",
+                    "staff_continuity_diff") %in% names(training)))
+  expect_true(all(!vapply(training[c("qb_continuity_diff", "roster_continuity_diff",
+                                     "staff_continuity_diff")],
+                          is.numeric, logical(1))))
   expect_equal(
     sort(paste0("ps_", intended_preseason_production_features(config), "_diff")),
     sort(paste0("ps_", config$preseason$production_features, "_diff"))
   )
-  expect_equal(length(setdiff(synthetic_foundation_predictors, selected)), 2L)
   expect_equal(
     sort(setdiff(synthetic_foundation_predictors, selected)),
-    c("defense_rating_diff", "offense_rating_diff")
+    sort(c("offense_rating_diff", "defense_rating_diff",
+           "qb_continuity_diff", "roster_continuity_diff", "staff_continuity_diff"))
   )
 })
 
