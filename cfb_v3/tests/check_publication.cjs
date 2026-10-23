@@ -26,7 +26,7 @@ const expected = JSON.parse(fs.readFileSync(path.join(output, 'verification_expe
       assert.equal(row.cells[1], want.market_line);
       assert.equal(row.cells[2], want.model_line);
       assert.equal(row.cells[3], want.ats_pick_line);
-      assert.equal(row.cells[6], want.straight_up_pick);
+      assert.equal(row.cells[5], want.straight_up_pick);
       assert(row.cells[0].includes(want.kickoff_display));
       assert.equal(row.primetime, String(want.primetime));
     });

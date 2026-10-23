@@ -34,7 +34,7 @@ season_label <- if (length(season_value)) season_value[1] else "Current"
 week_label <- if (length(week_value)) week_value[1] else "Slate"
 snapshot_values <- picks$snapshot_time[!is.na(picks$snapshot_time) & nzchar(picks$snapshot_time)]
 snapshot_label <- if (length(snapshot_values)) snapshot_values[1] else
-  format(file.info(prediction_path)$mtime, "%Y-%m-%d %H:%M %Z")
+  "Capture time unavailable"
 provider_values <- unique(picks$market_provider_display[
   !is.na(picks$market_provider_display) & nzchar(picks$market_provider_display)
 ])
@@ -44,7 +44,6 @@ profile_values <- unique(picks$preseason_profile[
 ])
 profile_label <- if (length(profile_values)) profile_values[1] else "Production model"
 
-official <- picks[picks$status_group == "official", , drop = FALSE]
 reviews <- picks[picks$status_group == "review", , drop = FALSE]
 article <- picks[picks$status_group == "article", , drop = FALSE]
 article_card <- picks[
@@ -82,7 +81,8 @@ pick_board <- function(data, limit = 8L, empty = "No selections", title = "Selec
         htmltools::div(
           class = "pick-copy",
           htmltools::span(class = "pick-side", row$ats_pick_line),
-          htmltools::span(class = "pick-matchup", row$game_label)
+          htmltools::span(class = "pick-matchup", row$game_label),
+          if (row$injury_flag) htmltools::span(class = "game-warning", "Injury review")
         ),
         htmltools::div(
           class = "pick-numbers",
@@ -168,8 +168,7 @@ picks_table <- function(data) {
   header <- htmltools::tags$thead(
     htmltools::tags$tr(
       lapply(
-        c("Game", "Market", "Model", "ATS side", "Edge", "Cover", "SU pick",
-          "Confidence", "Status", ""),
+        c("Game", "Market", "Model", "ATS side", "Edge", "SU pick", "Status", ""),
         htmltools::tags$th
       )
     )
@@ -200,19 +199,7 @@ picks_table <- function(data) {
         htmltools::tags$td(class = "line-cell model-cell", row$model_line),
         htmltools::tags$td(class = "ats-cell", row$ats_pick_line),
         htmltools::tags$td(edge_meter(row$pick_edge)),
-        htmltools::tags$td(
-          class = "probability-cell",
-          ifelse(!isTRUE(row$ats_calibrated), "Unvalidated", ifelse(is.finite(row$pick_cover_probability),
-                 sprintf("%.1f%%", 100 * row$pick_cover_probability), "-"))
-        ),
         htmltools::tags$td(row$straight_up_pick),
-        htmltools::tags$td(
-          class = "confidence-cell",
-          htmltools::span(
-            class = paste("confidence-label", paste0("confidence-", tolower(row$reported_confidence))),
-            row$reported_confidence
-          )
-        ),
         htmltools::tags$td(status_badge(row$status_group, row$status_label)),
         htmltools::tags$td(class = "details-cell", details_cell(row))
       )
@@ -270,7 +257,6 @@ htmltools::div(
     class = "metric-strip",
     metric_item(nrow(picks), "Games"),
     metric_item(nrow(article_card), "ATS sides", "positive"),
-    metric_item(nrow(official), "Validated bets", "neutral"),
     metric_item(nrow(reviews), "Review flags", "warning"),
     metric_item(nrow(provisional), "Data reviews", if (nrow(provisional)) "warning" else "neutral")
   )
@@ -282,15 +268,17 @@ htmltools::div(
 ### Article Card
 
 ```{r}
-pick_board(article_card, 8L, "No article selections", "Largest Point Gaps")
+pick_board(article_card[!article_card$injury_flag, , drop = FALSE],
+           8L, "No article selections", "Largest Point Gaps")
 ```
 
-### Evening Card
+### Matchup Spotlight
 
 ```{r}
 if (any(picks$primetime, na.rm = TRUE)) {
   pick_board(picks[picks$primetime, ], 8L, title = "Evening Kickoffs", sort_edge = FALSE)
-} else pick_board(official, 8L, "No validated best bets in this snapshot", "Validation Status")
+} else pick_board(article_card[order(abs(article_card$expected_margin)), ],
+                  8L, "No matchups available", "Closest Model Matchups", sort_edge = FALSE)
 ```
 
 ### Review Board
@@ -310,7 +298,6 @@ htmltools::tagList(htmltools::tags$h3(class = "section-title", "Full Card"), htm
     class = "filter-group", role = "group", `aria-label` = "Filter picks",
     htmltools::tags$button(type = "button", class = "filter-button active", `data-filter` = "all", `aria-pressed` = "true", "All"),
     if (any(picks$primetime, na.rm = TRUE)) htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "primetime", `aria-pressed` = "false", "Primetime"),
-    htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "official", `aria-pressed` = "false", "Validated"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "article", `aria-pressed` = "false", "Article picks"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "review", `aria-pressed` = "false", "Review"),
     htmltools::tags$button(type = "button", class = "filter-button", `data-filter` = "provisional", `aria-pressed` = "false", "Provisional"),
@@ -432,7 +419,7 @@ htmltools::div(
   ),
   htmltools::p(
     class = "snapshot-note",
-    "Every requested game receives an ATS side. Confidence remains conservative until historical ATS validation supports a best-bet label; edge measures model disagreement with the market."
+    "Edge measures the model's point difference from the market spread."
   )
 )
 ```

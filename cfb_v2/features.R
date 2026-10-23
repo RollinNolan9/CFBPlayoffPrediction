@@ -495,6 +495,76 @@ validate_pregame_features <- function(data, kickoff_col = "kickoff") {
   invisible(TRUE)
 }
 
+select_latest_injury_reports <- function(injuries, as_of) {
+  if (is.null(injuries) || !nrow(injuries)) return(injuries)
+  assert_columns(injuries, c("game_id", "team", "status", "source_timestamp"), "injuries")
+  cutoff <- parse_utc_datetime(as_of)
+  if (length(cutoff) != 1L || is.na(cutoff)) {
+    stop("Injury report cutoff must be one valid timestamp.", call. = FALSE)
+  }
+  timestamp <- parse_utc_datetime(injuries$source_timestamp)
+  eligible <- !is.na(timestamp) & timestamp <= cutoff
+  injuries <- injuries[eligible, , drop = FALSE]
+  timestamp <- timestamp[eligible]
+  if (!nrow(injuries)) return(injuries)
+
+  injuries$game_id <- trimws(as.character(injuries$game_id))
+  injuries$team <- canonical_team(injuries$team)
+  injuries$status <- tolower(trimws(as.character(injuries$status)))
+  present <- function(x) !is.na(x) & nzchar(x)
+  if (any(!present(injuries$game_id) | !present(injuries$team))) {
+    stop("Injury reports require a game_id and team to resolve updates.", call. = FALSE)
+  }
+  player_id <- if ("player_id" %in% names(injuries)) {
+    trimws(as.character(injuries$player_id))
+  } else rep(NA_character_, nrow(injuries))
+  player_name <- if ("player_name" %in% names(injuries)) {
+    tolower(trimws(as.character(injuries$player_name)))
+  } else rep(NA_character_, nrow(injuries))
+  if (any(!present(player_id) & !present(player_name))) {
+    stop("Injury reports require player_id or player_name to resolve updates.", call. = FALSE)
+  }
+  # Keep both ledger key columns even when a source only supplies one identity.
+  injuries$player_id <- player_id
+  injuries$player_id[!present(player_id)] <- NA_character_
+  if (!"player_name" %in% names(injuries)) injuries$player_name <- NA_character_
+
+  selected <- integer()
+  game_teams <- split(seq_len(nrow(injuries)),
+                      list(injuries$game_id, injuries$team), drop = TRUE)
+  for (rows in game_teams) {
+    identity <- ifelse(present(player_id[rows]), paste0("id:", player_id[rows]),
+                       paste0("name:", player_name[rows]))
+    # Connect name-only updates to an ID only when that name is unambiguous.
+    for (i in which(!present(player_id[rows]))) {
+      matches <- rows[present(player_name[rows]) &
+                        player_name[rows] == player_name[rows[i]] &
+                        present(player_id[rows])]
+      ids <- unique(player_id[matches])
+      if (length(ids) > 1L) {
+        stop("Ambiguous injury player_name; supply player_id for ",
+             injuries$team[rows[i]], ": ", player_name[rows[i]], call. = FALSE)
+      }
+      if (length(ids)) identity[i] <- paste0("id:", ids)
+    }
+    for (reports in split(rows, identity)) {
+      latest <- reports[timestamp[reports] == max(timestamp[reports])]
+      if (length(unique(injuries$status[latest])) > 1L) {
+        stop("Conflicting latest injury statuses for game ", injuries$game_id[latest[1]],
+             ", team ", injuries$team[latest[1]],
+             "; resolve reports with the same source_timestamp.", call. = FALSE)
+      }
+      chosen <- tail(latest, 1L)
+      if ("conflict_flag" %in% names(injuries)) {
+        injuries$conflict_flag[chosen] <- any(as.logical(injuries$conflict_flag[latest]),
+                                             na.rm = TRUE)
+      }
+      selected <- c(selected, chosen)
+    }
+  }
+  injuries[sort(selected), , drop = FALSE]
+}
+
 build_injury_scenarios <- function(injuries, base_margin, home_team, away_team, config) {
   if (is.null(injuries) || !nrow(injuries)) {
     return(data.frame(scenario = "most_likely", margin_adjustment = 0,

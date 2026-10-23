@@ -231,11 +231,13 @@ select_article_lines <- function(lines, game_ids, as_of) {
                       market_total = NA_real_, opening_home_spread = NA_real_,
                       draftkings_home_spread = NA_real_, fanduel_home_spread = NA_real_,
                       best_home_spread = NA_real_, best_away_spread = NA_real_,
-                      line_source = NA_character_))
+                      line_source = NA_character_,
+                      market_captured_at = as.POSIXct(NA, tz = "UTC")))
   }
   assert_columns(lines, c("game_id", "provider", "captured_at", "home_spread"), "lines")
-  lines$captured_at <- as.POSIXct(lines$captured_at, tz = "UTC")
-  lines <- lines[lines$captured_at <= as.POSIXct(as_of, tz = "UTC") &
+  lines$captured_at <- parse_utc_datetime(lines$captured_at)
+  lines <- lines[!is.na(lines$captured_at) & is.finite(lines$home_spread) &
+                   lines$captured_at <= as.POSIXct(as_of, tz = "UTC") &
                    lines$game_id %in% game_ids, , drop = FALSE]
   main <- tolower(lines$provider) %in% c("draftkings", "draft kings", "fanduel", "fan duel")
   lines <- lines[main, , drop = FALSE]
@@ -245,7 +247,8 @@ select_article_lines <- function(lines, game_ids, as_of) {
       game_id = game_id, market_home_spread = NA_real_, market_total = NA_real_,
       opening_home_spread = NA_real_, draftkings_home_spread = NA_real_,
       fanduel_home_spread = NA_real_, best_home_spread = NA_real_,
-      best_away_spread = NA_real_, line_source = NA_character_, stringsAsFactors = FALSE
+      best_away_spread = NA_real_, line_source = NA_character_,
+      market_captured_at = as.POSIXct(NA, tz = "UTC"), stringsAsFactors = FALSE
     ))
     by_provider <- split(x, tolower(x$provider))
     latest_by_provider <- do.call(rbind, lapply(by_provider, function(y) {
@@ -275,6 +278,8 @@ select_article_lines <- function(lines, game_ids, as_of) {
       best_home_spread = max(latest_by_provider$home_spread, na.rm = TRUE),
       best_away_spread = max(-latest_by_provider$home_spread, na.rm = TRUE),
       line_source = paste(sort(unique(latest_by_provider$provider)), collapse = "+"),
+      # A consensus is only as fresh as its oldest contributing quote.
+      market_captured_at = min(latest_by_provider$captured_at),
       stringsAsFactors = FALSE
     )
   })

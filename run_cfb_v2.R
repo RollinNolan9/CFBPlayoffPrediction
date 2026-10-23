@@ -3,7 +3,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 parse_args <- function(args) {
   parsed <- list(mode = "article", season = as.integer(format(Sys.Date(), "%Y")),
-                 week = NA_integer_, as_of = Sys.time(), force = character(), strict = TRUE,
+                 week = NA_integer_, as_of = NULL, force = character(), strict = TRUE,
                  seasons = 2020:2025, refresh_pbp = FALSE,
                  refresh_schedule = FALSE, refresh_coaches = FALSE,
                  refresh_espn = FALSE, refresh_preseason = FALSE, overwrite = FALSE,

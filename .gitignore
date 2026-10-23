@@ -3,7 +3,14 @@
 .RData
 .Ruserdata
 .Renviron
+.Renviron.*
+.env
+*.zip
+*.zip.sha256
+CFB-Current-*/
 .RDataTmp*
+__pycache__/
+*.pyc
 cfb_v2/data/*.duckdb*
 cfb_v2/output/
 cfb_v2/cache/

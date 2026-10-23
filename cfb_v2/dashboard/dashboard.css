@@ -116,7 +116,7 @@ body {
 .metric-strip,
 .availability-strip {
   display: grid;
-  grid-template-columns: repeat(5, minmax(86px, 1fr));
+  grid-template-columns: repeat(4, minmax(86px, 1fr));
   gap: 8px;
 }
 
@@ -315,7 +315,7 @@ body {
 
 .picks-table {
   width: 100%;
-  min-width: 1180px;
+  min-width: 1000px;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 12px;
@@ -414,12 +414,7 @@ body {
   background: var(--positive);
 }
 
-.probability-cell {
-  font-variant-numeric: tabular-nums;
-}
-
 .status-badge,
-.confidence-label,
 .coach-flag {
   display: inline-block;
   padding: 3px 6px;
@@ -447,26 +442,6 @@ body {
 .status-pass {
   background: #f1f2f3;
   color: #747d85;
-}
-
-.confidence-high {
-  background: var(--positive-soft);
-  color: #105b45;
-}
-
-.confidence-medium {
-  background: var(--blue-soft);
-  color: #20517e;
-}
-
-.confidence-low {
-  background: var(--neutral-soft);
-  color: #555f68;
-}
-
-.confidence-provisional {
-  background: var(--warning-soft);
-  color: #854b09;
 }
 
 .details-cell {
@@ -654,7 +629,7 @@ body {
   }
 
   .metric-strip {
-    grid-template-columns: repeat(5, minmax(70px, 1fr));
+    grid-template-columns: repeat(4, minmax(70px, 1fr));
   }
 
   .table-toolbar {

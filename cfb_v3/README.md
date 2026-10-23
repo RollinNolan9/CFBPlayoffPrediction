@@ -28,6 +28,11 @@ to the current engine; use the prior Git revision to execute the original 2.1.0 
 
 ## Run
 
+**Required before the first weekly prediction run: complete the full-slate injury
+research below, or ask Nolan to fill the specific reporting gaps.** This applies
+to preliminary, live, opponent-relative, and article runs. Do not wait for Nolan
+to name injured players. Refresh the review again before the final article run.
+
 From the repository root in PowerShell:
 
 ```powershell
@@ -40,8 +45,8 @@ From the repository root in PowerShell:
 # Compare frozen v2 features and v3 using the same corrected validation.
 & 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v3.R --mode=compare
 
-# Generate a preliminary Week 2 card and self-contained Quarto dashboard.
-& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v3.R --mode=live --season=2026 --week=2 --all-picks=true --refresh=false
+# Generate a Week 3 live card and self-contained Quarto dashboard with fresh sources.
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\run_cfb_v3.R --mode=live --season=2026 --week=3 --all-picks=true --refresh=true
 ```
 
 Use `--refresh=true` to update schedule, current play-by-play, membership, coaches,
@@ -59,12 +64,101 @@ Run `--mode=article` on publication day for an immutable article snapshot. Live 
 are separate. Supply `--as-of="2026-09-11 13:00:00"` only for the actual intended data
 cutoff; timestamps are interpreted in Eastern time. Historical/current source pulls
 are not a substitute for archived point-in-time data when reconstructing old articles.
+When `--as-of` is omitted, the cutoff is set after live sources finish downloading.
+An explicit cutoff remains fixed. The dashboard uses the selected quotes' actual
+capture times. For consensus lines, the capture time is the oldest contributing quote.
+The dashboard omits cover probabilities, confidence tiers, and validation badges;
+calibration and confidence metadata remain in the prediction exports.
 
 Manual injury rows belong in `cfb_v3/inbox/injuries.csv`. The weekly command reads
-them, rejects information dated after the cutoff from the prediction input, and
-reports injury scenarios. Automated injury reporting remains future work. Coach
+them, rejects information dated after the cutoff, and uses the latest report per
+player, team, and game for injury scenarios. A later active status clears an older
+out status; conflicting statuses at the same latest timestamp require resolution.
+Automated injury collection remains future work; the research requirement below
+is an analyst/agent responsibility on every weekly run. Coach
 interval corrections belong in `cfb_v3/inbox/coach_assignment_overrides.csv` and take
 precedence over the current-coach source. Review those intervals after midseason changes.
+
+### Required injury research before weekly runs
+
+1. Build the intended slate and research **both teams in every matchup**, including
+   all reported injuries and availability changes across positions. Check existing
+   season-long absences, new injuries, returns, uncertain starters, and replacement
+   depth. Research must include teams outside the article's featured games. User
+   examples such as LJ Martin, JKS, and Jared Curtis are leads, not an exhaustive list.
+2. Start with current conference availability reports, school releases, and coach
+   press conferences. Fill gaps with credible team beat reporters and corroborated
+   national reporting. Verify player identity, team, applicable game, report date,
+   and exact status; resolve initials before matching player data. Distinguish an
+   in-game injury designation from availability for the next game. An older report
+   must not silently override a newer update.
+3. Save a dated research log with each team's sources and coverage, plus each
+   reported player's status, source URL, publication time when available, retrieval
+   time, and replacement information. Distinguish "reviewed, no reported issue"
+   from "not reviewed/report unavailable"; neither proves a healthy roster. Record
+   source-time uncertainty instead of inventing precise timestamps. Use only
+   information available by the run's cutoff. The Friday article injury cutoff is
+   **noon America/Los_Angeles** unless Nolan specifies otherwise; earlier preliminary
+   runs use their actual cutoff and must not borrow later Friday information.
+4. If reporting is missing, stale, contradictory, or leaves a material role unclear,
+   **ask Nolan for the specific missing information before the initial model run**.
+   Batch the open cases into one concise question after doing the available research.
+   Do not make him supply the entire injury list or assume an unmentioned player is
+   available. If he requests a baseline while cases remain unresolved, label those
+   cases and the incomplete coverage explicitly.
+5. Preserve exact availability states. Out/season-ending absences can enter the
+   confirmed-availability registry; questionable, doubtful, and concussion-protocol
+   reports remain explicit open cases until resolved. Being in protocol does not
+   itself establish whether a player will play. The current opponent-relative
+   overlay accepts only out/active reports: retain other statuses in the research
+   log and flag the game for review rather than converting them to out, active, or
+   an invented participation probability. For material uncertainty, prepare
+   available/unavailable scenarios when the replacement inputs support them.
+6. After freezing the baseline, apply fresh, source-backed usage/EPA replacement
+   estimates where the method is defensible. Research every reported injury even
+   when no defensible point value exists. Offensive line, defensive, special-teams,
+   thin-sample, and overlapping injuries may require qualitative review or a joint
+   scenario; do not silently assign zero impact or invent values. Account for
+   replacement performance already present in team history and avoid counting the
+   same lost production twice. Keep all unresolved material cases out of featured
+   pick recommendations until reviewed.
+7. Before handing over the dashboard, state the research cutoff, teams covered,
+   important absences, open cases, adjustments actually applied, and cases that are
+   flagged without a numerical adjustment. Refresh news for the final article run
+   and revisit changed statuses. Never describe a one-player adjustment as a
+   comprehensive injury-adjusted slate.
+
+### Injury scenarios for the opponent-relative cards
+
+The separate `run_cfb_live_relative.R` and `cfb_v3/run_week6_relative_preliminary.R`
+runners read confirmed availability from `cfb_v3/inbox/player_availability.csv`.
+The latest eligible status persists through its stated season/week; a later active
+report supersedes an older absence. Known absences without a fresh estimate retain
+their numerical baseline, appear as injury reviews, and are excluded from the
+Largest Point Gaps board. The registry does not provide comprehensive injury coverage.
+
+For a reviewed player, freeze a baseline first, then apply a game-specific estimate:
+
+```powershell
+Rscript --vanilla cfb_v3/apply_live_injuries.R --baseline=FROZEN_OUTPUT_DIR --registry=cfb_v3/inbox/player_availability.csv --estimates=ESTIMATES.csv --output=NEW_OUTPUT_DIR
+```
+
+The directory input selects `unadjusted_predictions.csv`. Verified estimate rows
+require `game_id`, `team`, `player_id`, signed `impact_points` (positive means the
+absence costs that team points), `input_verified`, `estimate_game_id`,
+`baseline_as_of`, `baseline_sha256`, `estimate_method`, and `estimate_source`.
+`input_verified` confirms the underlying inputs, not predictive accuracy. The
+timestamp and SHA-256 must match the exact frozen baseline. Optional
+`estimate_note` records workload, replacement sample, and limitations.
+
+The output includes a full replacement scenario dashboard, the untouched baseline,
+half-strength sensitivity, comparison CSV, and source audit. It does not refit or
+publish. Usage/EPA estimates must use compatible player/backup play definitions,
+past-only samples, and reconciled source data. They are supplemental scenarios,
+not learned injury coefficients or cover probabilities. Reassess the estimate as
+backup performance enters team history; never carry an old point penalty forward
+solely because the player remains out. Overlapping player effects require a joint
+estimate rather than summing QB and receiver/RB production from the same plays.
 
 ## What Changed
 

@@ -101,6 +101,7 @@ v2_schema_sql <- function() {
        expected_total DOUBLE, total_sd DOUBLE,
        home_win_probability DOUBLE, market_home_spread DOUBLE,
        ats_edge_home DOUBLE, home_cover_probability DOUBLE,
+       market_captured_at TIMESTAMP, ats_calibrated BOOLEAN,
        straight_up_pick VARCHAR, ats_pick VARCHAR, pick_status VARCHAR,
        confidence_tier VARCHAR, forced_pick BOOLEAN, fbs_transition VARCHAR,
        injury_scenario VARCHAR,
@@ -174,6 +175,8 @@ v2_init_schema <- function(con) {
   }
   DBI::dbExecute(con, "ALTER TABLE line_snapshots ADD COLUMN IF NOT EXISTS opening_home_spread DOUBLE")
   DBI::dbExecute(con, "ALTER TABLE prediction_snapshots ADD COLUMN IF NOT EXISTS data_flag VARCHAR")
+  DBI::dbExecute(con, "ALTER TABLE prediction_snapshots ADD COLUMN IF NOT EXISTS market_captured_at TIMESTAMP")
+  DBI::dbExecute(con, "ALTER TABLE prediction_snapshots ADD COLUMN IF NOT EXISTS ats_calibrated BOOLEAN")
   invisible(con)
 }
 

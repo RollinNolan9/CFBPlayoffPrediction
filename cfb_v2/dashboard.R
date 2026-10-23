@@ -60,7 +60,7 @@ prepare_dashboard_predictions <- function(data) {
     fbs_transition = "", transition_game = FALSE, neutral_site = FALSE,
     kickoff_display = "", broadcast = "", primetime = FALSE,
     evidence_note = "", availability_note = "", availability_source = "",
-    publication_note = "", market_change_note = "", ats_calibrated = TRUE
+    publication_note = "", market_change_note = "", ats_calibrated = FALSE
   )
   for (name in names(defaults)) data <- dashboard_add_column(data, name, defaults[[name]])
 
@@ -134,7 +134,7 @@ prepare_dashboard_predictions <- function(data) {
     )
   )
   data$status_label <- ifelse(
-    status == "official_pick", "Validated best bet",
+    status == "official_pick", "Model pick",
     ifelse(
       status %in% c("article_pick", "forced_model_pick"), "Article pick",
       ifelse(
@@ -162,7 +162,7 @@ prepare_dashboard_predictions <- function(data) {
   data$snapshot_time <- ifelse(
     nzchar(trimws(as.character(data$market_captured_at))),
     as.character(data$market_captured_at),
-    as.character(data$as_of)
+    ""
   )
   data$row_order <- seq_len(nrow(data))
   data
