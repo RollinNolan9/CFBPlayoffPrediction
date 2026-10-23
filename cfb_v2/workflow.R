@@ -835,11 +835,10 @@ write_prediction_outputs <- function(predictions, config, run_id, snapshot_type)
 }
 
 run_v2_week <- function(config, season, week, mode = c("article", "live"),
-                        as_of = Sys.time(), force_game_ids = character(), strict = TRUE,
+                        as_of = NULL, force_game_ids = character(), strict = TRUE,
                         refresh = FALSE, all_picks = FALSE) {
   mode <- match.arg(mode)
   config$season <- as.integer(season)
-  if (mode == "article") validate_article_as_of(as_of, config)
   if (mode == "article") {
     slot_con <- v2_connect(config)
     on.exit(v2_disconnect(slot_con), add = TRUE)
@@ -854,7 +853,11 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     any(supplied$season == season & supplied$week == week)
   if (!has_features) {
     inputs <- prepare_live_inputs(inputs, config, season, week, as_of, refresh)
+    as_of <- inputs$as_of
   }
+  if (is.null(as_of)) as_of <- Sys.time()
+  if (length(as_of) != 1L || is.na(as_of)) stop("A valid prediction cutoff is required.")
+  if (mode == "article") validate_article_as_of(as_of, config)
   required <- c("schedule", "training_games", "coach_assignments", "coach_history",
                 "team_week_features", "membership")
   empty <- required[vapply(inputs[required], function(x) is.null(x) || !nrow(x), logical(1))]
@@ -965,16 +968,11 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
     require_coverage = TRUE
   )
   lines <- inputs$lines
-  lines$captured_at <- as.POSIXct(lines$captured_at, tz = "UTC")
+  lines$captured_at <- parse_utc_datetime(lines$captured_at)
   selected_lines <- select_article_lines(lines, schedule$game_id, as_of)
   selected_lines <- selected_lines[match(schedule$game_id, selected_lines$game_id), ]
 
-  injuries <- inputs$injuries
-  if (!is.null(injuries) && nrow(injuries)) {
-    assert_columns(injuries, "source_timestamp", "injuries")
-    timestamp <- parse_utc_datetime(injuries$source_timestamp)
-    injuries <- injuries[!is.na(timestamp) & timestamp <= as_of, , drop = FALSE]
-  }
+  injuries <- select_latest_injury_reports(inputs$injuries, as_of)
   predictions <- predict_week(
     model, schedule, matchup, selected_lines$market_home_spread,
     force_game_ids = force_game_ids, injuries = injuries,
@@ -1003,6 +1001,7 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
   predictions$snapshot_type <- mode
   predictions$model_version <- config$version
   predictions$published <- mode == "article"
+  predictions$ats_calibrated <- !is.null(ats_model)
 
   con <- v2_connect(config)
   on.exit(v2_disconnect(con), add = TRUE)
@@ -1049,7 +1048,7 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
                          c("team", "season", "week", "provider"))
     }
 
-    line_store <- lines[lines$game_id %in% schedule$game_id &
+    line_store <- lines[!is.na(lines$captured_at) & lines$game_id %in% schedule$game_id &
                           lines$captured_at <= as.POSIXct(as_of, tz = "UTC"), , drop = FALSE]
     if (nrow(line_store)) {
       if (!"snapshot_type" %in% names(line_store)) line_store$snapshot_type <- mode
@@ -1060,9 +1059,9 @@ run_v2_week <- function(config, season, week, mode = c("article", "live"),
       injury_store <- injuries[injuries$game_id %in% schedule$game_id, , drop = FALSE]
       if (nrow(injury_store)) {
         injury_store$captured_at <- as.POSIXct(as_of, tz = "UTC")
-        injury_store$source_timestamp <- as.POSIXct(injury_store$source_timestamp, tz = "UTC")
+        injury_store$source_timestamp <- parse_utc_datetime(injury_store$source_timestamp)
         v2_append_snapshot(con, "injury_snapshots", injury_store, run_id,
-                           c("game_id", "team", "player_id", "source_timestamp"))
+                           c("game_id", "team", "player_id", "player_name", "source_timestamp"))
       }
     }
 

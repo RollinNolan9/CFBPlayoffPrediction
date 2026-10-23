@@ -7,6 +7,7 @@ project_dir <- if (length(script_arg)) {
 } else normalizePath(getwd(), winslash = "/", mustWork = TRUE)
 
 source(file.path(project_dir, "cfb_v2", "dashboard.R"))
+source(file.path(project_dir, "cfb_v2", "config.R"))
 
 prediction_path <- NULL
 for (arg in args) {
@@ -16,7 +17,7 @@ for (arg in args) {
 }
 if (is.null(prediction_path)) {
   prediction_path <- find_latest_prediction_csv(
-    file.path(project_dir, "cfb_v2", "output")
+    cfb_v2_config(project_dir)$output_dir
   )
 }
 if (!grepl("^([A-Za-z]:|/)", prediction_path)) {
@@ -37,6 +38,11 @@ if (length(missing)) {
   stop("Prediction snapshot is missing: ", paste(missing, collapse = ", "),
        call. = FALSE)
 }
+# Add presentation fields without inferring new picks for saved passes.
+predictions <- dashboard_add_column(predictions, "model_line",
+  dashboard_model_line_text(predictions$home, predictions$away, predictions$expected_margin))
+predictions <- dashboard_add_column(predictions, "ats_pick_line",
+  dashboard_pick_text(predictions$ats_pick, predictions$home, predictions$market_home_spread))
 seasons <- unique(stats::na.omit(as.integer(predictions$season)))
 if (length(seasons) != 1L) stop("Snapshot must contain exactly one season.", call. = FALSE)
 

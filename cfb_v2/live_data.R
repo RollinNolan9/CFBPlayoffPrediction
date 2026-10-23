@@ -9,13 +9,31 @@ cached_power_rows <- function(games) {
   rows[!duplicated(paste(rows$team, rows$season, rows$model_week)), ]
 }
 
-prepare_live_inputs <- function(inputs, config, season, week, as_of, refresh = FALSE) {
+prepare_live_inputs <- function(inputs, config, season, week, as_of = NULL, refresh = FALSE) {
   raw <- load_cfbd_schedule_season(season, config, refresh, allow_missing_key = FALSE)
   membership <- load_cfbd_fbs_teams_season(season, config, refresh)
   pbp <- if (week > 1L) load_compact_pbp_season(season, config, refresh) else NULL
+  coach_cache <- file.path(config$project_dir, "cfb_v2", "cache", "coaches",
+                           paste0("current_fbs_coaches_", season, ".rds"))
+  coaches <- pull_current_fbs_coaches(season, coach_cache, refresh)
+  line_cache <- file.path(config$project_dir, "cfb_v2", "cache", "lines",
+                          paste0("cfbd_week_", week, "_", season, ".rds"))
+  if (refresh || !file.exists(line_cache)) {
+    lines <- pull_cfbd_lines(season, week)
+    dir.create(dirname(line_cache), recursive = TRUE, showWarnings = FALSE)
+    saveRDS(lines, line_cache)
+  } else lines <- readRDS(line_cache)
+  # A live run freezes after its source pulls. Explicit historical cutoffs stay fixed.
+  if (is.null(as_of)) as_of <- Sys.time()
+  inputs$as_of <- as_of
   universe <- if (!is.null(pbp)) {
     derive_games_from_pbp(pbp, schedule = raw, fbs_membership = membership)
-  } else add_chronological_model_week(standardize_cfbd_schedule(raw))
+  } else {
+    preseason_schedule <- standardize_cfbd_schedule(raw)
+    preseason_schedule <- preseason_schedule[
+      preseason_schedule$source_season_type == "regular", , drop = FALSE]
+    add_chronological_model_week(standardize_schedule(preseason_schedule))
+  }
   schedule <- universe[universe$season == season & universe$week == week &
                          !is.na(universe$kickoff) & universe$kickoff > as_of &
                          !universe$completed & universe$home_level == "fbs" &
@@ -73,9 +91,6 @@ prepare_live_inputs <- function(inputs, config, season, week, as_of, refresh = F
   snapshots <- snapshots[snapshots$game_id %in% schedule$game_id, ]
   inputs$team_week_features <- snapshots[setdiff(names(snapshots), "game_id")]
 
-  coach_cache <- file.path(config$project_dir, "cfb_v2", "cache", "coaches",
-                           paste0("current_fbs_coaches_", season, ".rds"))
-  coaches <- pull_current_fbs_coaches(season, coach_cache, refresh, captured_at = as_of)
   assignments <- current_fbs_coach_assignments(
     membership$team, coaches, season, inputs$coach_assignment_overrides)
   inputs$coach_assignments <- assignments
@@ -88,14 +103,7 @@ prepare_live_inputs <- function(inputs, config, season, week, as_of, refresh = F
   inputs$membership <- data.frame(team = membership$team, season = season,
     subdivision = "fbs", conference = membership$conference,
     power_conference = membership$conference %in% c("ACC", "SEC", "Big Ten", "Big 12"))
-  line_cache <- file.path(config$project_dir, "cfb_v2", "cache", "lines",
-                          paste0("cfbd_week_", week, "_", season, ".rds"))
   supplied_lines <- inputs$lines
-  if (refresh || !file.exists(line_cache)) {
-    lines <- pull_cfbd_lines(season, week, Sys.time())
-    dir.create(dirname(line_cache), recursive = TRUE, showWarnings = FALSE)
-    saveRDS(lines, line_cache)
-  } else lines <- readRDS(line_cache)
   inputs$lines <- bind_rows_fill(lines, supplied_lines)
   if (nrow(inputs$lines)) {
     key <- paste(inputs$lines$game_id, inputs$lines$provider, inputs$lines$captured_at)
