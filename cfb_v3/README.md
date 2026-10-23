@@ -160,6 +160,96 @@ backup performance enters team history; never carry an old point penalty forward
 solely because the player remains out. Overlapping player effects require a joint
 estimate rather than summing QB and receiver/RB production from the same plays.
 
+## Prospective Line Capture
+
+Historical spreads in the foundation are cached play-by-play quotes with no book,
+price, or observation time, so they cannot support an honest ATS backtest.
+`cfb_v3/capture_lines.R` records lines going forward. Each run appends one row per
+game, source, and book to `cfb_v3/data/line_captures/line_quotes.csv`, logs the run
+in `captures.csv`, and keeps the gzipped raw responses under `raw/<capture_id>/`.
+The whole store is git-ignored; rows are only ever appended.
+
+Sources:
+
+- **CFBD `/lines`** (`CFBD_API_KEY`, required): every provider CFBD carries, with
+  spread, open spread, total, open total, and moneylines. CFBD supplies **no spread or
+  total prices and no provider update time**; `captured_at` is retrieval time.
+- **The Odds API v4** (`ODDS_API_KEY`, optional): US books with American prices for
+  both spread sides, over/under, and moneylines, plus each market's `last_update`
+  (`spread_updated_at`, `total_updated_at`). With `--sources=auto` (the default) it
+  runs only when the key is set. One run costs `markets x regions` credits (3 by
+  default); `captures.csv` records the remaining credit balance.
+
+Both keys belong in the ignored root `.Renviron`, which the script reads itself:
+
+```text
+CFBD_API_KEY=...
+ODDS_API_KEY=...
+```
+
+`game_id` is the CFBD/ESPN game ID used throughout the model (`predictions.csv`,
+`historical_games.csv`). Odds API events are matched to CFBD games by team name and
+kickoff; matched rows are re-expressed for the CFBD home team (neutral-site games are
+often listed the other way round), and `source_home`/`source_away` keep the book's
+names. `match_method` is `team_names`, `one_team_and_kickoff`, `ambiguous`, or
+`unmatched`; unmatched rows keep `odds_event_id` and an empty `game_id`. When a
+capture reports unmatched events, add the Odds API name to
+`cfb_v3/inbox/odds_api_team_aliases.csv` (`odds_api_name,cfbd_name`). Spreads are home
+spreads (negative means the home team is favored), and `pregame` is false for quotes
+captured after kickoff.
+
+```powershell
+# Current week (from the CFBD calendar), both sources when keys are present.
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v3\capture_lines.R --label=friday
+# Explicit week or source.
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v3\capture_lines.R --label=adhoc --season=2026 --week=9 --season-type=regular --sources=cfbd
+# Offline tests (no keys or network needed).
+& 'C:\Program Files\R\R-4.2.2\bin\Rscript.exe' .\cfb_v3\tests\test_capture_lines.R
+```
+
+The script exits non-zero when any requested source fails or nothing was captured.
+Successful sources are still written. `line_quotes_as_of(quotes, as_of, books)` in
+the same file returns the latest pregame quote per game, source, and book observed
+at or before a cutoff, for example Friday noon PT for article grading. The closing
+line for a game is its last capture with `pregame` true. DuckDB can query the store
+directly with `read_csv_auto('cfb_v3/data/line_captures/line_quotes.csv')`.
+
+### Scheduling on Windows
+
+`cfb_v3\capture_lines.cmd LABEL` changes to the repository root, sets the UTF-8 locale,
+runs the script, and appends output to `cfb_v3\data\line_captures\logs\capture_lines.log`.
+Set `CFB_RSCRIPT` if R is not at `C:\Program Files\R\R-4.2.2\bin\Rscript.exe` (for
+example the bundled `windows-runtime` R). Register the weekly tasks once from
+PowerShell in the repository root. Times are the PC's local time (Pacific):
+
+```powershell
+$cmd = (Resolve-Path .\cfb_v3\capture_lines.cmd).Path
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -WakeToRun -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
+function Add-CfbCapture($name, $label, $trigger) {
+  $action = New-ScheduledTaskAction -Execute $cmd -Argument $label
+  Register-ScheduledTask -TaskName "CFB lines - $name" -Action $action -Trigger $trigger -Settings $settings -Force
+}
+Add-CfbCapture "Sunday opener" opener   (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday   -At 6:00PM)
+Add-CfbCapture "Monday"        monday   (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday   -At 9:00AM)
+Add-CfbCapture "Thursday"      thursday (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Thursday -At 3:00PM)
+Add-CfbCapture "Friday noon"   friday   (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday   -At 11:50AM)
+Add-CfbCapture "Friday night"  close    (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday   -At 3:30PM)
+# Saturday closes: hourly from 8:30 AM to 7:30 PM so each kickoff has a capture within an hour.
+$saturday = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Saturday -At 8:30AM
+$saturday.Repetition = (New-ScheduledTaskTrigger -Once -At 8:30AM -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration (New-TimeSpan -Hours 11)).Repetition
+Add-CfbCapture "Saturday close" close $saturday
+```
+
+That is 17 runs a week: about 220 Odds API credits a month at the default 3 per run
+(the free tier allows 500), and about 220 CFBD calls a month (3 per run). The tasks
+run only while the PC is on and the user is logged in; `-StartWhenAvailable` runs a
+missed capture at the next opportunity, and `minutes_to_kickoff` shows how close
+each quote actually was. Test a task with `Start-ScheduledTask "CFB lines - Monday"`
+and check the log. Remove them with
+`Get-ScheduledTask "CFB lines - *" | Unregister-ScheduledTask -Confirm:$false`.
+CFBD refreshes its lines on its own schedule, so CFBD rows can lag the books; use the
+Odds API rows for prices and close timing.
+
 ## What Changed
 
 1. Promoted FCS teams receive a prior from earlier transitions/crossover games before
